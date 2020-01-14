@@ -3,13 +3,18 @@
 #include <g2o/core/base_binary_edge.h>
 #include <g2o/core/base_vertex.h>
 #include <g2o/types/sba/types_sba.h>
+#include <g2o/types/sim3/types_seven_dof_expmap.h>
 #include <g2o/types/slam3d/types_slam3d.h>
 #include <iostream>
 
-namespace g2o
+namespace LLVM
 {
 using namespace Eigen;
 using namespace std;
+using g2o::Matrix3;
+using g2o::Vector3;
+using g2o::VertexSE3;
+using g2o::VertexSim3Expmap;
 
 class EdgeGICP
 {
@@ -109,11 +114,8 @@ public:
   }
 };
 
-// 3D rigid constraint
-//    3 values for position wrt frame
-//    3 values for normal wrt frame, not used here
 // first two args are the measurement type, second two the connection classes
-class Edge_V_V_GICP : public BaseBinaryEdge<3, EdgeGICP, VertexSE3, VertexSE3>
+class Edge_V_V_GICP : public g2o::BaseBinaryEdge<3, EdgeGICP, VertexSE3, VertexSim3Expmap>
 {
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
@@ -142,7 +144,7 @@ public:
   {
     // from <ViewPoint> to <Point>
     const VertexSE3* vp0 = static_cast<const VertexSE3*>(_vertices[0]);
-    const VertexSE3* vp1 = static_cast<const VertexSE3*>(_vertices[1]);
+    const VertexSim3Expmap* vp1 = static_cast<const VertexSim3Expmap*>(_vertices[1]);
 
     // get vp1 point into vp0 frame
     // could be more efficient if we computed this transform just once
@@ -162,7 +164,7 @@ public:
       else
 #endif
     {
-      p1 = vp1->estimate() * measurement().pos1;
+      p1 = vp1->estimate().map(measurement().pos1);
       p1 = vp0->estimate().inverse() * p1;
     }
 
@@ -183,10 +185,10 @@ public:
 
     if (!pl_pl) return;
 
-    // re-define the information matrix
-    // topLeftCorner<3,3>() is the rotation()
-    const Matrix3 transform = (vp0->estimate().inverse() * vp1->estimate()).matrix().topLeftCorner<3, 3>();
-    information() = (cov0 + transform * cov1 * transform.transpose()).inverse();
+    // // re-define the information matrix
+    // // topLeftCorner<3,3>() is the rotation()
+    // const Matrix3 transform = (vp0->estimate().inverse() * vp1->estimate()).matrix().topLeftCorner<3, 3>();
+    // information() = (cov0 + transform * cov1 * transform.transpose()).inverse();
   }
 
 #ifdef NOT_NEED
@@ -201,4 +203,4 @@ public:
   static Matrix3 dRidz;  // differential quat matrices
 #endif
 };
-}  // namespace g2o
+}  // namespace LLVM
