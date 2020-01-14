@@ -50,7 +50,7 @@ find_package(
                g2o::stuff
                g2o::types_sba
                g2o::types_sim3
-               g2o::types_icp
+               #    g2o::types_icp
                g2o::solver_dense
                g2o::solver_eigen
                g2o::solver_csparse
@@ -78,7 +78,7 @@ target_link_libraries(
            g2o::solver_dense
            g2o::solver_eigen
            g2o::solver_csparse
-           g2o::types_icp
+           #    g2o::types_icp
            g2o::csparse_extension
            ${CXSPARSE_LIBRARIES}
            ${SUITESPARSE_LIBRARIES})

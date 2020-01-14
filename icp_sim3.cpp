@@ -6,10 +6,12 @@
 #include <g2o/core/sparse_optimizer.h>
 #include <g2o/solvers/dense/linear_solver_dense.h>
 #include <g2o/stuff/sampler.h>
-#include <g2o/types/icp/types_icp.h>
+// #include <g2o/types/icp/types_icp.h>
+#include "types_icp.hpp"
 #include <iostream>
 #include <random>
 #include <stdint.h>
+
 
 int main()
 {
@@ -18,12 +20,13 @@ int main()
   //  double outlier_ratio = 0.1;
 
   g2o::SparseOptimizer optimizer;
-  optimizer.setVerbose(false);
+  optimizer.setVerbose(true);
 
   // variable-size block solver
   g2o::OptimizationAlgorithmLevenberg* solver = new g2o::OptimizationAlgorithmLevenberg(
       g2o::make_unique<g2o::BlockSolverX>(g2o::make_unique<g2o::LinearSolverDense<g2o::BlockSolverX::PoseMatrixType>>()));
   optimizer.setAlgorithm(solver);
+
 
   // point cloud in R^3
   constexpr int N = 1000;
@@ -36,10 +39,9 @@ int main()
   }
 
   // set up two poses
-  int vertex_id = 0;
   for (size_t i = 0; i < 2; ++i) {
     // set up rotation and translation for this node
-    Eigen::Vector3d t(0, 0, static_cast<int>(i));
+    Eigen::Vector3d t(0, 0, static_cast<double>(i));
     Eigen::Quaterniond q;
     q.setIdentity();
 
@@ -47,10 +49,10 @@ int main()
     cam = q;
     cam.translation() = t;
 
-    // set up node
+    // set up initial parameter
     g2o::VertexSE3* vc = new g2o::VertexSE3();
     vc->setEstimate(cam);
-    vc->setId(vertex_id);  // vertex id
+    vc->setId(static_cast<int>(i));  // vertex id
 
     std::cerr << t.transpose() << " | " << q.coeffs().transpose() << std::endl;
 
@@ -60,7 +62,6 @@ int main()
 
     // add to optimizer
     optimizer.addVertex(vc);
-    vertex_id++;
   }
 
   // set up point matches
@@ -107,11 +108,10 @@ int main()
 
     meas = e->measurement();
 
-    // e->information() = meas.prec0(0.01);// use this for point-plane
+    // e->information() = meas.prec0(0.01);  // use this for point-plane
     e->information().setIdentity();  // use this for point-point
 
-
-    // Kernel Huber(default delta = 1.0)
+    // set Huber kernel (default delta = 1.0)
     g2o::RobustKernelHuber* rk = new g2o::RobustKernelHuber;
     e->setRobustKernel(rk);
 
@@ -129,7 +129,7 @@ int main()
   std::cout << "Initial chi2 = " << FIXED(optimizer.chi2()) << std::endl;
 
   optimizer.setVerbose(true);
-  optimizer.optimize(5);
+  optimizer.optimize(10);
 
   // clang-format off
   std::cout << std::endl
