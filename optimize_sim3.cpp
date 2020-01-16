@@ -111,7 +111,7 @@ int main()
     nm1.normalize();
 
     // new edge with correct cohort for caching
-    LLVM::Edge_V_V_GICP* e = new LLVM::Edge_V_V_GICP();
+    LLVM::Edge_Sim3_GICP* e = new LLVM::Edge_Sim3_GICP();
 
     e->setVertex(0, vp0);  // first viewpoint
     e->setVertex(1, vp1);  // second viewpoint
@@ -124,8 +124,7 @@ int main()
 
     e->setMeasurement(meas);
 
-    meas = e->measurement();
-
+    // meas = e->measurement();
     // e->information() = meas.prec0(0.01);  // use this for point-plane
     e->information().setIdentity();  // use this for point-point
 

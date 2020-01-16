@@ -9,8 +9,6 @@
 
 namespace LLVM
 {
-using namespace Eigen;
-using namespace std;
 using g2o::Matrix3;
 using g2o::Vector3;
 using g2o::VertexSE3;
@@ -18,26 +16,21 @@ using g2o::VertexSim3Expmap;
 
 class EdgeGICP
 {
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
-
 public:
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
   // point positions
   Vector3 pos0, pos1;
-
   // unit normals
   Vector3 normal0, normal1;
-
   // rotation matrix for normal
   Matrix3 R0, R1;
 
-  // initialize an object
   EdgeGICP()
   {
     pos0.setZero();
     pos1.setZero();
     normal0 << 0, 0, 1;
     normal1 << 0, 0, 1;
-    //makeRot();
     R0.setIdentity();
     R1.setIdentity();
   }
@@ -52,9 +45,6 @@ public:
     y.normalize();  // need to check if y is close to 0
     R0.row(1) = y;
     R0.row(0) = normal0.cross(R0.row(1));
-    //      cout << normal.transpose() << endl;
-    //      cout << R0 << endl << endl;
-    //      cout << R0*R0.transpose() << endl << endl;
   }
 
   // set up rotation matrix for pos1
@@ -114,28 +104,26 @@ public:
   }
 };
 
-// first two args are the measurement type, second two the connection classes
-class Edge_V_V_GICP : public g2o::BaseBinaryEdge<3, EdgeGICP, VertexSE3, VertexSim3Expmap>
+class Edge_Sim3_GICP : public g2o::BaseBinaryEdge<3, EdgeGICP, VertexSE3, VertexSim3Expmap>
 {
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
-  Edge_V_V_GICP() : pl_pl(false) {}
-  Edge_V_V_GICP(const Edge_V_V_GICP* e);
+  Edge_Sim3_GICP() : pl_pl(false) {}
+  Edge_Sim3_GICP(const Edge_Sim3_GICP* e);
 
   // switch to go between point-plane and plane-plane
   bool pl_pl;
   Matrix3 cov0, cov1;
 
-  // I/O functions
-  virtual bool read(std::istream& /*is*/)
+  virtual bool read(std::istream&)
   {
-    cerr << __PRETTY_FUNCTION__ << " not implemented yet" << endl;
+    std::cerr << __PRETTY_FUNCTION__ << " not implemented yet" << std::endl;
     return false;
   }
 
-  virtual bool write(std::ostream& /*os*/) const
+  virtual bool write(std::ostream&) const
   {
-    cerr << __PRETTY_FUNCTION__ << " not implemented yet" << endl;
+    std::cerr << __PRETTY_FUNCTION__ << " not implemented yet" << std::endl;
     return false;
   }
 
@@ -146,61 +134,29 @@ public:
     const VertexSE3* vp0 = static_cast<const VertexSE3*>(_vertices[0]);
     const VertexSim3Expmap* vp1 = static_cast<const VertexSim3Expmap*>(_vertices[1]);
 
-    // get vp1 point into vp0 frame
-    // could be more efficient if we computed this transform just once
-    Vector3 p1;
+    // get vp1 point into vp0 frame could be more efficient if we computed this transform just once
+    Vector3 p1 = vp1->estimate().map(measurement().pos1);
+    p1 = vp0->estimate().inverse() * p1;
 
-#if 0
-      if (_cnum >= 0 && 0)      // using global cache
-        {
-          if (_tainted[_cnum])  // set up transform
-            {
-              _transforms[_cnum] = vp0->estimate().inverse() * vp1->estimate();
-              _tainted[_cnum] = 0;
-              cout << _transforms[_cnum] << endl;
-            }
-          p1 = _transforms[_cnum].map(measurement().pos1); // do the transform
-        }
-      else
-#endif
-    {
-      p1 = vp1->estimate().map(measurement().pos1);
-      p1 = vp0->estimate().inverse() * p1;
-    }
-
-    //      cout << endl << "Error computation; points are: " << endl;
-    //      cout << p0.transpose() << endl;
-    //      cout << p1.transpose() << endl;
-
-    // get their difference
-    // this is simple Euclidean distance, for now
+    // Euclidean distance
     _error = p1 - measurement().pos0;
-
-#if 0
-      cout << "vp0" << endl << vp0->estimate() << endl;
-      cout << "vp1" << endl << vp1->estimate() << endl;
-      cout << "e Jac Xj" << endl <<  _jacobianOplusXj << endl << endl;
-      cout << "e Jac Xi" << endl << _jacobianOplusXi << endl << endl;
-#endif
 
     if (!pl_pl) return;
 
-    // // re-define the information matrix
-    // // topLeftCorner<3,3>() is the rotation()
+    // re-define the information matrix
+    // topLeftCorner<3,3>() is the rotation()
     // const Matrix3 transform = (vp0->estimate().inverse() * vp1->estimate()).matrix().topLeftCorner<3, 3>();
     // information() = (cov0 + transform * cov1 * transform.transpose()).inverse();
   }
 
 #ifdef NOT_NEED
   // try analytic jacobians
-#ifdef GICP_ANALYTIC_JACOBIANS
   virtual void linearizeOplus();
-#endif
 
   // global derivative matrices
   static Matrix3 dRidx;
   static Matrix3 dRidy;
-  static Matrix3 dRidz;  // differential quat matrices
+  static Matrix3 dRidz;
 #endif
 };
 }  // namespace LLVM

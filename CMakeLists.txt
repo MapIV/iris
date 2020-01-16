@@ -43,7 +43,7 @@ endforeach()
 message("CMAKE_CXX_FLAGS:\n\t${CMAKE_CXX_FLAGS}")
 
 # PCL
-find_package(PCL QUIET REQUIRED COMPONENTS common io registration visualization)
+find_package(PCL QUIET REQUIRED COMPONENTS common io registration visualization kdtree)
 include_directories(SYSTEM ${PCL_INCLUDE_DIRS})
 link_directories(${PCL_LIBRARY_DIRS})
 message("PCL version:\n\t${PCL_VERSION}")
@@ -65,6 +65,7 @@ find_package(
              g2o::solver_csparse
              g2o::csparse_extension
   OPTIONAL_COMPONENTS g2o::csparse)
+
 set(G2O_LIBS
     g2o::core
     g2o::stuff
@@ -84,8 +85,8 @@ file(GLOB SOURCES ${CMAKE_CURRENT_LIST_DIR}/src/*.cpp)
 
 # =======================================
 # Exe
-# add_executable(optimize_sim3 optimize_sim3.cpp)
-# target_link_libraries(optimize_sim3 PUBLIC ${G2O_LIBS})
+add_executable(optimize_sim3 optimize_sim3.cpp)
+target_link_libraries(optimize_sim3 PUBLIC ${G2O_LIBS})
 
-add_executable(pcl_icp pcl_icp.cpp)
-target_link_libraries(pcl_icp PUBLIC ${PCL_LIBRARIES} ${G2O_LIBS})
+# add_executable(pcl_icp pcl_icp.cpp)
+# target_link_libraries(pcl_icp PUBLIC ${PCL_LIBRARIES} ${G2O_LIBS})

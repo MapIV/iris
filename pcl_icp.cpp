@@ -4,9 +4,10 @@
 #include <pcl/io/pcd_io.h>
 #include <pcl/kdtree/kdtree_flann.h>
 #include <pcl/point_types.h>
+#include <pcl/registration/correspondence_estimation.h>
 #include <pcl/registration/icp.h>
 #include <pcl/registration/transformation_estimation_svd_scale.h>
-#include <pcl/visualization/cloud_viewer.h>
+#include <pcl/visualization/pcl_visualizer.h>
 #include <random>
 
 using pcXYZ = pcl::PointCloud<pcl::PointXYZ>;
@@ -19,10 +20,6 @@ pcXYZ::Ptr loadPointCloud(const std::string& pcd_file)
     std::cout << "Couldn't read file test_pcd.pcd " << pcd_file << std::endl;
     exit(1);
   }
-  std::cout << "Loaded "
-            << cloud_in->width * cloud_in->height
-            << std::endl;
-
   return cloud_in;
 }
 
@@ -67,30 +64,30 @@ void visualizePointCloud(
   }
 }
 
-void getCorrespondences(
-    const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud_query,
-    const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud_reference)
+// L2 norm is maybe used
+pcl::Correspondences getCorrespondences(const pcXYZ::Ptr& cloud_source, const pcXYZ::Ptr& cloud_target)
 {
-  pcl::KdTreeFLANN<pcl::PointXYZ> kdtree;
-  kdtree.setInputCloud(cloud_reference);
+  pcl::PointCloud<pcl::PointXYZRGBA>::Ptr source, target;
+  pcl::registration::CorrespondenceEstimation<pcl::PointXYZ, pcl::PointXYZ> est;
+  est.setInputSource(cloud_source);
+  est.setInputTarget(cloud_target);
+  pcl::Correspondences all_correspondences;
+  est.determineReciprocalCorrespondences(all_correspondences);
+  // est.determineCorrespondences(all_correspondences);
 
-  constexpr int K = 1;
-  std::vector<int> point_indices(K);
-  std::vector<float> point_distances(K);
-  // if (kdtree.nearestKSearch(searchPoint, K, point_indices, point_distances) > 0) {
-  // }
+  return all_correspondences;
 }
 
 // Pointclouds must be sorted in correspondence order
 Eigen::Matrix4f registrationPointCloud(
-    const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud_query,
-    const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud_reference)
+    const pcXYZ::Ptr& cloud_source,
+    const pcXYZ::Ptr& cloud_target)
 {
   using pclSVD = pcl::registration::TransformationEstimationSVDScale<pcl::PointXYZ, pcl::PointXYZ>;
   pclSVD::Ptr estPtr(new pclSVD());
 
   Eigen::Matrix4f T;
-  estPtr->estimateRigidTransformation(*cloud_query, *cloud_reference, T);
+  estPtr->estimateRigidTransformation(*cloud_source, *cloud_target, getCorrespondences(cloud_source, cloud_target), T);
   Eigen::Matrix3f R = T.topLeftCorner(3, 3);
   std::cout << "scale " << std::sqrt((R.transpose() * R).trace() / 3.0) << std::endl;
   std::cout << T << std::endl;
@@ -121,7 +118,7 @@ void shufflePointCloud(pcXYZ::Ptr& cloud)
   }
 }
 
-int main(int argc, char* argv[])
+int main(int, char**)
 {
   // specify input file
   pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_in = loadPointCloud("../data/table.pcd");
@@ -129,10 +126,10 @@ int main(int argc, char* argv[])
   *cloud_out = *cloud_in;  // deep copy
 
   transformPointCloud(cloud_out);
-  Eigen::Matrix4f T;
 
   shufflePointCloud(cloud_in);
 
+  Eigen::Matrix4f T;
   // T = icpWithPurePCL(cloud_in, cloud_out);
   T = registrationPointCloud(cloud_in, cloud_out);
 
