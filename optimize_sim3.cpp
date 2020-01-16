@@ -1,4 +1,3 @@
-// #include <Eigen/StdVector>
 #include "types_icp.hpp"
 #include <g2o/core/block_solver.h>
 #include <g2o/core/optimization_algorithm_levenberg.h>

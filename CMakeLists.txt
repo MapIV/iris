@@ -43,7 +43,7 @@ endforeach()
 message("CMAKE_CXX_FLAGS:\n\t${CMAKE_CXX_FLAGS}")
 
 # PCL
-find_package(PCL REQUIRED) #COMPONENTS common io registration)
+find_package(PCL QUIET REQUIRED COMPONENTS common io registration visualization)
 include_directories(SYSTEM ${PCL_INCLUDE_DIRS})
 link_directories(${PCL_LIBRARY_DIRS})
 message("PCL version:\n\t${PCL_VERSION}")
