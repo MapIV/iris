@@ -84,10 +84,8 @@ int main()
   setVertexSE3(optimizer);
   setVertexSim3(optimizer);
 
-
-  // set up point matches
   for (size_t i = 0; i < true_points.size(); ++i) {
-    // get two poses
+    // get Vertex
     g2o::VertexSE3* vp0 = dynamic_cast<g2o::VertexSE3*>(optimizer.vertices().find(0)->second);
     g2o::VertexSim3Expmap* vp1 = dynamic_cast<g2o::VertexSim3Expmap*>(optimizer.vertices().find(1)->second);
 
