@@ -1,61 +1,144 @@
+#include <Eigen/Dense>
+#include <Eigen/Geometry>
 #include <iostream>
 #include <pcl/io/pcd_io.h>
+#include <pcl/kdtree/kdtree_flann.h>
 #include <pcl/point_types.h>
 #include <pcl/registration/icp.h>
+#include <pcl/registration/transformation_estimation_svd_scale.h>
 #include <pcl/visualization/cloud_viewer.h>
+#include <random>
 
-int main(int argc, char* argv[])
+using pcXYZ = pcl::PointCloud<pcl::PointXYZ>;
+
+pcXYZ::Ptr loadPointCloud(const std::string& pcd_file)
 {
-  // specify input file
-  std::string pcd_file = "../data/table.pcd";
-  if (argc == 2)
-    pcd_file = argv[1];
-
   pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_in(new pcl::PointCloud<pcl::PointXYZ>);
-  pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_out(new pcl::PointCloud<pcl::PointXYZ>);
-
   // load point cloud
   if (pcl::io::loadPCDFile<pcl::PointXYZ>(pcd_file, *cloud_in) == -1) {
     std::cout << "Couldn't read file test_pcd.pcd " << pcd_file << std::endl;
-    return -1;
+    exit(1);
   }
   std::cout << "Loaded "
             << cloud_in->width * cloud_in->height
             << std::endl;
 
-  // deep copy
-  *cloud_out = *cloud_in;
+  return cloud_in;
+}
+
+void transformPointCloud(pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud)
+{
+  // rotation
+  Eigen::Matrix3f R;
+  R = Eigen::AngleAxisf(static_cast<float>(M_PI / 2.0), Eigen::Vector3f(0, 1, 0));  // Rotate CCW 90[deg] around y-axis
+
+  // scaling
+  float scale = 1.5f;
+  R *= scale;
+
+  // transration
+  Eigen::Vector3f t;
+  t << 0.5f, -0.1f, 0.0f;
 
   // transform
-  for (std::size_t i = 0; i < cloud_in->points.size(); ++i)
-    cloud_out->points[i].x = cloud_in->points[i].x + 0.7f;
+  Eigen::Matrix4f T = Eigen::Matrix4f::Identity();
+  T.topLeftCorner(3, 3) = R;
+  T.topRightCorner(3, 1) = t;
 
-  // setup ICP
-  pcl::IterativeClosestPoint<pcl::PointXYZ, pcl::PointXYZ> icp;
-  pcl::PointCloud<pcl::PointXYZ> final;
-  icp.setInputSource(cloud_in);
-  icp.setInputTarget(cloud_out);
-  icp.align(final);
+  std::cout << "=========== " << std::endl;
+  std::cout << T << std::endl;
+  pcl::transformPointCloud(*cloud, *cloud, T);
+}
 
-  //
-  std::cout << "has converged:" << icp.hasConverged() << " score: " << icp.getFitnessScore() << std::endl;
-  std::cout << icp.getFinalTransformation() << std::endl;
-
+void visualizePointCloud(
+    const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud_query,
+    const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud_reference,
+    const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud_aligned)
+{
   pcl::visualization::PCLVisualizer::Ptr viewer(new pcl::visualization::PCLVisualizer("visualizer"));
-  pcl::PointCloud<pcl::PointXYZ>::Ptr final_ptr = final.makeShared();
+  using pcl_color = pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ>;
 
-  {
-    pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ> single_color(final_ptr, 0, 255, 0);
-    viewer->addPointCloud<pcl::PointXYZ>(final_ptr, single_color, "cloud_final");
-  }
-  {
-    pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ> single_color(cloud_in, 255, 255, 0);
-    viewer->addPointCloud<pcl::PointXYZ>(cloud_in, single_color, "cloud_in");
-  }
+  viewer->addPointCloud<pcl::PointXYZ>(cloud_query, pcl_color(cloud_query, 255, 0, 0), "cloud_query");
+  viewer->addPointCloud<pcl::PointXYZ>(cloud_reference, pcl_color(cloud_reference, 0, 255, 0), "cloud_reference");
+  viewer->addPointCloud<pcl::PointXYZ>(cloud_aligned, pcl_color(cloud_aligned, 0, 0, 255), "cloud_aligned");
 
-  viewer->addCoordinateSystem(1.0);
   while (!viewer->wasStopped()) {
     viewer->spinOnce(100);
   }
+}
+
+void getCorrespondences(
+    const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud_query,
+    const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud_reference)
+{
+  pcl::KdTreeFLANN<pcl::PointXYZ> kdtree;
+  kdtree.setInputCloud(cloud_reference);
+
+  constexpr int K = 1;
+  std::vector<int> point_indices(K);
+  std::vector<float> point_distances(K);
+  // if (kdtree.nearestKSearch(searchPoint, K, point_indices, point_distances) > 0) {
+  // }
+}
+
+// Pointclouds must be sorted in correspondence order
+Eigen::Matrix4f registrationPointCloud(
+    const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud_query,
+    const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud_reference)
+{
+  using pclSVD = pcl::registration::TransformationEstimationSVDScale<pcl::PointXYZ, pcl::PointXYZ>;
+  pclSVD::Ptr estPtr(new pclSVD());
+
+  Eigen::Matrix4f T;
+  estPtr->estimateRigidTransformation(*cloud_query, *cloud_reference, T);
+  Eigen::Matrix3f R = T.topLeftCorner(3, 3);
+  std::cout << "scale " << std::sqrt((R.transpose() * R).trace() / 3.0) << std::endl;
+  std::cout << T << std::endl;
+
+  return T;
+}
+
+// Not compatible with Scaling
+Eigen::Matrix4f icpWithPurePCL(const pcXYZ::Ptr& cloud_query, const pcXYZ::Ptr& cloud_reference)
+{
+  pcl::IterativeClosestPoint<pcl::PointXYZ, pcl::PointXYZ> icp;
+  pcXYZ::Ptr cloud_aligned(new pcXYZ);
+  Eigen::Matrix4f T = icp.getFinalTransformation();
+
+  icp.setInputSource(cloud_query);
+  icp.setInputTarget(cloud_reference);
+  icp.align(*cloud_aligned);
+  std::cout << T << std::endl;
+
+  return T;
+}
+
+void shufflePointCloud(pcXYZ::Ptr& cloud)
+{
+  std::mt19937 rand;
+  for (size_t i = 0, size = cloud->size(); i < size; i++) {
+    std::swap(cloud->points.at(i), cloud->points.at(rand() % size));
+  }
+}
+
+int main(int argc, char* argv[])
+{
+  // specify input file
+  pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_in = loadPointCloud("../data/table.pcd");
+  pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_out(new pcl::PointCloud<pcl::PointXYZ>);
+  *cloud_out = *cloud_in;  // deep copy
+
+  transformPointCloud(cloud_out);
+  Eigen::Matrix4f T;
+
+  shufflePointCloud(cloud_in);
+
+  // T = icpWithPurePCL(cloud_in, cloud_out);
+  T = registrationPointCloud(cloud_in, cloud_out);
+
+  pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_aligned(new pcl::PointCloud<pcl::PointXYZ>);
+  pcl::transformPointCloud(*cloud_in, *cloud_aligned, T);
+
+  visualizePointCloud(cloud_in, cloud_out, cloud_aligned);
   return 0;
 }
