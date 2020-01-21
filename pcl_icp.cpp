@@ -1,3 +1,5 @@
+#include "registration_sim3.hpp"
+
 #include <Eigen/Dense>
 #include <Eigen/Geometry>
 #include <iostream>
@@ -42,7 +44,8 @@ void transformPointCloud(pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud)
   T.topLeftCorner(3, 3) = R;
   T.topRightCorner(3, 1) = t;
 
-  std::cout << "=========== " << std::endl;
+  std::cout << "\n=========== " << std::endl;
+  std::cout << "scale " << scale << std::endl;
   std::cout << T << std::endl;
   pcl::transformPointCloud(*cloud, *cloud, T);
 }
@@ -78,7 +81,11 @@ pcl::Correspondences getCorrespondences(const pcXYZ::Ptr& cloud_source, const pc
   return all_correspondences;
 }
 
-// Pointclouds must be sorted in correspondence order
+double getScale(const Eigen::Matrix3f& R)
+{
+  return std::sqrt((R.transpose() * R).trace() / 3.0);
+}
+
 Eigen::Matrix4f registrationPointCloud(
     const pcXYZ::Ptr& cloud_source,
     const pcXYZ::Ptr& cloud_target)
@@ -89,11 +96,29 @@ Eigen::Matrix4f registrationPointCloud(
   Eigen::Matrix4f T;
   estPtr->estimateRigidTransformation(*cloud_source, *cloud_target, getCorrespondences(cloud_source, cloud_target), T);
   Eigen::Matrix3f R = T.topLeftCorner(3, 3);
-  std::cout << "scale " << std::sqrt((R.transpose() * R).trace() / 3.0) << std::endl;
+  std::cout << "\n=========== " << std::endl;
+  std::cout << "scale " << getScale(R) << std::endl;
   std::cout << T << std::endl;
 
   return T;
 }
+
+Eigen::Matrix4f registrationByG2O(
+    const pcXYZ::Ptr& cloud_source,
+    const pcXYZ::Ptr& cloud_target)
+{
+  Aligner aligner;
+  Eigen::Matrix4f T;
+  aligner.estimate(
+      *cloud_source, *cloud_target, getCorrespondences(cloud_source, cloud_target), T);
+  Eigen::Matrix3f R = T.topLeftCorner(3, 3);
+  std::cout << "\n=========== " << std::endl;
+  std::cout << "scale " << getScale(R) << std::endl;
+  std::cout << T << std::endl;
+
+  return T;
+}
+
 
 // Not compatible with Scaling
 Eigen::Matrix4f icpWithPurePCL(const pcXYZ::Ptr& cloud_query, const pcXYZ::Ptr& cloud_reference)
@@ -123,7 +148,7 @@ int main(int, char**)
   // specify input file
   pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_in = loadPointCloud("../data/table.pcd");
   pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_out(new pcl::PointCloud<pcl::PointXYZ>);
-  *cloud_out = *cloud_in;  // deep copy
+  *cloud_out = *cloud_in;
 
   transformPointCloud(cloud_out);
 
@@ -132,6 +157,7 @@ int main(int, char**)
   Eigen::Matrix4f T;
   // T = icpWithPurePCL(cloud_in, cloud_out);
   T = registrationPointCloud(cloud_in, cloud_out);
+  T = registrationByG2O(cloud_in, cloud_out);
 
   pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_aligned(new pcl::PointCloud<pcl::PointXYZ>);
   pcl::transformPointCloud(*cloud_in, *cloud_aligned, T);
