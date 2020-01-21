@@ -1,31 +1,27 @@
 #include "aligner.hpp"
+#include "util.hpp"
+#include "viewer.hpp"
 
 #include <Eigen/Dense>
 #include <Eigen/Geometry>
 #include <iostream>
 #include <pcl/io/pcd_io.h>
-#include <pcl/kdtree/kdtree_flann.h>
 #include <pcl/point_types.h>
 #include <pcl/registration/correspondence_estimation.h>
-#include <pcl/registration/icp.h>
-#include <pcl/registration/transformation_estimation_svd_scale.h>
-#include <pcl/visualization/pcl_visualizer.h>
-#include <random>
 
 using pcXYZ = pcl::PointCloud<pcl::PointXYZ>;
 
 pcXYZ::Ptr loadPointCloud(const std::string& pcd_file)
 {
-  pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_in(new pcl::PointCloud<pcl::PointXYZ>);
-  // load point cloud
-  if (pcl::io::loadPCDFile<pcl::PointXYZ>(pcd_file, *cloud_in) == -1) {
+  pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_source(new pcl::PointCloud<pcl::PointXYZ>);
+  if (pcl::io::loadPCDFile<pcl::PointXYZ>(pcd_file, *cloud_source) == -1) {
     std::cout << "Couldn't read file test_pcd.pcd " << pcd_file << std::endl;
     exit(1);
   }
-  return cloud_in;
+  return cloud_source;
 }
 
-void transformPointCloud(pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud)
+void initTransformPointCloud(pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud)
 {
   // rotation
   Eigen::Matrix3f R;
@@ -65,28 +61,6 @@ pcl::Correspondences getCorrespondences(const pcXYZ::Ptr& cloud_source, const pc
   return all_correspondences;
 }
 
-double getScale(const Eigen::Matrix3f& R)
-{
-  return std::sqrt((R.transpose() * R).trace() / 3.0);
-}
-
-Eigen::Matrix4f registrationPointCloud(
-    const pcXYZ::Ptr& cloud_source,
-    const pcXYZ::Ptr& cloud_target)
-{
-  using pclSVD = pcl::registration::TransformationEstimationSVDScale<pcl::PointXYZ, pcl::PointXYZ>;
-  pclSVD::Ptr estPtr(new pclSVD());
-
-  Eigen::Matrix4f T;
-  estPtr->estimateRigidTransformation(*cloud_source, *cloud_target, getCorrespondences(cloud_source, cloud_target), T);
-  Eigen::Matrix3f R = T.topLeftCorner(3, 3);
-  std::cout << "\n=========== " << std::endl;
-  std::cout << "scale " << getScale(R) << std::endl;
-  std::cout << T << std::endl;
-
-  return T;
-}
-
 Eigen::Matrix4f registrationByG2O(
     const pcXYZ::Ptr& cloud_source,
     const pcXYZ::Ptr& cloud_target,
@@ -98,66 +72,10 @@ Eigen::Matrix4f registrationByG2O(
       *cloud_source, *cloud_target, correspondences, T);
   Eigen::Matrix3f R = T.topLeftCorner(3, 3);
   std::cout << "\n=========== " << std::endl;
-  std::cout << "scale " << getScale(R) << std::endl;
+  std::cout << "scale " << vllm::getScale(R) << std::endl;
   std::cout << T << std::endl;
 
   return T;
-}
-
-
-// Not compatible with Scaling
-Eigen::Matrix4f icpWithPurePCL(const pcXYZ::Ptr& cloud_query, const pcXYZ::Ptr& cloud_reference)
-{
-  pcl::IterativeClosestPoint<pcl::PointXYZ, pcl::PointXYZ> icp;
-  pcXYZ::Ptr cloud_aligned(new pcXYZ);
-  Eigen::Matrix4f T = icp.getFinalTransformation();
-
-  icp.setInputSource(cloud_query);
-  icp.setInputTarget(cloud_reference);
-  icp.align(*cloud_aligned);
-  std::cout << T << std::endl;
-
-  return T;
-}
-
-void shufflePointCloud(pcXYZ::Ptr& cloud)
-{
-  std::mt19937 rand;
-  for (size_t i = 0, size = cloud->size(); i < size; i++) {
-    std::swap(cloud->points.at(i), cloud->points.at(rand() % size));
-  }
-}
-
-bool quit = false;
-
-void keyboardEventOccurred(const pcl::visualization::KeyboardEvent& event, void*)
-{
-  if (event.getKeySym() == "q" && event.keyDown()) {
-    std::cout << "pressed" << std::endl;
-    quit = true;
-  }
-}
-
-pcl::visualization::PCLVisualizer::Ptr viewer(new pcl::visualization::PCLVisualizer("visualizer"));
-
-void visualizePointCloud(
-    const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud_source,
-    const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud_target,
-    const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud_aligned,
-    const pcl::Correspondences& correspondences)
-{
-  using pcl_color = pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ>;
-
-  viewer->removeAllPointClouds();
-  viewer->removeCorrespondences();
-  viewer->addPointCloud<pcl::PointXYZ>(cloud_source, pcl_color(cloud_source, 255, 0, 0), "cloud_source");
-  viewer->addPointCloud<pcl::PointXYZ>(cloud_target, pcl_color(cloud_target, 0, 255, 0), "cloud_target");
-  viewer->addPointCloud<pcl::PointXYZ>(cloud_aligned, pcl_color(cloud_aligned, 0, 0, 255), "cloud_aligned");
-  // viewer->addCorrespondences<pcl::PointXYZ>(cloud_aligned, cloud_target, correspondences);
-
-  // while (!(viewer->wasStopped() || quit)) {
-  viewer->spinOnce(500);
-  // }
 }
 
 int main(int, char**)
@@ -166,27 +84,27 @@ int main(int, char**)
   pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_source = loadPointCloud("../data/table.pcd");
   pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_target(new pcl::PointCloud<pcl::PointXYZ>);
   *cloud_target = *cloud_source;
+  initTransformPointCloud(cloud_target);
 
-  transformPointCloud(cloud_target);
-  shufflePointCloud(cloud_source);
-
-  viewer->registerKeyboardCallback(keyboardEventOccurred, (void*)&viewer);
+  vllm::Viewer viewer;
 
   pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_align(new pcl::PointCloud<pcl::PointXYZ>);
   *cloud_align = *cloud_source;
 
+  Eigen::Matrix4f pose = Eigen::Matrix4f::Identity();
   for (int i = 0; i < 100; i++) {
     pcl::Correspondences correspondences = getCorrespondences(cloud_align, cloud_target);
 
     Eigen::Matrix4f T = registrationByG2O(cloud_align, cloud_target, correspondences);
 
     pcl::transformPointCloud(*cloud_align, *cloud_align, T);
+    pose = T * pose;
 
-    visualizePointCloud(cloud_source, cloud_target, cloud_align, correspondences);
-  }
+    viewer.visualizePointCloud(cloud_source, cloud_target, cloud_align);
 
-  while (!viewer->wasStopped()) {
-    viewer->spinOnce(1000);
+    if (viewer.waitKey(100) == 'q')
+      break;
   }
+  std::cout << pose << std::endl;
   return 0;
 }
