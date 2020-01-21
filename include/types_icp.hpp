@@ -1,13 +1,14 @@
 #pragma once
 #include <Eigen/Geometry>
 #include <g2o/core/base_binary_edge.h>
+#include <g2o/core/base_unary_edge.h>
 #include <g2o/core/base_vertex.h>
 #include <g2o/types/sba/types_sba.h>
 #include <g2o/types/sim3/types_seven_dof_expmap.h>
 #include <g2o/types/slam3d/types_slam3d.h>
 #include <iostream>
 
-namespace LLVM
+namespace vllm
 {
 using g2o::Matrix3;
 using g2o::Vector3;
@@ -104,7 +105,7 @@ public:
   }
 };
 
-class Edge_Sim3_GICP : public g2o::BaseBinaryEdge<3, EdgeGICP, VertexSE3, VertexSim3Expmap>
+class Edge_Sim3_GICP : public g2o::BaseUnaryEdge<3, EdgeGICP, VertexSim3Expmap>
 {
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
@@ -131,12 +132,10 @@ public:
   void computeError()
   {
     // from <ViewPoint> to <Point>
-    const VertexSE3* vp0 = static_cast<const VertexSE3*>(_vertices[0]);
-    const VertexSim3Expmap* vp1 = static_cast<const VertexSim3Expmap*>(_vertices[1]);
+    const VertexSim3Expmap* vp0 = static_cast<const VertexSim3Expmap*>(_vertices[0]);
 
     // get vp1 point into vp0 frame could be more efficient if we computed this transform just once
-    Vector3 p1 = vp1->estimate().map(measurement().pos1);
-    p1 = vp0->estimate().inverse() * p1;
+    Vector3 p1 = vp0->estimate().map(measurement().pos1);
 
     // Euclidean distance
     _error = p1 - measurement().pos0;
@@ -159,4 +158,5 @@ public:
   static Matrix3 dRidz;
 #endif
 };
-}  // namespace LLVM
+
+}  // namespace vllm
