@@ -91,6 +91,10 @@ int main(int, char**)
   pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_align(new pcl::PointCloud<pcl::PointXYZ>);
   *cloud_align = *cloud_source;
 
+  viewer.visualizePointCloud(cloud_source, cloud_target, cloud_align);
+  while (viewer.waitKey() != 's')
+    ;
+
   Eigen::Matrix4f pose = Eigen::Matrix4f::Identity();
   for (int i = 0; i < 100; i++) {
     pcl::Correspondences correspondences = getCorrespondences(cloud_align, cloud_target);
@@ -102,7 +106,7 @@ int main(int, char**)
 
     viewer.visualizePointCloud(cloud_source, cloud_target, cloud_align);
 
-    if (viewer.waitKey(100) == 'q')
+    if (viewer.waitKey(10) == 'q')
       break;
   }
   std::cout << pose << std::endl;

@@ -36,9 +36,9 @@ void Viewer::visualizePointCloud(
   using pcl_color = pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ>;
   viewer->removeAllPointClouds();
   viewer->removeCorrespondences();
-  viewer->addPointCloud<pcl::PointXYZ>(cloud_source, pcl_color(cloud_source, 255, 0, 0), "cloud_source");
-  viewer->addPointCloud<pcl::PointXYZ>(cloud_target, pcl_color(cloud_target, 0, 255, 0), "cloud_target");
-  viewer->addPointCloud<pcl::PointXYZ>(cloud_aligned, pcl_color(cloud_aligned, 0, 0, 255), "cloud_aligned");
+  viewer->addPointCloud<pcl::PointXYZ>(cloud_source, pcl_color(cloud_source, 255, 0, 255), "cloud_source");
+  viewer->addPointCloud<pcl::PointXYZ>(cloud_target, pcl_color(cloud_target, 0, 255, 255), "cloud_target");
+  viewer->addPointCloud<pcl::PointXYZ>(cloud_aligned, pcl_color(cloud_aligned, 255, 255, 255), "cloud_aligned");
   viewer->addCorrespondences<pcl::PointXYZ>(cloud_aligned, cloud_target, correspondences);
 }
 }  // namespace vllm
