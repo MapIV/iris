@@ -87,5 +87,8 @@ file(GLOB SOURCES ${CMAKE_CURRENT_LIST_DIR}/src/*.cpp)
 # add_executable(optimize_sim3 optimize_sim3.cpp)
 # target_link_libraries(optimize_sim3 PUBLIC ${G2O_LIBS})
 
-add_executable(icp icp.cpp ${SOURCES})
-target_link_libraries(icp PUBLIC ${PCL_LIBRARIES} ${G2O_LIBS})
+# add_executable(icp icp.cpp ${SOURCES})
+# target_link_libraries(icp PUBLIC ${PCL_LIBRARIES} ${G2O_LIBS})
+
+add_executable(lpd local_point_distribution.cpp)
+target_link_libraries(lpd PUBLIC ${PCL_LIBRARIES})
