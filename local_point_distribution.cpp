@@ -53,7 +53,6 @@ int main(int, char**)
   pcl::PointCloud<pcl::PointXYZ> cloud_cropped;
   std::cout << "source " << cloud_source->size() << std::endl;
 
-
   // cut out pointcloud for each voxel
   for (int i = 0; i < N; i++) {
     for (int j = 0; j < N; j++) {
@@ -68,6 +67,5 @@ int main(int, char**)
       }
     }
   }
-
   return 0;
 }

@@ -92,3 +92,6 @@ file(GLOB SOURCES ${CMAKE_CURRENT_LIST_DIR}/src/*.cpp)
 
 add_executable(lpd local_point_distribution.cpp)
 target_link_libraries(lpd PUBLIC ${PCL_LIBRARIES})
+
+add_executable(pca pca.cpp)
+target_link_libraries(pca PUBLIC ${PCL_LIBRARIES})
