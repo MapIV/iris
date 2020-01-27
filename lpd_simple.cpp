@@ -1,30 +1,14 @@
-#include <cmath>
+#include "lpd.hpp"
 #include <iostream>
 #include <pcl/common/generate.h>
-#include <pcl/common/pca.h>
 #include <pcl/common/random.h>
-#include <pcl/filters/crop_box.h>
 #include <pcl/io/pcd_io.h>
 #include <pcl/point_types.h>
 
-Eigen::Matrix3f correctRotationMatrix(const Eigen::Matrix3f& R)
-{
-  if (R.trace() < 0) {
-    Eigen::Matrix3f A = Eigen::Matrix3f::Identity();
-    A(2, 2) = -1;
-    return R * A;
-  } else {
-    return R;
-  }
-}
-
-Eigen::Vector3f correctSigma(const Eigen::Vector3f& sigma)
-{
-  return Eigen::Vector3f(std::abs(sigma.x()), std::abs(sigma.y()), std::abs(sigma.z()));
-}
-
 int main(int argc, char** argv)
 {
+  // init point cloud
+  //====================================
   // struct cloud generator
   float mean_x = 5, mean_y = 10, mean_z = 0;
   pcl::common::CloudGenerator<pcl::PointXYZ, pcl::common::NormalGenerator<float>> generator;
@@ -56,28 +40,11 @@ int main(int argc, char** argv)
     pcl::transformPointCloud(cloud, cloud, T);
   }
 
-  // primary component analysis
-  {
-    pcl::PCA<pcl::PointXYZ> pca;
-    pca.setInputCloud(cloud.makeShared());
-    Eigen::Matrix3f R = correctRotationMatrix(pca.getEigenVectors());
-    Eigen::Vector3f sigma = correctSigma(pca.getEigenValues() / N);
-    sigma = sigma.array().sqrt();
-
-    std::cout << "\n"
-              << R
-              << "\n\n"
-              << sigma.transpose() << std::endl;
-  }
-
-  // compute centroid
-  {
-    pcl::PointXYZ point;
-    pcl::computeCentroid(cloud, point);
-    Eigen::Vector3f center = point.getArray3fMap();
-    std::cout << "\n"
-              << center.transpose() << std::endl;
-  }
+  // analyze Local Point Distribution
+  //====================================
+  vllm::LpdAnalyzer analyzer;
+  vllm::LPD lpd = analyzer.compute(cloud.makeShared());
+  lpd.show();
 
   pcl::io::savePCDFileBinary("random.pcd", cloud);
   return 0;
