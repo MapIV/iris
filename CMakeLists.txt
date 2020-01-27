@@ -90,8 +90,8 @@ file(GLOB SOURCES ${CMAKE_CURRENT_LIST_DIR}/src/*.cpp)
 # add_executable(icp icp.cpp ${SOURCES})
 # target_link_libraries(icp PUBLIC ${PCL_LIBRARIES} ${G2O_LIBS})
 
-add_executable(lpd local_point_distribution.cpp)
-target_link_libraries(lpd PUBLIC ${PCL_LIBRARIES})
+add_executable(reject reject_with_lpd.cpp)
+target_link_libraries(reject PUBLIC ${PCL_LIBRARIES})
 
 # add_executable(lpd_simple lpd_simple.cpp)
 # target_link_libraries(lpd_simple PUBLIC ${PCL_LIBRARIES})

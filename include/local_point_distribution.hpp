@@ -25,6 +25,9 @@ struct LPD {
               << T << std::endl;
   }
 
+  Eigen::Matrix3f R() { return T.topLeftCorner(3, 3); }
+  Eigen::Vector3f t() { return T.topRightCorner(3, 1); }
+
 private:
   Eigen::Matrix4f makeT(const Eigen::Matrix3f& R, const Eigen::Vector3f& mu)
   {
