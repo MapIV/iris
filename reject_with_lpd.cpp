@@ -33,7 +33,6 @@ int main(int, char**)
 
   transformPointCloud(cloud_source);
 
-
   vllm::CorrespondenceRejectorLpd rejector;
   rejector.init(cloud_source);
 

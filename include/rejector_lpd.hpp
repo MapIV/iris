@@ -60,9 +60,10 @@ public:
   {
     Eigen::Vector3i index = getIndex(point);
     LPD lpd = table[index.x()][index.y()][index.z()];
+
     // debug
-    std::cout << index.transpose() << " " << point << std::endl;
-    lpd.show();
+    // std::cout << index.transpose() << " " << point << std::endl;
+    // lpd.show();
 
     if (lpd.N < 10)
       return false;
