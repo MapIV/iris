@@ -44,7 +44,7 @@ public:
   LPD compute(const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud)
   {
     const size_t N = cloud->size();
-    if (N == 0)
+    if (N < 5)
       return LPD{};
 
     // primary component analysis

@@ -1,13 +1,14 @@
 #pragma once
 #include <chrono>
 #include <pcl/visualization/pcl_visualizer.h>
+#include <thread>
 
 namespace vllm
 {
 class Viewer
 {
 private:
-  unsigned char key = false;
+  unsigned char key = 0;
   pcl::visualization::PCLVisualizer::Ptr viewer;
 
 public:
@@ -31,15 +32,17 @@ public:
         std::chrono::duration_cast<std::chrono::milliseconds>(dur).count());
   }
 
-  unsigned char waitKey(int ms = -1)
+  int waitKey(int ms = -1)
   {
-    std::chrono::system_clock::time_point start = std::chrono::system_clock::now();
+    std::this_thread::sleep_for(std::chrono::milliseconds(5));
+    viewer->spinOnce(1, true);
     key = 0;
-    while (key == 0) {
+    std::chrono::system_clock::time_point start = std::chrono::system_clock::now();
+    while (key < 26) {
       if (milliSeconds(start) > ms && ms > 0) return -1;
-
-      viewer->spinOnce();
+      viewer->spinOnce(1, true);
     }
+    std::cout << key << " " << int(key) << std::endl;
     return key;
   }
 

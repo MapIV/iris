@@ -12,7 +12,7 @@ class CorrespondenceRejectorLpd
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
-  CorrespondenceRejectorLpd()
+  CorrespondenceRejectorLpd(float gain) : gain(gain)
   {
     table.resize(N);
     for (int i = 0; i < N; ++i) {
@@ -23,16 +23,30 @@ public:
     }
   }
 
+  pcl::Correspondences refineCorrespondences(const pcl::Correspondences& correspondences, const pcXYZ::Ptr& cloud)
+  {
+    pcl::Correspondences refined;
+    for (size_t i = 0, N = correspondences.size(); i < N; i++) {
+      const pcl::Correspondence pair = correspondences.at(i);
+      pcl::PointXYZ point = cloud->at(pair.index_query);
+      if (check(point)) {
+        refined.push_back(pair);
+      }
+    }
+    return refined;
+  }
+
   void init(const pcXYZ::Ptr& cloud)
   {
     pcl::PointXYZ min_point, max_point;
     pcl::getMinMax3D(*cloud, min_point, max_point);
 
     D = getResolution(min_point, max_point, N);
-    bottom << min_point.x, min_point.y, min_point.z, 1.0f;
+    bottom << min_point.x, min_point.y, min_point.z, 0.0f;
 
-    pcl::CropBox<pcl::PointXYZ> clop;
-    clop.setInputCloud(cloud);
+    std::cout << "size= " << cloud->size() << std::endl;
+    std::cout << "bottom= " << bottom.transpose() << " box=" << D << std::endl;
+    std::cout << "max=" << max_point << " min=" << min_point << std::endl;
 
     LpdAnalyzer analyzer;
 
@@ -45,10 +59,13 @@ public:
           max_box << D.x * static_cast<float>(i + 1), D.y * static_cast<float>(j + 1), D.z * static_cast<float>(k + 1), 1.0f;
 
           pcXYZ cloud_cropped;
-          clop.setMax(bottom + max_box);
+          pcl::CropBox<pcl::PointXYZ> clop;
+          clop.setInputCloud(cloud);
           clop.setMin(bottom + min_box);
+          clop.setMax(bottom + max_box);
           clop.filter(cloud_cropped);
 
+          std::cout << i << " " << j << " " << k << " " << cloud_cropped.size() << std::endl;
           LPD tmp = analyzer.compute(cloud_cropped.makeShared());
           table[i][j][k] = tmp;
         }
@@ -59,22 +76,20 @@ public:
   bool check(const pcl::PointXYZ& point)
   {
     Eigen::Vector3i index = getIndex(point);
+    // std::cout << index.transpose() << std::endl;
     LPD lpd = table[index.x()][index.y()][index.z()];
 
-    // debug
-    // std::cout << index.transpose() << " " << point << std::endl;
-    // lpd.show();
-
-    if (lpd.N < 10)
+    if (lpd.N < 20)
       return false;
 
     Eigen::Vector3f p = point.getVector3fMap();
     Eigen::Vector3f transformed = lpd.R() * p + lpd.t();
-    return inBox(transformed, 0.01f * static_cast<float>(lpd.N) * lpd.sigma);
+    return inBox(transformed, gain * static_cast<float>(lpd.N) * lpd.sigma);
   }
 
 private:
-  const int N = 2;
+  const float gain;
+  const int N = 3;
   std::vector<std::vector<std::vector<LPD>>> table;
 
   // blok size

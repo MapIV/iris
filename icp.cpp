@@ -1,4 +1,5 @@
 #include "aligner.hpp"
+#include "rejector_lpd.hpp"
 #include "util.hpp"
 #include "viewer.hpp"
 
@@ -71,15 +72,19 @@ Eigen::Matrix4f registrationByG2O(
   aligner.estimate(
       *cloud_source, *cloud_target, correspondences, T);
   Eigen::Matrix3f R = T.topLeftCorner(3, 3);
-  std::cout << "\n=========== " << std::endl;
-  std::cout << "scale " << vllm::getScale(R) << std::endl;
-  std::cout << T << std::endl;
+  // std::cout << "\n=========== " << std::endl;
+  // std::cout << "scale " << vllm::getScale(R) << std::endl;
+  // std::cout << T << std::endl;
 
   return T;
 }
 
-int main(int, char**)
+int main(int argc, char** argv)
 {
+  float gain = 0.05f;
+  if (argc == 2)
+    gain = static_cast<float>(std::atof(argv[1]));
+
   // load point cloud
   pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_source = loadPointCloud("../data/table.pcd");
   pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_target(new pcl::PointCloud<pcl::PointXYZ>);
@@ -91,23 +96,34 @@ int main(int, char**)
   pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_align(new pcl::PointCloud<pcl::PointXYZ>);
   *cloud_align = *cloud_source;
 
+
   viewer.visualizePointCloud(cloud_source, cloud_target, cloud_align);
   while (viewer.waitKey() != 's')
     ;
 
+  vllm::CorrespondenceRejectorLpd rejector(gain);
+  rejector.init(cloud_target);
+
   Eigen::Matrix4f pose = Eigen::Matrix4f::Identity();
   for (int i = 0; i < 100; i++) {
     pcl::Correspondences correspondences = getCorrespondences(cloud_align, cloud_target);
+    viewer.visualizePointCloud(cloud_source, cloud_target, cloud_align, correspondences);
+    std::cout << "NN" << std::endl;
+    if (viewer.waitKey(0) == 'q') break;
 
-    Eigen::Matrix4f T = registrationByG2O(cloud_align, cloud_target, correspondences);
+    // refine
+    pcl::Correspondences refined = rejector.refineCorrespondences(correspondences, cloud_align);
+    viewer.visualizePointCloud(cloud_source, cloud_target, cloud_align, refined);
+    std::cout << "all: " << correspondences.size() << " refine: " << refined.size() << std::endl;
+    if (viewer.waitKey(0) == 'q') break;
 
+    Eigen::Matrix4f T = registrationByG2O(cloud_align, cloud_target, refined);
     pcl::transformPointCloud(*cloud_align, *cloud_align, T);
     pose = T * pose;
 
     viewer.visualizePointCloud(cloud_source, cloud_target, cloud_align);
-
-    if (viewer.waitKey(10) == 'q')
-      break;
+    std::cout << "trans" << std::endl;
+    if (viewer.waitKey(0) == 'q') break;
   }
   std::cout << pose << std::endl;
   return 0;

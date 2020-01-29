@@ -1,4 +1,4 @@
-#include "lpd.hpp"
+#include "local_point_distribution.hpp"
 #include <iostream>
 #include <pcl/common/generate.h>
 #include <pcl/common/random.h>

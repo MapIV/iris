@@ -21,8 +21,8 @@ message("Build Type:\n\t${CMAKE_BUILD_TYPE}")
 
 # clear "CMAKE_CXX_FLAGS"
 set(CMAKE_CXX_FLAGS "")
-# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pipe -mtune=native -march=native -fopenmp")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pipe -fopenmp ")
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pipe -mtune=native -march=native -fopenmp")
 
 # set warning flags
 set(CXX_WARNING_FLAGS
@@ -43,7 +43,7 @@ endforeach()
 message("CMAKE_CXX_FLAGS:\n\t${CMAKE_CXX_FLAGS}")
 
 # PCL
-find_package(PCL QUIET REQUIRED COMPONENTS common io registration visualization kdtree)
+find_package(PCL QUIET REQUIRED COMPONENTS common io registration visualization kdtree filter)
 include_directories(SYSTEM ${PCL_INCLUDE_DIRS})
 link_directories(${PCL_LIBRARY_DIRS})
 message("PCL version:\n\t${PCL_VERSION}")
@@ -87,14 +87,14 @@ file(GLOB SOURCES ${CMAKE_CURRENT_LIST_DIR}/src/*.cpp)
 # add_executable(optimize_sim3 optimize_sim3.cpp)
 # target_link_libraries(optimize_sim3 PUBLIC ${G2O_LIBS})
 
-# add_executable(icp icp.cpp ${SOURCES})
-# target_link_libraries(icp PUBLIC ${PCL_LIBRARIES} ${G2O_LIBS})
+add_executable(icp icp.cpp ${SOURCES})
+target_link_libraries(icp PUBLIC ${PCL_LIBRARIES} ${G2O_LIBS})
 
-add_executable(reject reject_with_lpd.cpp)
-target_link_libraries(reject PUBLIC ${PCL_LIBRARIES})
+# add_executable(reject reject_with_lpd.cpp)
+# target_link_libraries(reject PUBLIC ${PCL_LIBRARIES})
 
-add_executable(reject_test reject_test.cpp)
-target_link_libraries(reject_test PUBLIC ${PCL_LIBRARIES})
+# add_executable(reject_test reject_test.cpp)
+# target_link_libraries(reject_test PUBLIC ${PCL_LIBRARIES})
 
 # add_executable(lpd_simple lpd_simple.cpp)
 # target_link_libraries(lpd_simple PUBLIC ${PCL_LIBRARIES})
