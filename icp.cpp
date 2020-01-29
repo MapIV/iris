@@ -42,9 +42,9 @@ void initTransformPointCloud(pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud)
   T.topLeftCorner(3, 3) = R;
   T.topRightCorner(3, 1) = t;
 
-  std::cout << "\n=========== " << std::endl;
-  std::cout << "scale " << scale << std::endl;
-  std::cout << T << std::endl;
+  // std::cout << "\n=========== " << std::endl;
+  // std::cout << "scale " << scale << std::endl;
+  // std::cout << T << std::endl;
   pcl::transformPointCloud(*cloud, *cloud, T);
 }
 
@@ -81,7 +81,7 @@ Eigen::Matrix4f registrationByG2O(
 
 int main(int argc, char** argv)
 {
-  float gain = 0.05f;
+  float gain = 1.0f;
   if (argc == 2)
     gain = static_cast<float>(std::atof(argv[1]));
 
@@ -97,13 +97,18 @@ int main(int argc, char** argv)
   *cloud_align = *cloud_source;
 
 
-  viewer.visualizePointCloud(cloud_source, cloud_target, cloud_align);
+  // viewer.visualizePointCloud(cloud_source, cloud_target, cloud_align);
+  viewer.visualizePointCloud(cloud_target);
+
+  vllm::GPD gpd(5);
+  gpd.init(cloud_target);
+  viewer.visualizeGPD(gpd);
+
+
   while (viewer.waitKey() != 's')
     ;
 
-  vllm::CorrespondenceRejectorLpd rejector(gain);
-  rejector.init(cloud_target);
-
+  vllm::CorrespondenceRejectorLpd rejector(gpd, gain);
   Eigen::Matrix4f pose = Eigen::Matrix4f::Identity();
   for (int i = 0; i < 100; i++) {
     pcl::Correspondences correspondences = getCorrespondences(cloud_align, cloud_target);

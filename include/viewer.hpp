@@ -1,4 +1,5 @@
 #pragma once
+#include "global_point_distribution.hpp"
 #include <chrono>
 #include <pcl/visualization/pcl_visualizer.h>
 #include <thread>
@@ -15,6 +16,9 @@ public:
   Viewer();
 
   void visualizePointCloud(
+      const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud_source);
+
+  void visualizePointCloud(
       const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud_source,
       const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud_target,
       const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud_aligned);
@@ -24,6 +28,8 @@ public:
       const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud_target,
       const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud_aligned,
       const pcl::Correspondences& correspondences);
+
+  void visualizeGPD(const GPD& gpd);
 
   int milliSeconds(std::chrono::system_clock::time_point start)
   {
@@ -38,7 +44,7 @@ public:
     viewer->spinOnce(1, true);
     key = 0;
     std::chrono::system_clock::time_point start = std::chrono::system_clock::now();
-    while (key < 26) {
+    while (key == 0) {
       if (milliSeconds(start) > ms && ms > 0) return -1;
       viewer->spinOnce(1, true);
     }

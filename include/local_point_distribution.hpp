@@ -3,6 +3,8 @@
 
 namespace vllm
 {
+using pcXYZ = pcl::PointCloud<pcl::PointXYZ>;
+
 // Local Point Distribution
 struct LPD {
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
@@ -28,12 +30,16 @@ struct LPD {
   Eigen::Matrix3f R() { return T.topLeftCorner(3, 3); }
   Eigen::Vector3f t() { return T.topRightCorner(3, 1); }
 
+  Eigen::Matrix3f invR() { return R().transpose(); }
+  Eigen::Vector3f invt() { return -invR() * t(); }
+  Eigen::Matrix4f invT() { return makeT(invR(), invt()); }
+
 private:
   Eigen::Matrix4f makeT(const Eigen::Matrix3f& R, const Eigen::Vector3f& mu)
   {
     Eigen::Matrix4f T = Eigen::Matrix4f::Identity();
-    T.topLeftCorner(3, 3) = R.transpose();
-    T.topRightCorner(3, 1) = -R.transpose() * mu;
+    T.topLeftCorner(3, 3) = R;
+    T.topRightCorner(3, 1) = mu;
     return T;
   }
 };
@@ -51,8 +57,8 @@ public:
     pcl::PCA<pcl::PointXYZ> pca;
     pca.setInputCloud(cloud);
     Eigen::Matrix3f R = correctRotationMatrix(pca.getEigenVectors());
-    Eigen::Vector3f sigma = correctSigma(pca.getEigenValues() / N);
-    sigma = sigma.array().sqrt();
+    Eigen::Vector3f sigma = correctSigma(pca.getEigenValues());
+    sigma = sigma.array().sqrt() / 8;
 
     // compute centroid
     pcl::PointXYZ point;
