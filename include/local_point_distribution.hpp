@@ -47,10 +47,10 @@ private:
 class LpdAnalyzer
 {
 public:
-  LPD compute(const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud)
+  LPD compute(const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud, float gain)
   {
     const size_t N = cloud->size();
-    if (N < 5)
+    if (N < 20)
       return LPD{};
 
     // primary component analysis
@@ -58,7 +58,9 @@ public:
     pca.setInputCloud(cloud);
     Eigen::Matrix3f R = correctRotationMatrix(pca.getEigenVectors());
     Eigen::Vector3f sigma = correctSigma(pca.getEigenValues());
-    sigma = sigma.array().sqrt() / 8;
+    sigma = sigma.array().sqrt() * gain;
+
+    // checkRotate(R);
 
     // compute centroid
     pcl::PointXYZ point;
@@ -71,12 +73,26 @@ public:
 private:
   Eigen::Matrix3f correctRotationMatrix(const Eigen::Matrix3f& R)
   {
-    if (R.trace() < 0) {
+    if (R.determinant() < 0) {
       Eigen::Matrix3f A = Eigen::Matrix3f::Identity();
       A(2, 2) = -1;
       return R * A;
     } else {
       return R;
+    }
+  }
+
+  void checkRotate(const Eigen::Matrix3f& R)
+  {
+    if ((R.inverse() - R.transpose()).norm() > 1e-3f) {
+      std::cout << "INVALID ROTATION MATRIX\n"
+                << R << std::endl;
+      exit(1);
+    }
+    if (std::abs(R.determinant() - 1) > 1e-3f) {
+      std::cout << "INVALID ROTATION MATRIX\n"
+                << R << std::endl;
+      exit(1);
     }
   }
 

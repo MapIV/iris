@@ -84,13 +84,16 @@ message("g2o version:\n\t${g2o_VERSION}")
 include_directories(${CMAKE_CURRENT_LIST_DIR}/include)
 file(GLOB SOURCES ${CMAKE_CURRENT_LIST_DIR}/src/*.cpp)
 
+add_library(aligner src/aligner.cpp src/viewer.cpp)
+target_link_libraries(aligner PUBLIC ${PCL_LIBRARIES} ${G2O_LIBS})
+
 # Exe =======================================
 # add_executable(optimize_sim3 optimize_sim3.cpp)
 # target_link_libraries(optimize_sim3 PUBLIC ${G2O_LIBS})
 
-add_executable(icp icp.cpp ${SOURCES})
+add_executable(icp icp.cpp)
 # target_link_libraries(icp PUBLIC ${PCL_LIBRARIES})
-target_link_libraries(icp PUBLIC ${PCL_LIBRARIES} ${G2O_LIBS})
+target_link_libraries(icp PUBLIC ${PCL_LIBRARIES} aligner)
 
 # add_executable(reject reject_with_lpd.cpp)
 # target_link_libraries(reject PUBLIC ${PCL_LIBRARIES})

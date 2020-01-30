@@ -15,13 +15,27 @@ private:
 public:
   Viewer();
 
+  void visualizeProPointCloud(
+      const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud_source);
+  void visualizeBigPointCloud(
+      const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud_source);
+
   void visualizePointCloud(
       const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud_source);
+
+  void visualizePointCloud(
+      const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud_target,
+      const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud_aligned);
 
   void visualizePointCloud(
       const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud_source,
       const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud_target,
       const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud_aligned);
+
+  void visualizePointCloud(
+      const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud_target,
+      const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud_aligned,
+      const pcl::Correspondences& correspondences);
 
   void visualizePointCloud(
       const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud_source,
@@ -48,7 +62,7 @@ public:
       if (milliSeconds(start) > ms && ms > 0) return -1;
       viewer->spinOnce(1, true);
     }
-    std::cout << key << " " << int(key) << std::endl;
+    // std::cout << key << " " << int(key) << std::endl;
     return key;
   }
 

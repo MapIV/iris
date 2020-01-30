@@ -18,7 +18,7 @@ public:
   }
 
 
-  void init(const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud)
+  void init(const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud, float gain)
   {
     pcl::PointXYZ min_point, max_point;
     pcl::getMinMax3D(*cloud, min_point, max_point);
@@ -47,7 +47,7 @@ public:
           clop.filter(cloud_cropped);
 
           // std::cout << i << " " << j << " " << k << " " << cloud_cropped.size() << std::endl;
-          LPD tmp = analyzer.compute(cloud_cropped.makeShared());
+          LPD tmp = analyzer.compute(cloud_cropped.makeShared(), gain);
           tmp.show();
           data[i][j][k] = tmp;
         }

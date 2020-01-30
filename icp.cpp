@@ -56,7 +56,6 @@ pcl::Correspondences getCorrespondences(const pcXYZ::Ptr& cloud_source, const pc
   est.setInputSource(cloud_source);
   est.setInputTarget(cloud_target);
   pcl::Correspondences all_correspondences;
-  // est.determineReciprocalCorrespondences(all_correspondences);
   est.determineCorrespondences(all_correspondences);
 
   return all_correspondences;
@@ -72,12 +71,34 @@ Eigen::Matrix4f registrationByG2O(
   aligner.estimate(
       *cloud_source, *cloud_target, correspondences, T);
   Eigen::Matrix3f R = T.topLeftCorner(3, 3);
-  // std::cout << "\n=========== " << std::endl;
-  // std::cout << "scale " << vllm::getScale(R) << std::endl;
-  // std::cout << T << std::endl;
 
   return T;
 }
+
+pcXYZ makeSphere()
+{
+  constexpr int N = 50;
+  constexpr float PI = 3.14159f;
+  constexpr float OMEGA = PI / N;
+
+  const float R = 0.1f;
+  pcXYZ cloud;
+  cloud.points.resize(2 * N * N);
+  cloud.width = 2 * N * N;
+  cloud.height = 1;
+
+  for (int i = 0; i < N; i++) {
+    for (int j = 0; j < 2 * N; j++) {
+      float x = R * std::cos(OMEGA * i);
+      float y = R * std::sin(OMEGA * i) * std::cos(OMEGA * j);
+      float z = R * std::sin(OMEGA * i) * std::sin(OMEGA * j);
+      cloud.points.at(i + N * j) = pcl::PointXYZ(x, y, z);
+    }
+  }
+
+  return cloud;
+}
+
 
 int main(int argc, char** argv)
 {
@@ -89,7 +110,7 @@ int main(int argc, char** argv)
   pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_source = loadPointCloud("../data/table.pcd");
   pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_target(new pcl::PointCloud<pcl::PointXYZ>);
   *cloud_target = *cloud_source;
-  initTransformPointCloud(cloud_target);
+  initTransformPointCloud(cloud_source);
 
   vllm::Viewer viewer;
 
@@ -101,24 +122,24 @@ int main(int argc, char** argv)
   viewer.visualizePointCloud(cloud_target);
 
   vllm::GPD gpd(5);
-  gpd.init(cloud_target);
+  gpd.init(cloud_target, gain);
   viewer.visualizeGPD(gpd);
 
+  vllm::CorrespondenceRejectorLpd rejector(gpd);
 
-  while (viewer.waitKey() != 's')
+  while (viewer.waitKey() != 'q')
     ;
 
-  vllm::CorrespondenceRejectorLpd rejector(gpd, gain);
   Eigen::Matrix4f pose = Eigen::Matrix4f::Identity();
   for (int i = 0; i < 100; i++) {
     pcl::Correspondences correspondences = getCorrespondences(cloud_align, cloud_target);
-    viewer.visualizePointCloud(cloud_source, cloud_target, cloud_align, correspondences);
+    viewer.visualizePointCloud(cloud_target, cloud_align, correspondences);
     std::cout << "NN" << std::endl;
     if (viewer.waitKey(0) == 'q') break;
 
     // refine
     pcl::Correspondences refined = rejector.refineCorrespondences(correspondences, cloud_align);
-    viewer.visualizePointCloud(cloud_source, cloud_target, cloud_align, refined);
+    viewer.visualizePointCloud(cloud_target, cloud_align, refined);
     std::cout << "all: " << correspondences.size() << " refine: " << refined.size() << std::endl;
     if (viewer.waitKey(0) == 'q') break;
 
@@ -126,8 +147,8 @@ int main(int argc, char** argv)
     pcl::transformPointCloud(*cloud_align, *cloud_align, T);
     pose = T * pose;
 
-    viewer.visualizePointCloud(cloud_source, cloud_target, cloud_align);
-    std::cout << "trans" << std::endl;
+    viewer.visualizePointCloud(cloud_target, cloud_align);
+    std::cout << "trans " << T.topRightCorner(3, 1).transpose() << std::endl;
     if (viewer.waitKey(0) == 'q') break;
   }
   std::cout << pose << std::endl;
