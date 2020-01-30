@@ -26,25 +26,22 @@ void initTransformPointCloud(pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud)
 {
   // rotation
   Eigen::Matrix3f R;
-  R = Eigen::AngleAxisf(static_cast<float>(M_PI / 6.0), Eigen::Vector3f(0, 1, 0));  // Rotate CCW 90[deg] around y-axis
+  R = Eigen::AngleAxisf(static_cast<float>(M_PI / 4.0), Eigen::Vector3f(0, 1, 0));  // Rotate CCW 90[deg] around y-axis
   // R = Eigen::Matrix3f::Identity();
 
   // scaling
-  float scale = 1.2f;
+  float scale = 1.5f;
   R *= scale;
 
   // transration
   Eigen::Vector3f t;
-  t << 0.05f, -0.1f, 0.0f;
+  t << 1.0f, -0.05f, 0.0f;
 
   // transform
   Eigen::Matrix4f T = Eigen::Matrix4f::Identity();
   T.topLeftCorner(3, 3) = R;
   T.topRightCorner(3, 1) = t;
 
-  // std::cout << "\n=========== " << std::endl;
-  // std::cout << "scale " << scale << std::endl;
-  // std::cout << T << std::endl;
   pcl::transformPointCloud(*cloud, *cloud, T);
 }
 
@@ -70,39 +67,12 @@ Eigen::Matrix4f registrationByG2O(
   Eigen::Matrix4f T;
   aligner.estimate(
       *cloud_source, *cloud_target, correspondences, T);
-  Eigen::Matrix3f R = T.topLeftCorner(3, 3);
-
   return T;
 }
 
-pcXYZ makeSphere()
-{
-  constexpr int N = 50;
-  constexpr float PI = 3.14159f;
-  constexpr float OMEGA = PI / N;
-
-  const float R = 0.1f;
-  pcXYZ cloud;
-  cloud.points.resize(2 * N * N);
-  cloud.width = 2 * N * N;
-  cloud.height = 1;
-
-  for (int i = 0; i < N; i++) {
-    for (int j = 0; j < 2 * N; j++) {
-      float x = R * std::cos(OMEGA * i);
-      float y = R * std::sin(OMEGA * i) * std::cos(OMEGA * j);
-      float z = R * std::sin(OMEGA * i) * std::sin(OMEGA * j);
-      cloud.points.at(i + N * j) = pcl::PointXYZ(x, y, z);
-    }
-  }
-
-  return cloud;
-}
-
-
 int main(int argc, char** argv)
 {
-  float gain = 1.0f;
+  float gain = 0.4f;
   if (argc == 2)
     gain = static_cast<float>(std::atof(argv[1]));
 
@@ -112,44 +82,45 @@ int main(int argc, char** argv)
   *cloud_target = *cloud_source;
   initTransformPointCloud(cloud_source);
 
-  vllm::Viewer viewer;
 
   pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_align(new pcl::PointCloud<pcl::PointXYZ>);
   *cloud_align = *cloud_source;
 
-
-  // viewer.visualizePointCloud(cloud_source, cloud_target, cloud_align);
-  viewer.visualizePointCloud(cloud_target);
+  vllm::Viewer viewer;
+  viewer.addPointCloud(cloud_target, "target", vllm::Color(255, 0, 0));
+  viewer.addPointCloud(cloud_align, "align", vllm::Color(0, 255, 0));
+  while (viewer.waitKey() != 's')
+    ;
 
   vllm::GPD gpd(5);
   gpd.init(cloud_target, gain);
   viewer.visualizeGPD(gpd);
-
   vllm::CorrespondenceRejectorLpd rejector(gpd);
 
-  while (viewer.waitKey() != 'q')
-    ;
 
   Eigen::Matrix4f pose = Eigen::Matrix4f::Identity();
   for (int i = 0; i < 100; i++) {
+    // NN
     pcl::Correspondences correspondences = getCorrespondences(cloud_align, cloud_target);
-    viewer.visualizePointCloud(cloud_target, cloud_align, correspondences);
-    std::cout << "NN" << std::endl;
+    viewer.updatePointCloud(cloud_align, "align", vllm::Color(0, 255, 0));
+    viewer.visualizeCorrespondences(cloud_align, cloud_target, correspondences, "cor", vllm::Color(0, 0, 255));
     if (viewer.waitKey(0) == 'q') break;
 
-    // refine
-    pcl::Correspondences refined = rejector.refineCorrespondences(correspondences, cloud_align);
-    viewer.visualizePointCloud(cloud_target, cloud_align, refined);
-    std::cout << "all: " << correspondences.size() << " refine: " << refined.size() << std::endl;
+    // Rejector
+    correspondences = rejector.refineCorrespondences(correspondences, cloud_align);
+    viewer.updatePointCloud(cloud_align, "align", vllm::Color(0, 255, 0));
+    viewer.visualizeCorrespondences(cloud_align, cloud_target, correspondences, "cor", vllm::Color(0, 0, 255));
     if (viewer.waitKey(0) == 'q') break;
 
-    Eigen::Matrix4f T = registrationByG2O(cloud_align, cloud_target, refined);
+    // Registration
+    Eigen::Matrix4f T = registrationByG2O(cloud_align, cloud_target, correspondences);
     pcl::transformPointCloud(*cloud_align, *cloud_align, T);
     pose = T * pose;
-
-    viewer.visualizePointCloud(cloud_target, cloud_align);
-    std::cout << "trans " << T.topRightCorner(3, 1).transpose() << std::endl;
+    viewer.updatePointCloud(cloud_align, "align", vllm::Color(0, 255, 0));
+    viewer.unvisualizeCorrespondences("cor");
     if (viewer.waitKey(0) == 'q') break;
+
+    std::cout << "trans " << T.topRightCorner(3, 1).transpose() << std::endl;
   }
   std::cout << pose << std::endl;
   return 0;

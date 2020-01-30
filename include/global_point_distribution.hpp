@@ -48,7 +48,6 @@ public:
 
           // std::cout << i << " " << j << " " << k << " " << cloud_cropped.size() << std::endl;
           LPD tmp = analyzer.compute(cloud_cropped.makeShared(), gain);
-          tmp.show();
           data[i][j][k] = tmp;
         }
       }
@@ -84,7 +83,7 @@ private:
     return Eigen::Vector3i(static_cast<int>(x), static_cast<int>(y), static_cast<int>(z));
   }
 
-  Eigen::Vector3f getResolution(pcl::PointXYZ min, pcl::PointXYZ max, int N)
+  Eigen::Vector3f getResolution(pcl::PointXYZ min, pcl::PointXYZ max, size_t N)
   {
     float inv = 1.0f / static_cast<float>(N);
     return Eigen::Vector3f((max.x - min.x) * inv, (max.y - min.y) * inv, (max.z - min.z) * inv);
