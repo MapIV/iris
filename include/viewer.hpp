@@ -50,7 +50,6 @@ public:
       if (milliSeconds(start) > ms && ms > 0) return -1;
       viewer->spinOnce(1, false);
     }
-    // std::cout << key << " " << int(key) << std::endl;
     return key;
   }
 

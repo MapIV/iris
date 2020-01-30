@@ -27,8 +27,6 @@ public:
     bottom << min_point.x, min_point.y, min_point.z;
     top << max_point.x, max_point.y, max_point.z;
 
-    LpdAnalyzer analyzer;
-
     // cut out pointcloud for each voxel
     for (size_t i = 0; i < N; i++) {
       for (size_t j = 0; j < N; j++) {
@@ -47,7 +45,7 @@ public:
           clop.filter(cloud_cropped);
 
           // std::cout << i << " " << j << " " << k << " " << cloud_cropped.size() << std::endl;
-          LPD tmp = analyzer.compute(cloud_cropped.makeShared(), gain);
+          LPD tmp(cloud_cropped.makeShared(), gain);
           data[i][j][k] = tmp;
         }
       }

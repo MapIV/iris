@@ -11,21 +11,37 @@ struct LPD {
 
   LPD() : N(0), sigma(Eigen::Vector3f::Zero()), T(Eigen::Matrix4f::Identity()) {}
 
-  LPD(size_t N, const Eigen::Matrix3f& R, const Eigen::Vector3f& mu, const Eigen::Vector3f& sigma)
-      : N(N), sigma(sigma), T(makeT(R, mu)) {}
+  LPD(const pcXYZ::Ptr& cloud, float gain) : N(0), sigma(Eigen::Vector3f::Zero()), T(Eigen::Matrix4f::Identity())
+  {
+    init(cloud, gain);
+  }
 
-  LPD(size_t N, const Eigen::Matrix4f& T, const Eigen::Vector3f& sigma)
-      : N(N), sigma(sigma), T(T) {}
+  void init(const pcXYZ::Ptr& cloud, float gain)
+  {
+    N = cloud->size();
+    if (N < 20)
+      return;
+
+    // primary component analysis
+    pcl::PCA<pcl::PointXYZ> pca;
+    pca.setInputCloud(cloud);
+    Eigen::Matrix3f _R = correctRotationMatrix(pca.getEigenVectors());
+    Eigen::Vector3f _sigma = correctSigma(pca.getEigenValues());
+    _sigma = _sigma.array().sqrt() * gain;
+
+    // compute centroid
+    pcl::PointXYZ point;
+    pcl::computeCentroid(*cloud, point);
+    Eigen::Vector3f _mu = point.getArray3fMap();
+
+    // set member variables
+    sigma = _sigma;
+    T = makeT(_R, _mu);
+  }
 
   size_t N;
   Eigen::Vector3f sigma;
   Eigen::Matrix4f T;
-
-  void show()
-  {
-    std::cout << "N= " << N << " ,sigma= " << sigma.transpose() << "\n"
-              << T << std::endl;
-  }
 
   Eigen::Matrix3f R() { return T.topLeftCorner(3, 3); }
   Eigen::Vector3f t() { return T.topRightCorner(3, 1); }
@@ -42,35 +58,7 @@ private:
     T.topRightCorner(3, 1) = mu;
     return T;
   }
-};
 
-class LpdAnalyzer
-{
-public:
-  LPD compute(const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud, float gain)
-  {
-    const size_t N = cloud->size();
-    if (N < 20)
-      return LPD{};
-
-    // primary component analysis
-    pcl::PCA<pcl::PointXYZ> pca;
-    pca.setInputCloud(cloud);
-    Eigen::Matrix3f R = correctRotationMatrix(pca.getEigenVectors());
-    Eigen::Vector3f sigma = correctSigma(pca.getEigenValues());
-    sigma = sigma.array().sqrt() * gain;
-
-    // checkRotate(R);
-
-    // compute centroid
-    pcl::PointXYZ point;
-    pcl::computeCentroid(*cloud, point);
-    Eigen::Vector3f mu = point.getArray3fMap();
-
-    return LPD(N, R, mu, sigma);
-  }
-
-private:
   Eigen::Matrix3f correctRotationMatrix(const Eigen::Matrix3f& R)
   {
     if (R.determinant() < 0) {
@@ -79,20 +67,6 @@ private:
       return R * A;
     } else {
       return R;
-    }
-  }
-
-  void checkRotate(const Eigen::Matrix3f& R)
-  {
-    if ((R.inverse() - R.transpose()).norm() > 1e-3f) {
-      std::cout << "INVALID ROTATION MATRIX\n"
-                << R << std::endl;
-      exit(1);
-    }
-    if (std::abs(R.determinant() - 1) > 1e-3f) {
-      std::cout << "INVALID ROTATION MATRIX\n"
-                << R << std::endl;
-      exit(1);
     }
   }
 

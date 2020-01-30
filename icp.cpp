@@ -92,25 +92,25 @@ int main(int argc, char** argv)
   while (viewer.waitKey() != 's')
     ;
 
-  vllm::GPD gpd(5);
+  vllm::GPD gpd(4);
   gpd.init(cloud_target, gain);
   viewer.visualizeGPD(gpd);
   vllm::CorrespondenceRejectorLpd rejector(gpd);
 
-
   Eigen::Matrix4f pose = Eigen::Matrix4f::Identity();
+  const int DT = 50;
   for (int i = 0; i < 100; i++) {
     // NN
     pcl::Correspondences correspondences = getCorrespondences(cloud_align, cloud_target);
     viewer.updatePointCloud(cloud_align, "align", vllm::Color(0, 255, 0));
     viewer.visualizeCorrespondences(cloud_align, cloud_target, correspondences, "cor", vllm::Color(0, 0, 255));
-    if (viewer.waitKey(0) == 'q') break;
+    if (viewer.waitKey(2 * DT) == 'q') break;
 
     // Rejector
     correspondences = rejector.refineCorrespondences(correspondences, cloud_align);
     viewer.updatePointCloud(cloud_align, "align", vllm::Color(0, 255, 0));
-    viewer.visualizeCorrespondences(cloud_align, cloud_target, correspondences, "cor", vllm::Color(0, 0, 255));
-    if (viewer.waitKey(0) == 'q') break;
+    viewer.visualizeCorrespondences(cloud_align, cloud_target, correspondences, "cor", vllm::Color(0, 255, 255));
+    if (viewer.waitKey(2 * DT) == 'q') break;
 
     // Registration
     Eigen::Matrix4f T = registrationByG2O(cloud_align, cloud_target, correspondences);
@@ -118,7 +118,7 @@ int main(int argc, char** argv)
     pose = T * pose;
     viewer.updatePointCloud(cloud_align, "align", vllm::Color(0, 255, 0));
     viewer.unvisualizeCorrespondences("cor");
-    if (viewer.waitKey(0) == 'q') break;
+    if (viewer.waitKey(DT) == 'q') break;
 
     std::cout << "trans " << T.topRightCorner(3, 1).transpose() << std::endl;
   }
