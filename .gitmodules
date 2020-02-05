@@ -1,0 +1,3 @@
+[submodule "3rd/openvslam"]
+	path = 3rd/openvslam
+	url = https://gitlab.com/MapIV/openvslam.git
