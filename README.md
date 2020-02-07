@@ -11,9 +11,9 @@
 
 ### need to build from source
 * [g2o](https://github.com/RainerKuemmerle/g2o)
+* [Pangolin](https://github.com/stevenlovegrove/Pangolin)
 
 ### optinal
-* Pangolin
 * Socket Viewer
 
 ## ThirdParty
@@ -33,8 +33,9 @@ cmake \
     -DBUILD_TESTS=OFF \
     ..
 ```
+
 ``` bash
-./run_video_slam -v ./orb_vocab/orb_vocab.dbow2 -m ../../room-long.mp4  -c ./room/config.yaml --frame-skip 3 --no-sleep --map-db map.msg
+./main -v ./orb_vocab.dbow2 -m ../data/room-long.mp4 -c config.yaml
 ```
 
 ## References
