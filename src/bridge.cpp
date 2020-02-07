@@ -95,6 +95,9 @@ void BridgeOpenVSLAM::mono_tracking(const std::shared_ptr<openvslam::config>& cf
   SLAM_ptr->startup();
   const cv::Mat MASK = cv::Mat{};
 
+  slam_ready.store(true);
+  std::cout << "====== slam ready" << std::endl;
+
   // create a viewer object
   // and pass the frame_publisher and the map_publisher
 #ifdef USE_PANGOLIN_VIEWER
