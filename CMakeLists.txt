@@ -59,6 +59,12 @@ find_package(Eigen3 REQUIRED)
 include_directories(SYSTEM ${EIGEN3_INCLUDE_DIR})
 message(STATUS "Eigen3 version:\n\t${EIGEN3_VERSION_STRING}")
 
+# == Pangolin ==
+find_package(PangolinD)
+find_package(OpenGL REQUIRED)
+include_directories(${Pangolin_INCLUDE_DIRS})
+include_directories(${OPENGL_INCLUDE_DIR})
+
 # == g2o ==
 find_package(
     g2o REQUIRED

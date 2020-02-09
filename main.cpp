@@ -42,36 +42,45 @@ pcl::PointCloud<pcl::PointXYZ>::Ptr showLandmarks(
 
 int main(int argc, char* argv[])
 {
-  BridgeOpenVSLAM bridge;
-  std::thread vslam_thread = std::thread(&BridgeOpenVSLAM::start, &bridge, argc, argv);
+  // #ifdef USE_PANGOLIN_VIEWER
+  //   pangolin_viewer::viewer viewer(cfg, &*SLAM_ptr,
+  //       SLAM_ptr->get_frame_publisher(), SLAM_ptr->get_map_publisher());
+  // #endif
 
-  std::cout << "====== try get frame publisher" << std::endl;
+  BridgeOpenVSLAM bridge;
+  bridge.setup(argc, argv);
+
   const auto frame_publisher = bridge.get_frame_publisher();
   const auto map_publisher = bridge.get_map_publisher();
-  std::cout << "====== got frame publisher" << std::endl;
-
-  pcl::visualization::PCLVisualizer::Ptr viewer = pcl::visualization::PCLVisualizer::Ptr(new pcl::visualization::PCLVisualizer("PCLVisualizer"));
-  viewer->addCoordinateSystem(0.5);
 
   cv::namedWindow("OpenCV", cv::WINDOW_AUTOSIZE);
 
-  while (!viewer->wasStopped()) {
+  bool flag = true;
+  while (flag) {
+    flag = bridge.execute();
     cv::imshow("OpenCV", frame_publisher->draw_frame());
-    cv::waitKey(10);
 
-    std::vector<openvslam::data::landmark*> landmarks;
-    std::set<openvslam::data::landmark*> local_landmarks;
-    map_publisher->get_landmarks(landmarks, local_landmarks);
-
-    pcl::PointCloud<pcl::PointXYZ>::Ptr cloud = showLandmarks(landmarks, local_landmarks);
-    if (cloud->size() > 0) {
-      viewer->removeAllPointClouds();
-      viewer->addPointCloud(cloud);
+    int key = cv::waitKey(10);
+    if (key == 'q') {
+      break;
     }
-    viewer->spinOnce(10);
   }
 
+  // while (!viewer->wasStopped()) {
+  //   cv::imshow("OpenCV", frame_publisher->draw_frame());
+  //   cv::waitKey(10);
 
-  vslam_thread.join();
+  //   std::vector<openvslam::data::landmark*> landmarks;
+  //   std::set<openvslam::data::landmark*> local_landmarks;
+  //   map_publisher->get_landmarks(landmarks, local_landmarks);
+
+  //   pcl::PointCloud<pcl::PointXYZ>::Ptr cloud = showLandmarks(landmarks, local_landmarks);
+  //   if (cloud->size() > 0) {
+  //     viewer->removeAllPointClouds();
+  //     viewer->addPointCloud(cloud);
+  //   }
+  //   viewer->spinOnce(10);
+  // }
+
   return 0;
 }
