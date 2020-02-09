@@ -30,6 +30,10 @@ public:
   {
     return SLAM_ptr->get_frame_publisher();
   }
+  const std::shared_ptr<openvslam::system> getSystem()
+  {
+    return SLAM_ptr;
+  }
 
 private:
   std::shared_ptr<openvslam::system> SLAM_ptr = nullptr;
