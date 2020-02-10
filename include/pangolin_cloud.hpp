@@ -3,11 +3,11 @@
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 
-class PangoCloud
+class PangolinCloud
 {
 public:
-  PangoCloud(const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud)
-      : numPoints(cloud->size()), offset(4), stride(sizeof(pcl::PointXYZ))
+  PangolinCloud(const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud)
+      : numPoints(static_cast<int>(cloud->size())), offset(4), stride(sizeof(pcl::PointXYZ))
   {
     glGenBuffers(1, &vbo);
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
@@ -15,7 +15,7 @@ public:
     glBindBuffer(GL_ARRAY_BUFFER, 0);
   }
 
-  virtual ~PangoCloud()
+  virtual ~PangolinCloud()
   {
     glDeleteBuffers(1, &vbo);
   }

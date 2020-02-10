@@ -60,7 +60,7 @@ include_directories(SYSTEM ${EIGEN3_INCLUDE_DIR})
 message(STATUS "Eigen3 version:\n\t${EIGEN3_VERSION_STRING}")
 
 # == Pangolin ==
-find_package(PangolinD)
+find_package(Pangolin)
 find_package(OpenGL REQUIRED)
 include_directories(${Pangolin_INCLUDE_DIRS})
 include_directories(${OPENGL_INCLUDE_DIR})
@@ -77,7 +77,6 @@ find_package(
              g2o::solver_csparse
              g2o::csparse_extension
   OPTIONAL_COMPONENTS g2o::csparse)
-
 set(G2O_LIBS
     g2o::core
     g2o::stuff
@@ -92,7 +91,7 @@ set(G2O_LIBS
 message(STATUS "g2o version:\n\t${g2o_VERSION}")
 
 # == openvslam ==
-set(BUILD_EXAMPLES 0)
+set(BUILD_EXAMPLES 0) # disable building examples
 add_subdirectory(3rd/openvslam)
 
 # == header & source ==
