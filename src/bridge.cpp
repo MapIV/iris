@@ -95,8 +95,7 @@ bool BridgeOpenVSLAM::execute()
 
   if (!frame.empty()) {
     // input the current frame and estimate the camera pose
-    Eigen::MatrixXd T = SLAM_ptr->feed_monocular_frame(frame, 0.05, cv::Mat{});
-    std::cout << T << std::endl;
+     SLAM_ptr->feed_monocular_frame(frame, 0.05, cv::Mat{});
   } else {
     return false;
   }

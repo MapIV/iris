@@ -22,9 +22,6 @@ public:
 
   void drawPoints()
   {
-    // Render some stuff
-    glColor3f(1.0f, 1.0f, 0.0f);
-
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
     glVertexPointer(3, GL_FLOAT, stride, 0);
     // glColorPointer(3, GL_UNSIGNED_BYTE, stride, (void*)(sizeof(float) * offset));
