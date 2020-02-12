@@ -3,6 +3,7 @@
 #include "openvslam/publish/frame_publisher.h"
 #include "openvslam/publish/map_publisher.h"
 #include "pangolin_viewer.hpp"
+#include <opencv2/core/eigen.hpp>
 #include <opencv2/opencv.hpp>
 #include <pangolin/pangolin.h>
 #include <pcl/io/pcd_io.h>
@@ -50,6 +51,25 @@ pcl::PointCloud<pcl::PointXYZ>::Ptr convertLandmarks(
 
 int main(int argc, char* argv[])
 {
+  Eigen::Matrix4d T_init;
+  {
+    cv::FileStorage fs("../data/config.yaml", cv::FileStorage::READ);
+    cv::Mat t, r;
+    float s;
+    fs["VLLM.t_init"] >> t;
+    fs["VLLM.r_init"] >> r;
+    fs["VLLM.s_init"] >> s;
+
+    cv::Mat T = cv::Mat::ones(4, 4, CV_32FC1);
+    cv::Rodrigues(r, r);
+    cv::Mat(s * r).copyTo(T.colRange(0, 3).rowRange(0, 3));
+    t.copyTo(T.col(3).rowRange(0, 3));
+
+
+    cv::cv2eigen(T, T_init);
+    std::cout << T_init << std::endl;
+  }
+
   BridgeOpenVSLAM bridge;
   bridge.setup(argc, argv);
 
@@ -62,6 +82,7 @@ int main(int argc, char* argv[])
   cv::namedWindow("OpenCV", cv::WINDOW_AUTOSIZE);
 
   PangolinViewer pangolin_viewer;
+
 
   while (true) {
     // Execute vSLAM
@@ -77,6 +98,7 @@ int main(int argc, char* argv[])
     int state = static_cast<int>(frame_publisher->get_tracking_state());
     Eigen::Matrix4d camera = map_publisher->get_current_cam_pose();
 
+    camera = T_init * camera;
 
     // Visualize by OpenCV
     cv::imshow("OpenCV", frame_publisher->draw_frame());
