@@ -11,7 +11,6 @@
 int main(int argc, char* argv[])
 {
   Eigen::Matrix4d T_init;
-
   float leaf_size = 0.1f;
   {
     cv::FileStorage fs("../data/config.yaml", cv::FileStorage::READ);
@@ -41,17 +40,10 @@ int main(int argc, char* argv[])
   {
     pcl::io::loadPCDFile<pcl::PointXYZ>("../data/room.pcd", *cloud_map);
     pcl::VoxelGrid<pcl::PointXYZ> filter;
-    std::cout << cloud_map->size() << std::endl;
     filter.setInputCloud(cloud_map);
     filter.setLeafSize(leaf_size, leaf_size, leaf_size);
     filter.filter(*cloud_map);
-    std::cout << "POINT CLOUD SIZE" << std::endl;
-    std::cout << cloud_map->size() << std::endl;
   }
-
-
-  const auto frame_publisher = bridge.get_frame_publisher();
-  const auto map_publisher = bridge.get_map_publisher();
 
   PangolinViewer pangolin_viewer;
   cv::namedWindow("OpenCV", cv::WINDOW_AUTOSIZE);
@@ -62,20 +54,20 @@ int main(int argc, char* argv[])
     if (!success)
       break;
 
+    // Get some information of vSLAM
     pcl::PointCloud<pcl::PointXYZ>::Ptr local_cloud(new pcl::PointCloud<pcl::PointXYZ>);
     pcl::PointCloud<pcl::PointXYZ>::Ptr global_cloud(new pcl::PointCloud<pcl::PointXYZ>);
     bridge.getLandmarks(local_cloud, global_cloud);
-
-    int state = static_cast<int>(frame_publisher->get_tracking_state());
+    int state = static_cast<int>(bridge.getState());
     Eigen::Matrix4d camera = bridge.getCameraPose().inverse();
 
-    // initial transform
+    // Transform to subtract initial offset
     camera = T_init * camera;
     pcl::transformPointCloud(*local_cloud, *local_cloud, T_init);
     pcl::transformPointCloud(*global_cloud, *global_cloud, T_init);
 
     // Visualize by OpenCV
-    cv::imshow("OpenCV", frame_publisher->draw_frame());
+    cv::imshow("OpenCV", bridge.getFrame());
 
     // Visualize by Pangolin
     pangolin_viewer.clear();
@@ -87,6 +79,7 @@ int main(int argc, char* argv[])
     pangolin_viewer.addCamera(camera, {0.0f, 1.0f, 0.0f, 2.0f});
     pangolin_viewer.swap();
 
+    // Wait
     int key = cv::waitKey(10);
     if (key == 's') {
       while (key != 'r') {

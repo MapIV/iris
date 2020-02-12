@@ -149,12 +149,13 @@ private:
   {
     const float h = w * 0.75f;
     const float z = w * 0.6f;
-    // 四角錐の斜辺
+
+    // hypotenuse of frustum
     draw_line(0.0f, 0.0f, 0.0f, w, h, z);
     draw_line(0.0f, 0.0f, 0.0f, w, -h, z);
     draw_line(0.0f, 0.0f, 0.0f, -w, -h, z);
     draw_line(0.0f, 0.0f, 0.0f, -w, h, z);
-    // 四角錐の底辺
+    // bottom of frustum
     draw_line(w, h, z, w, -h, z);
     draw_line(-w, h, z, -w, -h, z);
     draw_line(-w, h, z, w, h, z);
