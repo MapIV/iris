@@ -30,9 +30,10 @@ void BridgeOpenVSLAM::setup(int argc, char* argv[])
   auto vocab_file_path = op.add<popl::Value<std::string>>("v", "vocab", "vocabulary file path");
   auto video_file_path = op.add<popl::Value<std::string>>("m", "video", "video file path");
   auto config_file_path = op.add<popl::Value<std::string>>("c", "config", "config file path");
-  auto frame_skip = op.add<popl::Value<unsigned int>>("", "frame-skip", "interval of frame skip", 1);
+  auto _frame_skip = op.add<popl::Value<unsigned int>>("", "frame-skip", "interval of frame skip", 1);
   auto auto_term = op.add<popl::Switch>("", "auto-term", "automatically terminate the viewer");
   auto debug_mode = op.add<popl::Switch>("", "debug", "debug mode");
+
 
   try {
     op.parse(argc, argv);
@@ -42,6 +43,8 @@ void BridgeOpenVSLAM::setup(int argc, char* argv[])
     std::cerr << op << std::endl;
     exit(EXIT_FAILURE);
   }
+
+  frame_skip = _frame_skip->value();
 
   // check validness of options
   if (help->is_set()) {
@@ -91,11 +94,12 @@ bool BridgeOpenVSLAM::execute()
     return false;
 
   cv::Mat frame;
-  is_not_end = video.read(frame);
+  for (int i = 0; i < frame_skip && is_not_end; i++)
+    is_not_end = video.read(frame);
 
   if (!frame.empty()) {
     // input the current frame and estimate the camera pose
-     SLAM_ptr->feed_monocular_frame(frame, 0.05, cv::Mat{});
+    SLAM_ptr->feed_monocular_frame(frame, 0.05, cv::Mat{});
   } else {
     return false;
   }

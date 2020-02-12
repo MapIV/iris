@@ -15,7 +15,7 @@ class PangolinViewer
 {
   const std::string window_name = "Pangolin";
 
-  std::shared_ptr<pangolin::Var<std::string>> ui_state_ptr;
+  std::shared_ptr<pangolin::Var<double>> ui_state_ptr;
   pangolin::OpenGlRenderState s_cam;
   pangolin::Handler3D handler;
   pangolin::View d_cam;
@@ -24,7 +24,7 @@ public:
   PangolinViewer()
       : s_cam(pangolin::OpenGlRenderState(
             pangolin::ProjectionMatrix(640, 480, 420, 420, 320, 240, 0.2, 100),
-            pangolin::ModelViewLookAt(0, -2, -2, 0, 0, 0, pangolin::AxisNegY))),
+            pangolin::ModelViewLookAt(-2, -2, 5, 0, 0, 0, pangolin::AxisZ))),
         handler(pangolin::Handler3D(s_cam))
   {
     // setup Pangolin viewer
@@ -41,7 +41,7 @@ public:
 
     // setup GUI
     pangolin::CreatePanel("ui").SetBounds(0.0, 1.0, 0.0, pangolin::Attach::Pix(180));
-    ui_state_ptr = std::make_shared<pangolin::Var<std::string>>("ui.state", "VLLM");
+    ui_state_ptr = std::make_shared<pangolin::Var<double>>("ui.state", 0.5, 0.0, 1.0);
   }
 
   ~PangolinViewer() = default;

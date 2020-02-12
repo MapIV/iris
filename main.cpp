@@ -1,57 +1,16 @@
 #include "bridge.hpp"
-#include "openvslam/data/landmark.h"
-#include "openvslam/publish/frame_publisher.h"
-#include "openvslam/publish/map_publisher.h"
 #include "pangolin_viewer.hpp"
 #include <opencv2/core/eigen.hpp>
 #include <opencv2/opencv.hpp>
 #include <pangolin/pangolin.h>
+#include <pcl/common/transforms.h>
 #include <pcl/io/pcd_io.h>
 #include <pcl/visualization/pcl_visualizer.h>
-
-pcl::PointCloud<pcl::PointXYZ>::Ptr convertLandmarks(
-    const std::vector<openvslam::data::landmark*>& landmarks,
-    const std::set<openvslam::data::landmark*>& local_landmarks)
-{
-  pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>);
-
-  if (landmarks.empty()) {
-    return cloud;
-  }
-
-  for (const auto lm : landmarks) {
-    if (!lm || lm->will_be_erased()) {
-      continue;
-    }
-    if (local_landmarks.count(lm)) {
-      continue;
-    }
-    const openvslam::Vec3_t pos = lm->get_pos_in_world();
-    pcl::PointXYZ p(
-        static_cast<float>(pos.x()),
-        static_cast<float>(pos.y()),
-        static_cast<float>(pos.z()));
-
-    cloud->push_back(p);
-  }
-  for (const auto local_lm : local_landmarks) {
-    if (local_lm->will_be_erased()) {
-      continue;
-    }
-    const openvslam::Vec3_t pos = local_lm->get_pos_in_world();
-    pcl::PointXYZ p(
-        static_cast<float>(pos.x()),
-        static_cast<float>(pos.y()),
-        static_cast<float>(pos.z()));
-    cloud->push_back(p);
-  }
-
-  return cloud;
-}
 
 int main(int argc, char* argv[])
 {
   Eigen::Matrix4d T_init;
+  Eigen::Matrix4d T_init_inv;
   {
     cv::FileStorage fs("../data/config.yaml", cv::FileStorage::READ);
     cv::Mat t, r;
@@ -61,13 +20,20 @@ int main(int argc, char* argv[])
     fs["VLLM.s_init"] >> s;
 
     cv::Mat T = cv::Mat::ones(4, 4, CV_32FC1);
+    cv::Mat T_inv = cv::Mat::ones(4, 4, CV_32FC1);
     cv::Rodrigues(r, r);
-    cv::Mat(s * r).copyTo(T.colRange(0, 3).rowRange(0, 3));
+    cv::Mat sR = s * r;
+
+    sR.copyTo(T.colRange(0, 3).rowRange(0, 3));
     t.copyTo(T.col(3).rowRange(0, 3));
 
+    cv::Mat(sR.t()).copyTo(T_inv.colRange(0, 3).rowRange(0, 3));
+    cv::Mat(-sR.t() * t).copyTo(T_inv.col(3).rowRange(0, 3));
 
     cv::cv2eigen(T, T_init);
+    cv::cv2eigen(T_inv, T_init_inv);
     std::cout << T_init << std::endl;
+    std::cout << T_init_inv << std::endl;
   }
 
   BridgeOpenVSLAM bridge;
@@ -90,15 +56,16 @@ int main(int argc, char* argv[])
     if (!success)
       break;
 
-    std::vector<openvslam::data::landmark*> landmarks;
-    std::set<openvslam::data::landmark*> local_landmarks;
-    map_publisher->get_landmarks(landmarks, local_landmarks);
-    auto cloud = convertLandmarks(landmarks, local_landmarks);
+    pcl::PointCloud<pcl::PointXYZ>::Ptr local_cloud(new pcl::PointCloud<pcl::PointXYZ>);
+    pcl::PointCloud<pcl::PointXYZ>::Ptr global_cloud(new pcl::PointCloud<pcl::PointXYZ>);
+    bridge.getLandmarks(local_cloud, global_cloud);
 
     int state = static_cast<int>(frame_publisher->get_tracking_state());
-    Eigen::Matrix4d camera = map_publisher->get_current_cam_pose();
+    Eigen::Matrix4d camera = bridge.getCameraPose();
 
     camera = T_init * camera;
+    pcl::transformPointCloud(*local_cloud, *local_cloud, T_init_inv);
+    pcl::transformPointCloud(*global_cloud, *global_cloud, T_init_inv);
 
     // Visualize by OpenCV
     cv::imshow("OpenCV", frame_publisher->draw_frame());
@@ -107,8 +74,9 @@ int main(int argc, char* argv[])
     pangolin_viewer.clear();
     pangolin_viewer.drawGridLine();
     pangolin_viewer.drawState(state);
-    pangolin_viewer.addPointCloud(cloud, {1.0f, 1.0f, 0.0f, 2.0f});
-    pangolin_viewer.addPointCloud(cloud_map, {0.5f, 0.5f, 0.5f, 1.0f});
+    pangolin_viewer.addPointCloud(local_cloud, {1.0f, 1.0f, 0.0f, 2.0f});
+    pangolin_viewer.addPointCloud(global_cloud, {1.0f, 0.0f, 0.0f, 1.5f});
+    pangolin_viewer.addPointCloud(cloud_map, {0.7f, 0.7f, 0.7f, 1.0f});
     pangolin_viewer.addCamera(camera, {0.0f, 1.0f, 0.0f, 2.0f});
     pangolin_viewer.swap();
 
