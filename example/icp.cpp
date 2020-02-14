@@ -45,7 +45,7 @@ void initTransformPointCloud(pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud)
   pcl::transformPointCloud(*cloud, *cloud, T);
 }
 
-// L2 norm is maybe used
+// L2 norm is used
 pcl::Correspondences getCorrespondences(const pcXYZ::Ptr& cloud_source, const pcXYZ::Ptr& cloud_target)
 {
   pcl::PointCloud<pcl::PointXYZRGBA>::Ptr source, target;

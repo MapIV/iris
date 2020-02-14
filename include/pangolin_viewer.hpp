@@ -123,10 +123,10 @@ public:
     pangolin::GlFont::I().Text(ss.str()).DrawWindow(200, 50 - 1.0f * pangolin::GlFont::I().Height());
   }
 
-  void addCamera(const Eigen::Matrix4d& cam_pose, const Color& color) const
+  void addCamera(const Eigen::Matrix4f& cam_pose, const Color& color) const
   {
     glPushMatrix();
-    glMultMatrixf(cam_pose.transpose().cast<float>().eval().data());
+    glMultMatrixf(cam_pose.transpose().eval().data());
 
     glBegin(GL_LINES);
     glColor3f(color.r, color.g, color.b);
