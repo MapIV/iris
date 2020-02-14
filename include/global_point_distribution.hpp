@@ -1,3 +1,4 @@
+// Global Point Distribution
 #pragma once
 #include "local_point_distribution.hpp"
 #include <pcl/common/common.h>
@@ -5,7 +6,6 @@
 
 namespace vllm
 {
-// Global Point Distribution
 class GPD
 {
 public:
@@ -16,7 +16,6 @@ public:
     Eigen::Vector3i index = getIndex(point);
     return data[index.x()][index.y()][index.z()];
   }
-
 
   void init(const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud, float gain)
   {

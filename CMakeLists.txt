@@ -99,7 +99,7 @@ include_directories(${CMAKE_CURRENT_LIST_DIR}/include)
 file(GLOB SOURCES ${CMAKE_CURRENT_LIST_DIR}/src/*.cpp)
 
 # == main ==
-add_executable(main main.cpp src/bridge.cpp src/aligner.cpp)
+add_executable(main main.cpp src/bridge.cpp src/aligner.cpp src/pangolin_viewer.cpp)
 target_include_directories(main SYSTEM PRIVATE ${PROJECT_SOURCE_DIR}/3rd/openvslam/src/ ${PROJECT_SOURCE_DIR}/3rd/openvslam/3rd/popl/include
                                                ${PROJECT_SOURCE_DIR}/3rd/openvslam/3rd/spdlog/include)
 target_link_libraries(main PRIVATE ${PCL_LIBRARIES} ${OpenCV_LIBS} openvslam)

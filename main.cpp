@@ -75,12 +75,12 @@ int main(int argc, char* argv[])
   BridgeOpenVSLAM bridge;
   bridge.setup(argc, argv);
 
-  PangolinViewer pangolin_viewer;
+  vllm::PangolinViewer pangolin_viewer;
   cv::namedWindow("OpenCV", cv::WINDOW_AUTOSIZE);
 
   // rejector with global point distribution
   vllm::GPD gpd(5);
-  gpd.init(cloud_target, 0.4f);
+  gpd.init(cloud_target, 0.2f);
   vllm::CorrespondenceRejectorLpd rejector(gpd);
 
   while (true) {
@@ -124,17 +124,15 @@ int main(int argc, char* argv[])
       pcl::transformPointCloud(*local_cloud, *local_cloud, T);
       pcl::transformPointCloud(*global_cloud, *global_cloud, T);
 
-      // update Transform subtacting offset
-      // T_init = T * T_init;
-
       // Visualize by Pangolin
       pangolin_viewer.clear();
       pangolin_viewer.drawGridLine();
-      pangolin_viewer.drawState(state);
-      pangolin_viewer.addPointCloud(local_cloud, {1.0f, 1.0f, 0.0f, 2.0f});
-      pangolin_viewer.addPointCloud(global_cloud, {1.0f, 0.0f, 0.0f, 1.0f});
-      pangolin_viewer.addPointCloud(cloud_target, {0.8f, 0.8f, 0.8f, 1.0f});
-      pangolin_viewer.addCamera(camera, {0.0f, 1.0f, 0.0f, 2.0f});
+      pangolin_viewer.drawStateString(state);
+      pangolin_viewer.drawPointCloud(local_cloud, {1.0f, 1.0f, 0.0f, 2.0f});
+      pangolin_viewer.drawPointCloud(global_cloud, {1.0f, 0.0f, 0.0f, 1.0f});
+      pangolin_viewer.drawPointCloud(cloud_target, {0.8f, 0.8f, 0.8f, 1.0f});
+      pangolin_viewer.drawCamera(camera, {0.0f, 1.0f, 0.0f, 2.0f});
+      pangolin_viewer.drawGPD(gpd);
       pangolin_viewer.swap();
     }
   }
