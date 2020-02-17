@@ -8,8 +8,6 @@
 #include <opencv2/opencv.hpp>
 #include <pangolin/pangolin.h>
 #include <pcl/common/transforms.h>
-#include <pcl/filters/voxel_grid.h>
-#include <pcl/io/pcd_io.h>
 #include <pcl/registration/correspondence_estimation.h>
 
 using pcXYZ = pcl::PointCloud<pcl::PointXYZ>;
@@ -52,37 +50,30 @@ struct Config {
   Eigen::Matrix4f T_init;
 };
 
-pcl::PointCloud<pcl::PointXYZ>::Ptr loadMapPointCloud(const std::string& pcd_file, float leaf)
-{
-  // Load map pointcloud
-  pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_map(new pcl::PointCloud<pcl::PointXYZ>);
-  pcl::io::loadPCDFile<pcl::PointXYZ>(pcd_file, *cloud_map);
-
-  // filtering
-  pcl::VoxelGrid<pcl::PointXYZ> filter;
-  filter.setInputCloud(cloud_map);
-  filter.setLeafSize(leaf, leaf, leaf);
-  filter.filter(*cloud_map);
-  return cloud_map;
-}
-
 int main(int argc, char* argv[])
 {
   Config config("../data/config.yaml");
-  pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_target = loadMapPointCloud(config.pcd_file, config.voxel_grid_leaf);
-  Eigen::Matrix4f T_init = config.T_init;
 
+  // setup for LiDAR map
+  pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_target = vllm::loadMapPointCloud(config.pcd_file, config.voxel_grid_leaf);
+  pcl::PointCloud<pcl::Normal>::Ptr normals = vllm::estimateNormals(cloud_target, config.normal_search_leaf);
+
+  // setup for OpenVSLAM
   BridgeOpenVSLAM bridge;
   bridge.setup(argc, argv);
 
+  // setup for Viewer
   vllm::PangolinViewer pangolin_viewer;
   cv::namedWindow("OpenCV", cv::WINDOW_AUTOSIZE);
 
-  // rejector with global point distribution
+  // setup for Rejector
   vllm::GPD gpd(config.gpd_size);
   gpd.init(cloud_target, config.gpd_gain);
   vllm::CorrespondenceRejectorLpd rejector(gpd);
 
+  const Eigen::Matrix4f T_init = config.T_init;
+
+  // == Main Loop ==
   while (true) {
     // Execute vSLAM
     bool success = bridge.execute();
@@ -127,15 +118,16 @@ int main(int argc, char* argv[])
       // Visualize by Pangolin
       pangolin_viewer.clear();
       pangolin_viewer.drawGridLine();
-      pangolin_viewer.drawStateString(state);
+      pangolin_viewer.drawString("state=" + std::to_string(state) + ", itr=" + std::to_string(i), {1.0f, 0.0f, 0.0f, 2.0f});
       pangolin_viewer.drawPointCloud(local_cloud, {1.0f, 1.0f, 0.0f, 2.0f});
       pangolin_viewer.drawPointCloud(global_cloud, {1.0f, 0.0f, 0.0f, 1.0f});
       pangolin_viewer.drawPointCloud(cloud_target, {0.8f, 0.8f, 0.8f, 1.0f});
       pangolin_viewer.drawCorrespondences(
           local_cloud, cloud_target,
           correspondences, {0.0f, 0.8f, 0.0f, 1.0f});
-      pangolin_viewer.drawCamera(camera, {0.0f, 1.0f, 0.0f, 2.0f});
-      pangolin_viewer.drawGPD(gpd);
+      pangolin_viewer.drawCamera(camera, {0.0f, 1.0f, 0.0f, 1.0f});
+      // pangolin_viewer.drawGPD(gpd);
+      pangolin_viewer.drawNormals(cloud_target, normals, {0.0f, 0.0f, 1.0f, 2.0f});
       pangolin_viewer.swap();
     }
   }

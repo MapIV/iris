@@ -1,6 +1,9 @@
 #pragma once
 #include <Eigen/Dense>
 #include <iostream>
+#include <pcl/features/normal_3d.h>
+#include <pcl/filters/voxel_grid.h>
+#include <pcl/io/pcd_io.h>
 #include <pcl/point_types.h>
 #include <pcl/registration/correspondence_estimation.h>
 #include <pcl/registration/icp.h>
@@ -43,6 +46,38 @@ Eigen::Matrix4f icpWithPurePCL(const pcXYZ::Ptr& cloud_query, const pcXYZ::Ptr& 
   std::cout << T << std::endl;
 
   return T;
+}
+
+pcl::PointCloud<pcl::PointXYZ>::Ptr loadMapPointCloud(const std::string& pcd_file, float leaf = -1.0f)
+{
+  // Load map pointcloud
+  pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_map(new pcl::PointCloud<pcl::PointXYZ>);
+  pcl::io::loadPCDFile<pcl::PointXYZ>(pcd_file, *cloud_map);
+
+  if (leaf < 0) {
+    return cloud_map;
+  }
+  // filtering
+  pcl::VoxelGrid<pcl::PointXYZ> filter;
+  filter.setInputCloud(cloud_map);
+  filter.setLeafSize(leaf, leaf, leaf);
+  filter.filter(*cloud_map);
+  return cloud_map;
+}
+
+
+pcl::PointCloud<pcl::Normal>::Ptr estimateNormals(const pcXYZ::Ptr& cloud, float leaf)
+{
+  pcl::PointCloud<pcl::Normal>::Ptr normals(new pcl::PointCloud<pcl::Normal>);
+  pcl::search::KdTree<pcl::PointXYZ>::Ptr tree(new pcl::search::KdTree<pcl::PointXYZ>());
+
+  pcl::NormalEstimation<pcl::PointXYZ, pcl::Normal> ne;
+  ne.setInputCloud(cloud);
+  ne.setSearchMethod(tree);
+  ne.setRadiusSearch(leaf);
+  ne.compute(*normals);
+
+  return normals;
 }
 
 // Eigen::Matrix4f registrationPointCloud(

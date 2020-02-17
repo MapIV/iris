@@ -2,19 +2,12 @@
 
 namespace vllm
 {
-void PangolinViewer::drawStateString(int state) const
+void PangolinViewer::drawString(const std::string& str, const Color& color) const
 {
-  glColor3f(1.0f, 0.0f, 0.0f);
-  std::stringstream ss;
-  ss << "State: ";
-  switch (state) {
-  case 0: ss << "NotInitialized"; break;
-  case 1: ss << "Initializing"; break;
-  case 2: ss << "Tracking"; break;
-  case 3: ss << "Lost"; break;
-  default: break;
-  }
-  pangolin::GlFont::I().Text(ss.str()).DrawWindow(200, 50 - 2.0f * pangolin::GlFont::I().Height());
+  glColor3f(color.r, color.g, color.b);
+  glPointSize(color.size);
+  glLineWidth(color.size);
+  pangolin::GlFont::I().Text(str).DrawWindow(200, 50 - 2.0f * pangolin::GlFont::I().Height());
 }
 
 void PangolinViewer::drawGPD(const GPD& gpd) const
@@ -128,9 +121,20 @@ void PangolinViewer::drawLine(const float x1, const float y1, const float z1, co
 
 void PangolinViewer::drawNormals(
     const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud,
-    const pcl::PointCloud<pcl::Normal>& normals,
+    const pcl::PointCloud<pcl::Normal>::Ptr& normals,
     const Color& color) const
 {
+  glBegin(GL_LINES);
+  glColor4f(color.r, color.g, color.b, 0.4f);
+  glLineWidth(color.size);
+  for (size_t i = 0; i < cloud->size(); i += 10) {
+    Eigen::Vector3f p = cloud->at(i).getArray3fMap();
+    Eigen::Vector3f n = normals->at(i).getNormalVector3fMap();
+    n = 0.2f * n;
+    if (std::isfinite(n.x()))
+      drawLine(p.x(), p.y(), p.z(), p.x() + n.x(), p.y() + n.y(), p.z() + n.z());
+  }
+  glEnd();
 }
 
 void PangolinViewer::drawCorrespondences(
@@ -140,7 +144,7 @@ void PangolinViewer::drawCorrespondences(
     const Color& color) const
 {
   glBegin(GL_LINES);
-  glColor4f(1.0f, 0.0f, 0.0f, 0.4f);
+  glColor4f(color.r, color.g, color.b, 0.4f);
   glLineWidth(color.size);
   for (const pcl::Correspondence& c : correspondences) {
     pcl::PointXYZ p1 = source->at(c.index_query);
