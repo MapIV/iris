@@ -126,19 +126,28 @@ void PangolinViewer::drawLine(const float x1, const float y1, const float z1, co
   glVertex3f(x2, y2, z2);
 }
 
+void PangolinViewer::drawNormals(
+    const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud,
+    const pcl::PointCloud<pcl::Normal>& normals,
+    const Color& color) const
+{
+}
+
 void PangolinViewer::drawCorrespondences(
     const pcl::PointCloud<pcl::PointXYZ>::Ptr& source,
     const pcl::PointCloud<pcl::PointXYZ>::Ptr& target,
     const pcl::Correspondences& correspondences,
     const Color& color) const
 {
-  glColor3f(color.r, color.g, color.b);
-  glPointSize(color.size);
+  glBegin(GL_LINES);
+  glColor4f(1.0f, 0.0f, 0.0f, 0.4f);
+  glLineWidth(color.size);
   for (const pcl::Correspondence& c : correspondences) {
     pcl::PointXYZ p1 = source->at(c.index_query);
     pcl::PointXYZ p2 = target->at(c.index_match);
     drawLine(p1.x, p1.y, p1.z, p2.x, p2.y, p2.z);
   }
+  glEnd();
 }
 
 void PangolinViewer::drawRectangular(const float x, const float y, const float z) const

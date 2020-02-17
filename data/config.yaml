@@ -52,4 +52,9 @@ VLLM.r_init:  !!opencv-matrix
     dt: f
     data: [ -1.2,1.2,-1.2]
 VLLM.s_init: 1.5
-VLLM.leaf: 0.02
+VLLM.pcd_file: "../data/room.pcd"
+VLLM.voxel_grid_leaf: 0.05
+VLLM.normal_search_leaf: 0.05
+VLLM.gpd_size: 5
+VLLM.gpd_gain: 0.2
+VLLM.iteration: 20

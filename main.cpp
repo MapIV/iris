@@ -2,6 +2,7 @@
 #include "bridge.hpp"
 #include "pangolin_viewer.hpp"
 #include "rejector_lpd.hpp"
+#include "util.hpp"
 
 #include <opencv2/core/eigen.hpp>
 #include <opencv2/opencv.hpp>
@@ -13,64 +14,63 @@
 
 using pcXYZ = pcl::PointCloud<pcl::PointXYZ>;
 
-// L2 norm is used
-pcl::Correspondences getCorrespondences(const pcXYZ::Ptr& cloud_source, const pcXYZ::Ptr& cloud_target)
+struct Config {
+  Config(std::string yaml_file)
+  {
+    cv::FileStorage fs(yaml_file, cv::FileStorage::READ);
+    {
+      cv::Mat t, r;
+      float s;
+      fs["VLLM.t_init"] >> t;
+      fs["VLLM.r_init"] >> r;
+      fs["VLLM.s_init"] >> s;
+      cv::Rodrigues(r, r);
+      cv::Mat T = cv::Mat::eye(4, 4, CV_32FC1);
+      cv::Mat(s * r).copyTo(T.colRange(0, 3).rowRange(0, 3));
+      t.copyTo(T.col(3).rowRange(0, 3));
+      cv::cv2eigen(T, T_init);
+      std::cout << T_init << std::endl;
+    }
+
+    fs["VLLM.normal_search_leaf"] >> normal_search_leaf;
+    fs["VLLM.voxel_grid_leaf"] >> voxel_grid_leaf;
+    fs["VLLM.pcd_file"] >> pcd_file;
+    fs["VLLM.gpd_size"] >> gpd_size;
+    fs["VLLM.gpd_gain"] >> gpd_gain;
+    fs["VLLM.iteration"] >> iteration;
+    std::cout << "gpd_gain " << gpd_gain << std::endl;
+
+    cv::Mat T = cv::Mat::eye(4, 4, CV_32FC1);
+  }
+
+  int iteration;
+  float gpd_gain;
+  int gpd_size;
+  float normal_search_leaf;
+  float voxel_grid_leaf;
+  std::string pcd_file;
+  Eigen::Matrix4f T_init;
+};
+
+pcl::PointCloud<pcl::PointXYZ>::Ptr loadMapPointCloud(const std::string& pcd_file, float leaf)
 {
-  pcl::PointCloud<pcl::PointXYZRGBA>::Ptr source, target;
-  pcl::registration::CorrespondenceEstimation<pcl::PointXYZ, pcl::PointXYZ> est;
-  est.setInputSource(cloud_source);
-  est.setInputTarget(cloud_target);
-  pcl::Correspondences all_correspondences;
-  est.determineCorrespondences(all_correspondences);
-
-  return all_correspondences;
-}
-
-float leaf_size = 0.05f;
-
-pcl::PointCloud<pcl::PointXYZ>::Ptr loadMapPointCloud()
-{
-
   // Load map pointcloud
   pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_map(new pcl::PointCloud<pcl::PointXYZ>);
+  pcl::io::loadPCDFile<pcl::PointXYZ>(pcd_file, *cloud_map);
 
-  pcl::io::loadPCDFile<pcl::PointXYZ>("../data/room.pcd", *cloud_map);
+  // filtering
   pcl::VoxelGrid<pcl::PointXYZ> filter;
   filter.setInputCloud(cloud_map);
-  filter.setLeafSize(leaf_size, leaf_size, leaf_size);
+  filter.setLeafSize(leaf, leaf, leaf);
   filter.filter(*cloud_map);
   return cloud_map;
 }
 
-Eigen::Matrix4f loadInitialTransform()
-{
-  cv::FileStorage fs("../data/config.yaml", cv::FileStorage::READ);
-  cv::Mat t, r;
-  float s;
-  fs["VLLM.t_init"] >> t;
-  fs["VLLM.r_init"] >> r;
-  fs["VLLM.s_init"] >> s;
-  fs["VLLM.leaf"] >> leaf_size;
-
-  cv::Mat T = cv::Mat::eye(4, 4, CV_32FC1);
-  cv::Mat T_inv = cv::Mat::eye(4, 4, CV_32FC1);
-  cv::Rodrigues(r, r);
-  cv::Mat sR = s * r;
-
-  sR.copyTo(T.colRange(0, 3).rowRange(0, 3));
-  t.copyTo(T.col(3).rowRange(0, 3));
-
-  Eigen::Matrix4f T_init;
-  cv::cv2eigen(T, T_init);
-  std::cout << T_init << std::endl;
-
-  return T_init;
-}
-
 int main(int argc, char* argv[])
 {
-  pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_target = loadMapPointCloud();
-  Eigen::Matrix4f T_init = loadInitialTransform();
+  Config config("../data/config.yaml");
+  pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_target = loadMapPointCloud(config.pcd_file, config.voxel_grid_leaf);
+  Eigen::Matrix4f T_init = config.T_init;
 
   BridgeOpenVSLAM bridge;
   bridge.setup(argc, argv);
@@ -79,8 +79,8 @@ int main(int argc, char* argv[])
   cv::namedWindow("OpenCV", cv::WINDOW_AUTOSIZE);
 
   // rejector with global point distribution
-  vllm::GPD gpd(5);
-  gpd.init(cloud_target, 0.2f);
+  vllm::GPD gpd(config.gpd_size);
+  gpd.init(cloud_target, config.gpd_gain);
   vllm::CorrespondenceRejectorLpd rejector(gpd);
 
   while (true) {
@@ -110,9 +110,9 @@ int main(int argc, char* argv[])
     pcl::transformPointCloud(*local_cloud, *local_cloud, T_init);
     pcl::transformPointCloud(*global_cloud, *global_cloud, T_init);
 
-    for (int i = 0; i < 20; i++) {
+    for (int i = 0; i < config.iteration; i++) {
       // Get all correspodences
-      pcl::Correspondences correspondences = getCorrespondences(local_cloud, cloud_target);
+      pcl::Correspondences correspondences = vllm::getCorrespondences(local_cloud, cloud_target);
       // Reject invalid correspondeces
       correspondences = rejector.refineCorrespondences(correspondences, local_cloud);
       // Align pointclouds
@@ -131,6 +131,9 @@ int main(int argc, char* argv[])
       pangolin_viewer.drawPointCloud(local_cloud, {1.0f, 1.0f, 0.0f, 2.0f});
       pangolin_viewer.drawPointCloud(global_cloud, {1.0f, 0.0f, 0.0f, 1.0f});
       pangolin_viewer.drawPointCloud(cloud_target, {0.8f, 0.8f, 0.8f, 1.0f});
+      pangolin_viewer.drawCorrespondences(
+          local_cloud, cloud_target,
+          correspondences, {0.0f, 0.8f, 0.0f, 1.0f});
       pangolin_viewer.drawCamera(camera, {0.0f, 1.0f, 0.0f, 2.0f});
       pangolin_viewer.drawGPD(gpd);
       pangolin_viewer.swap();

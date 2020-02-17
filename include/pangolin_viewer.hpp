@@ -38,6 +38,10 @@ public:
 
   void drawPointCloud(const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud, const Color& color) const;
   void drawCamera(const Eigen::Matrix4f& cam_pose, const Color& color) const;
+  void drawNormals(
+      const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud,
+      const pcl::PointCloud<pcl::Normal>& normals,
+      const Color& color) const;
   void drawCorrespondences(
       const pcl::PointCloud<pcl::PointXYZ>::Ptr& source,
       const pcl::PointCloud<pcl::PointXYZ>::Ptr& target,
