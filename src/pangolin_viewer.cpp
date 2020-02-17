@@ -99,7 +99,7 @@ void PangolinViewer::drawGridLine() const
   glPopMatrix();
 
   // coordinate axis
-  glLineWidth(2.0f);
+  glLineWidth(3.0f);
   glBegin(GL_LINES);
   constexpr float axis = 1.0f;
   glColor3f(1.0f, 0.0f, 0.0f);

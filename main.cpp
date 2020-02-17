@@ -8,7 +8,6 @@
 #include <opencv2/opencv.hpp>
 #include <pangolin/pangolin.h>
 #include <pcl/common/transforms.h>
-#include <pcl/registration/correspondence_estimation.h>
 
 using pcXYZ = pcl::PointCloud<pcl::PointXYZ>;
 
@@ -109,7 +108,7 @@ int main(int argc, char* argv[])
     pcl::transformPointCloud(*local_cloud, *local_cloud, T_init);
     pcl::transformPointCloud(*global_cloud, *global_cloud, T_init);
     camera = T_init * camera;
-    raw_trajectory.push_back(extractTranslation(camera));
+    raw_trajectory.push_back(camera.block(0, 3, 3, 1));
 
     for (int i = 0; i < config.iteration; i++) {
       // Get all correspodences
@@ -134,15 +133,13 @@ int main(int argc, char* argv[])
       pangolin_viewer.drawPointCloud(cloud_target, {0.8f, 0.8f, 0.8f, 1.0f});
       pangolin_viewer.drawTrajectory(raw_trajectory, {1.0f, 0.0f, 1.0f, 3.0f});
       pangolin_viewer.drawTrajectory(vllm_trajectory, {1.0f, 0.0f, 0.0f, 3.0f});
-      pangolin_viewer.drawCorrespondences(
-          local_cloud, cloud_target,
-          correspondences, {0.0f, 0.8f, 0.0f, 1.0f});
       pangolin_viewer.drawCamera(camera, {1.0f, 1.0f, 1.0f, 1.0f});
-      // pangolin_viewer.drawGPD(gpd);
       pangolin_viewer.drawNormals(cloud_target, normals, {0.0f, 0.0f, 1.0f, 2.0f});
+      pangolin_viewer.drawCorrespondences(local_cloud, cloud_target, correspondences, {0.0f, 0.8f, 0.0f, 1.0f});
+      // pangolin_viewer.drawGPD(gpd);
       pangolin_viewer.swap();
     }
-    vllm_trajectory.push_back(extractTranslation(camera));
+    vllm_trajectory.push_back(camera.block(0, 3, 3, 1));
   }
 
   return 0;
