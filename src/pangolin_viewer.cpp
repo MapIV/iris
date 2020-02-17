@@ -139,7 +139,7 @@ void PangolinViewer::drawNormals(
   glBegin(GL_LINES);
   glColor4f(color.r, color.g, color.b, 0.4f);
   glLineWidth(color.size);
-  for (size_t i = 0; i < cloud->size(); i += 10) {
+  for (size_t i = 0; i < cloud->size(); i += 20) {
     Eigen::Vector3f p = cloud->at(i).getArray3fMap();
     Eigen::Vector3f n = normals->at(i).getNormalVector3fMap();
     n = 0.2f * n;

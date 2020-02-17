@@ -109,11 +109,9 @@ class Edge_Sim3_GICP : public g2o::BaseUnaryEdge<3, EdgeGICP, VertexSim3Expmap>
 {
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
-  Edge_Sim3_GICP() : pl_pl(false) {}
+  Edge_Sim3_GICP() {}
   Edge_Sim3_GICP(const Edge_Sim3_GICP* e);
 
-  // switch to go between point-plane and plane-plane
-  bool pl_pl;
   Matrix3 cov0, cov1;
 
   virtual bool read(std::istream&)
@@ -140,10 +138,8 @@ public:
     // Euclidean distance
     _error = p1 - measurement().pos0;
 
-    if (!pl_pl) return;
-
-    // re-define the information matrix
-    // topLeftCorner<3,3>() is the rotation()
+    // == for Plane to Plane ==
+    // re-define the information matrix. topLeftCorner<3,3>() is the rotation()
     // const Matrix3 transform = (vp0->estimate().inverse() * vp1->estimate()).matrix().topLeftCorner<3, 3>();
     // information() = (cov0 + transform * cov1 * transform.transpose()).inverse();
   }

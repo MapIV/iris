@@ -13,13 +13,20 @@ public:
 
   ~Aligner() {}
 
-  void estimate(
+  Eigen::Matrix4f estimate(
+      const pcl::PointCloud<pcl::PointXYZ>& source,
+      const pcl::PointCloud<pcl::PointXYZ>& target,
+      const pcl::Correspondences& correspondances);
+
+  Eigen::Matrix4f estimate(
       const pcl::PointCloud<pcl::PointXYZ>& source,
       const pcl::PointCloud<pcl::PointXYZ>& target,
       const pcl::Correspondences& correspondances,
-      Eigen::Matrix4f& T);
+      const pcl::PointCloud<pcl::Normal>& normals);  // for target
 
 private:
+  Eigen::Matrix4f execute(g2o::SparseOptimizer& optimizer);
+
   void setVertexSim3(g2o::SparseOptimizer& optimizer);
 
   void setEdgeGICP(
@@ -27,5 +34,12 @@ private:
       const pcl::PointCloud<pcl::PointXYZ>& source,
       const pcl::PointCloud<pcl::PointXYZ>& target,
       const pcl::Correspondences& correspondances);
+
+  void setEdgeGICP(
+      g2o::SparseOptimizer& optimizer,
+      const pcl::PointCloud<pcl::PointXYZ>& source,
+      const pcl::PointCloud<pcl::PointXYZ>& target,
+      const pcl::Correspondences& correspondances,
+      const pcl::PointCloud<pcl::Normal>& normals);  // for target
 };
 }  // namespace vllm

@@ -6,7 +6,6 @@
 
 #include <opencv2/core/eigen.hpp>
 #include <opencv2/opencv.hpp>
-#include <pangolin/pangolin.h>
 #include <pcl/common/transforms.h>
 
 using pcXYZ = pcl::PointCloud<pcl::PointXYZ>;
@@ -49,11 +48,6 @@ struct Config {
   Eigen::Matrix4f T_init;
 };
 
-Eigen::Vector3f extractTranslation(const Eigen::Matrix4f& T)
-{
-  return T.block(0, 3, 3, 1);
-}
-
 int main(int argc, char* argv[])
 {
   Config config("../data/config.yaml");
@@ -76,7 +70,6 @@ int main(int argc, char* argv[])
   vllm::CorrespondenceRejectorLpd rejector(gpd);
 
   const Eigen::Matrix4f T_init = config.T_init;
-
   std::vector<Eigen::Vector3f> raw_trajectory;
   std::vector<Eigen::Vector3f> vllm_trajectory;
 
@@ -117,8 +110,8 @@ int main(int argc, char* argv[])
       correspondences = rejector.refineCorrespondences(correspondences, local_cloud);
       // Align pointclouds
       vllm::Aligner aligner;
-      Eigen::Matrix4f T;
-      aligner.estimate(*local_cloud, *cloud_target, correspondences, T);
+
+      Eigen::Matrix4f T = aligner.estimate(*local_cloud, *cloud_target, correspondences, *normals);
 
       camera = T * camera;
       pcl::transformPointCloud(*local_cloud, *local_cloud, T);
