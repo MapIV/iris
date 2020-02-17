@@ -35,7 +35,7 @@ public:
   void drawGPD(const GPD& gpd) const;
   void drawGridLine() const;
   void drawString(const std::string& str, const Color& color) const;
-
+  void drawTrajectory(const std::vector<Eigen::Vector3f>& trajectory,const Color& color);
   void drawPointCloud(const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud, const Color& color) const;
   void drawCamera(const Eigen::Matrix4f& cam_pose, const Color& color) const;
   void drawNormals(

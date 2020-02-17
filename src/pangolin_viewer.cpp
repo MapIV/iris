@@ -30,6 +30,18 @@ void PangolinViewer::drawGPD(const GPD& gpd) const
   }
 }
 
+void PangolinViewer::drawTrajectory(const std::vector<Eigen::Vector3f>& trajectory, const Color& color)
+{
+  glBegin(GL_LINE_STRIP);
+  glColor4f(color.r, color.g, color.b, 1.0f);
+  glLineWidth(color.size);
+  for (const Eigen::Vector3f& v : trajectory) {
+    glVertex3f(v.x(), v.y(), v.z());
+  }
+  glEnd();
+}
+
+
 void PangolinViewer::drawPointCloud(const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud, const Color& color) const
 {
   glColor3f(color.r, color.g, color.b);

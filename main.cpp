@@ -50,6 +50,11 @@ struct Config {
   Eigen::Matrix4f T_init;
 };
 
+Eigen::Vector3f extractTranslation(const Eigen::Matrix4f& T)
+{
+  return T.block(0, 3, 3, 1);
+}
+
 int main(int argc, char* argv[])
 {
   Config config("../data/config.yaml");
@@ -72,6 +77,9 @@ int main(int argc, char* argv[])
   vllm::CorrespondenceRejectorLpd rejector(gpd);
 
   const Eigen::Matrix4f T_init = config.T_init;
+
+  std::vector<Eigen::Vector3f> raw_trajectory;
+  std::vector<Eigen::Vector3f> vllm_trajectory;
 
   // == Main Loop ==
   while (true) {
@@ -96,10 +104,12 @@ int main(int argc, char* argv[])
       continue;
     }
 
+
     // Transform to subtract initial offset
-    camera = T_init * camera;
     pcl::transformPointCloud(*local_cloud, *local_cloud, T_init);
     pcl::transformPointCloud(*global_cloud, *global_cloud, T_init);
+    camera = T_init * camera;
+    raw_trajectory.push_back(extractTranslation(camera));
 
     for (int i = 0; i < config.iteration; i++) {
       // Get all correspodences
@@ -122,14 +132,17 @@ int main(int argc, char* argv[])
       pangolin_viewer.drawPointCloud(local_cloud, {1.0f, 1.0f, 0.0f, 2.0f});
       pangolin_viewer.drawPointCloud(global_cloud, {1.0f, 0.0f, 0.0f, 1.0f});
       pangolin_viewer.drawPointCloud(cloud_target, {0.8f, 0.8f, 0.8f, 1.0f});
+      pangolin_viewer.drawTrajectory(raw_trajectory, {1.0f, 0.0f, 1.0f, 3.0f});
+      pangolin_viewer.drawTrajectory(vllm_trajectory, {1.0f, 0.0f, 0.0f, 3.0f});
       pangolin_viewer.drawCorrespondences(
           local_cloud, cloud_target,
           correspondences, {0.0f, 0.8f, 0.0f, 1.0f});
-      pangolin_viewer.drawCamera(camera, {0.0f, 1.0f, 0.0f, 1.0f});
+      pangolin_viewer.drawCamera(camera, {1.0f, 1.0f, 1.0f, 1.0f});
       // pangolin_viewer.drawGPD(gpd);
       pangolin_viewer.drawNormals(cloud_target, normals, {0.0f, 0.0f, 1.0f, 2.0f});
       pangolin_viewer.swap();
     }
+    vllm_trajectory.push_back(extractTranslation(camera));
   }
 
   return 0;
