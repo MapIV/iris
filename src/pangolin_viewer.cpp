@@ -51,11 +51,11 @@ void PangolinViewer::drawPointCloud(const pcl::PointCloud<pcl::PointXYZ>::Ptr& c
   pc.drawPoints();
 }
 
-PangolinViewer::PangolinViewer()
+PangolinViewer::PangolinViewer(const Eigen::Vector3f& p0, const Eigen::Vector3f& p1, const pangolin::AxisDirection up)
     : s_cam(
           pangolin::OpenGlRenderState(
               pangolin::ProjectionMatrix(640, 480, 420, 420, 320, 240, 0.2, 100),
-              pangolin::ModelViewLookAt(-2, -2, 5, 0, 0, 0, pangolin::AxisZ))),
+              pangolin::ModelViewLookAt(p0.x(), p0.y(), p0.z(), p1.x(), p1.y(), p1.z(), up))),
       handler(pangolin::Handler3D(s_cam))
 {
   // setup Pangolin viewer
@@ -74,6 +74,8 @@ PangolinViewer::PangolinViewer()
   pangolin::CreatePanel("ui").SetBounds(0.0, 1.0, 0.0, pangolin::Attach::Pix(180));
   ui_double_ptr = std::make_shared<pangolin::Var<double>>("ui.state", 0.5, 0.0, 1.0);
 }
+
+PangolinViewer::PangolinViewer() : PangolinViewer(Eigen::Vector3f(-2, -2, 5), Eigen::Vector3f(0, 0, 0), pangolin::AxisZ) {}
 
 void PangolinViewer::drawGridLine() const
 {

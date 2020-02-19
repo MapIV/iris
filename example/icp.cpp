@@ -1,7 +1,7 @@
 #include "aligner.hpp"
+#include "pangolin_viewer.hpp"
 #include "rejector_lpd.hpp"
 #include "util.hpp"
-#include "viewer.hpp"
 
 #include <Eigen/Dense>
 #include <Eigen/Geometry>
@@ -11,16 +11,6 @@
 #include <pcl/registration/correspondence_estimation.h>
 
 using pcXYZ = pcl::PointCloud<pcl::PointXYZ>;
-
-pcXYZ::Ptr loadPointCloud(const std::string& pcd_file)
-{
-  pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_source(new pcl::PointCloud<pcl::PointXYZ>);
-  if (pcl::io::loadPCDFile<pcl::PointXYZ>(pcd_file, *cloud_source) == -1) {
-    std::cout << "Couldn't read file test_pcd.pcd " << pcd_file << std::endl;
-    exit(1);
-  }
-  return cloud_source;
-}
 
 void initTransformPointCloud(pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud)
 {
@@ -52,60 +42,51 @@ int main(int argc, char** argv)
     gain = static_cast<float>(std::atof(argv[1]));
 
   // load point cloud
-  pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_source = loadPointCloud("../data/table.pcd");
+  pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_source = vllm::loadPointCloud("../data/table.pcd");
   pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_target(new pcl::PointCloud<pcl::PointXYZ>);
   *cloud_target = *cloud_source;
   initTransformPointCloud(cloud_source);
 
   pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_align(new pcl::PointCloud<pcl::PointXYZ>);
   *cloud_align = *cloud_source;
-
   pcl::PointCloud<pcl::Normal>::Ptr normals = vllm::estimateNormals(cloud_target, 0.2f);
 
-
   // Initialize viewer
-  vllm::Viewer viewer;
-  viewer.addPointCloud(cloud_target, "target", vllm::Color(255, 0, 0));
-  viewer.addPointCloud(cloud_align, "align", vllm::Color(0, 255, 0));
-  viewer.addNormals(cloud_target, normals);
-  // while (viewer.waitKey() != 's')
-  //   ;
+  vllm::PangolinViewer pangolin_viewer({0, 0.5f, 1.5f}, {0, 0, 0}, pangolin::AxisY);
 
+  // Rejector
   vllm::GPD gpd(4);
   gpd.init(cloud_target, gain);
-  viewer.visualizeGPD(gpd);
   vllm::CorrespondenceRejectorLpd rejector(gpd);
 
   Eigen::Matrix4f pose = Eigen::Matrix4f::Identity();
-  const int DT = 100;
+
+  vllm::wait(1000);
+
+  constexpr int DT = 50;
   for (int i = 0; i < 100; i++) {
     // Search Nearest Neighbor
     pcl::Correspondences correspondences = vllm::getCorrespondences(cloud_align, cloud_target);
-    viewer.updatePointCloud(cloud_align, "align", vllm::Color(0, 255, 0));
-    viewer.visualizeCorrespondences(cloud_align, cloud_target, correspondences, "cor", vllm::Color(0, 0, 255));
-    if (viewer.waitKey(2 * DT) == 'q') break;
 
-    // Rejector
+    // Reject
     correspondences = rejector.refineCorrespondences(correspondences, cloud_align);
-    viewer.updatePointCloud(cloud_align, "align", vllm::Color(0, 255, 0));
-    viewer.visualizeCorrespondences(cloud_align, cloud_target, correspondences, "cor", vllm::Color(0, 255, 255));
-    if (viewer.waitKey(2 * DT) == 'q') break;
-
     // Align
     vllm::Aligner aligner;
     Eigen::Matrix4f T = aligner.estimate(*cloud_align, *cloud_target, correspondences, *normals);
     // Eigen::Matrix4f T = aligner.estimate(*cloud_align, *cloud_target, correspondences);
 
-    // Update
     pcl::transformPointCloud(*cloud_align, *cloud_align, T);
     pose = T * pose;
+    std::cout << "itr=" << i << " t=" << T.topRightCorner(3, 1).transpose() << std::endl;
 
-    // Visuzalize
-    viewer.updatePointCloud(cloud_align, "align", vllm::Color(0, 255, 0));
-    viewer.unvisualizeCorrespondences("cor");
-    if (viewer.waitKey(DT) == 'q') break;
-
-    std::cout << "trans " << T.topRightCorner(3, 1).transpose() << std::endl;
+    pangolin_viewer.clear();
+    pangolin_viewer.drawPointCloud(cloud_target, {1.0f, 1.0f, 0.0f, 1.0f});
+    pangolin_viewer.drawPointCloud(cloud_align, {1.0f, 0.0f, 0.0f, 1.0f});
+    pangolin_viewer.drawCorrespondences(cloud_align, cloud_target, correspondences, {1.0f, 1.0f, 1.0f, 1.0f});
+    pangolin_viewer.drawNormals(cloud_target, normals, {0.0f, 0.0f, 1.0f, 2.0f});
+    pangolin_viewer.drawString("iteration: " + std::to_string(i), {1.0f, 1.0f, 1.0f, 2.0f});
+    pangolin_viewer.swap();
+    vllm::wait(DT);
   }
   std::cout << pose << std::endl;
   return 0;

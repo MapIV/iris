@@ -1,4 +1,5 @@
 #include "util.hpp"
+#include <chrono>
 #include <pcl/features/normal_3d.h>
 #include <pcl/filters/voxel_grid.h>
 #include <pcl/io/pcd_io.h>
@@ -6,7 +7,7 @@
 #include <pcl/registration/icp.h>
 #include <pcl/registration/transformation_estimation_svd_scale.h>
 #include <random>
-
+#include <thread>
 
 namespace vllm
 {
@@ -60,6 +61,16 @@ pcl::PointCloud<pcl::PointXYZ>::Ptr loadMapPointCloud(const std::string& pcd_fil
   return cloud_map;
 }
 
+pcl::PointCloud<pcl::PointXYZ>::Ptr loadPointCloud(const std::string& pcd_file)
+{
+  pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_source(new pcl::PointCloud<pcl::PointXYZ>);
+  if (pcl::io::loadPCDFile<pcl::PointXYZ>(pcd_file, *cloud_source) == -1) {
+    std::cout << "Couldn't read file test_pcd.pcd " << pcd_file << std::endl;
+    exit(1);
+  }
+  return cloud_source;
+}
+
 
 pcl::PointCloud<pcl::Normal>::Ptr estimateNormals(const pcXYZ::Ptr& cloud, float leaf)
 {
@@ -95,6 +106,11 @@ void shufflePointCloud(pcXYZ::Ptr& cloud)
   for (size_t i = 0, size = cloud->size(); i < size; i++) {
     std::swap(cloud->points.at(i), cloud->points.at(rand() % size));
   }
+}
+
+void wait(float ms)
+{
+  std::this_thread::sleep_for(std::chrono::microseconds(static_cast<int64_t>(ms * 1000.f)));
 }
 
 }  // namespace vllm
