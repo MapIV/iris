@@ -27,4 +27,6 @@ void shufflePointCloud(pcXYZ::Ptr& cloud);
 
 void wait(float ms);
 
+Eigen::Matrix3f randomRotation();
+
 }  // namespace vllm

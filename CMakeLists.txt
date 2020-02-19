@@ -100,22 +100,21 @@ add_subdirectory(3rd/openvslam)
 include_directories(${CMAKE_CURRENT_LIST_DIR}/include)
 
 # == main ==
-# add_executable(main main.cpp src/bridge.cpp src/aligner.cpp src/pangolin_viewer.cpp
-#                     src/util.cpp)
-# target_include_directories(
-#   main SYSTEM
-#   PRIVATE ${PROJECT_SOURCE_DIR}/3rd/openvslam/src/
-#           ${PROJECT_SOURCE_DIR}/3rd/openvslam/3rd/popl/include
-#           ${PROJECT_SOURCE_DIR}/3rd/openvslam/3rd/spdlog/include)
-# target_link_libraries(main PRIVATE ${PCL_LIBRARIES} ${OpenCV_LIBS} openvslam)
-# target_link_libraries(main PRIVATE pangolin_viewer)
+add_executable(main main.cpp src/bridge.cpp src/aligner.cpp src/pangolin_viewer.cpp
+                    src/util.cpp src/global_point_distribution.cpp)
+target_include_directories(
+  main SYSTEM
+  PRIVATE ${PROJECT_SOURCE_DIR}/3rd/openvslam/src/
+          ${PROJECT_SOURCE_DIR}/3rd/openvslam/3rd/popl/include
+          ${PROJECT_SOURCE_DIR}/3rd/openvslam/3rd/spdlog/include)
+target_link_libraries(main PRIVATE ${PCL_LIBRARIES} ${OpenCV_LIBS} pangolin openvslam)
 
 # == example file ==
 # add_executable(optimize_sim3 optimize_sim3.cpp)
 # target_link_libraries(optimize_sim3 PUBLIC ${G2O_LIBS})
 
-add_executable(icp example/icp.cpp src/aligner.cpp src/util.cpp src/pangolin_viewer.cpp)
-target_link_libraries(icp PUBLIC ${PCL_LIBRARIES} ${G2O_LIBS} pangolin)
+# add_executable(icp example/icp.cpp src/aligner.cpp src/util.cpp src/pangolin_viewer.cpp src/global_point_distribution.cpp)
+# target_link_libraries(icp PUBLIC ${PCL_LIBRARIES} ${G2O_LIBS} pangolin)
 
 # add_executable(reject example/reject_with_lpd.cpp)
 # target_link_libraries(reject PUBLIC ${PCL_LIBRARIES})

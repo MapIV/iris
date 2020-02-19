@@ -113,4 +113,9 @@ void wait(float ms)
   std::this_thread::sleep_for(std::chrono::microseconds(static_cast<int64_t>(ms * 1000.f)));
 }
 
+Eigen::Matrix3f randomRotation()
+{
+  return Eigen::Quaternionf::UnitRandom().toRotationMatrix();
+}
+
 }  // namespace vllm

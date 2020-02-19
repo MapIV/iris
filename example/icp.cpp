@@ -61,9 +61,6 @@ int main(int argc, char** argv)
 
   Eigen::Matrix4f pose = Eigen::Matrix4f::Identity();
 
-  vllm::wait(1000);
-
-  constexpr int DT = 50;
   for (int i = 0; i < 100; i++) {
     // Search Nearest Neighbor
     pcl::Correspondences correspondences = vllm::getCorrespondences(cloud_align, cloud_target);
@@ -86,7 +83,7 @@ int main(int argc, char** argv)
     pangolin_viewer.drawNormals(cloud_target, normals, {0.0f, 0.0f, 1.0f, 2.0f});
     pangolin_viewer.drawString("iteration: " + std::to_string(i), {1.0f, 1.0f, 1.0f, 2.0f});
     pangolin_viewer.swap();
-    vllm::wait(DT);
+    vllm::wait(50);
   }
   std::cout << pose << std::endl;
   return 0;

@@ -7,6 +7,7 @@
 #include <opencv2/core/eigen.hpp>
 #include <opencv2/opencv.hpp>
 #include <pcl/common/transforms.h>
+#include <pcl/registration/correspondence_rejection_distance.h>
 
 using pcXYZ = pcl::PointCloud<pcl::PointXYZ>;
 
@@ -65,11 +66,10 @@ int main(int argc, char* argv[])
   cv::namedWindow("OpenCV", cv::WINDOW_AUTOSIZE);
 
   // setup for Rejector
-  vllm::GPD gpd(config.gpd_size);
-  gpd.init(cloud_target, config.gpd_gain);
+  vllm::GPD gpd(config.gpd_size, cloud_target, config.gpd_gain);
   vllm::CorrespondenceRejectorLpd rejector(gpd);
 
-  const Eigen::Matrix4f T_init = config.T_init;
+  Eigen::Matrix4f T_init = config.T_init;
   std::vector<Eigen::Vector3f> raw_trajectory;
   std::vector<Eigen::Vector3f> vllm_trajectory;
 
@@ -125,9 +125,9 @@ int main(int argc, char* argv[])
       pangolin_viewer.drawTrajectory(raw_trajectory, {1.0f, 0.0f, 1.0f, 3.0f});
       pangolin_viewer.drawTrajectory(vllm_trajectory, {1.0f, 0.0f, 0.0f, 3.0f});
       pangolin_viewer.drawCamera(camera, {1.0f, 1.0f, 1.0f, 1.0f});
-      pangolin_viewer.drawNormals(cloud_target, normals, {0.0f, 0.0f, 1.0f, 2.0f});
+      pangolin_viewer.drawNormals(cloud_target, normals, {0.0f, 1.0f, 1.0f, 1.0f});
       pangolin_viewer.drawCorrespondences(local_cloud, cloud_target, correspondences, {0.0f, 0.8f, 0.0f, 1.0f});
-      // pangolin_viewer.drawGPD(gpd);
+      pangolin_viewer.drawGPD(gpd);
       pangolin_viewer.swap();
     }
     vllm_trajectory.push_back(camera.block(0, 3, 3, 1));
