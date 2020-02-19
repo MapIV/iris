@@ -8,6 +8,7 @@
 #include <opencv2/opencv.hpp>
 #include <pcl/common/transforms.h>
 #include <pcl/registration/correspondence_rejection_distance.h>
+#include <popl.hpp>
 
 using pcXYZ = pcl::PointCloud<pcl::PointXYZ>;
 
@@ -32,6 +33,7 @@ struct Config {
     fs["VLLM.normal_search_leaf"] >> normal_search_leaf;
     fs["VLLM.voxel_grid_leaf"] >> voxel_grid_leaf;
     fs["VLLM.pcd_file"] >> pcd_file;
+    fs["VLLM.video_file"] >> video_file;
     fs["VLLM.gpd_size"] >> gpd_size;
     fs["VLLM.gpd_gain"] >> gpd_gain;
     fs["VLLM.iteration"] >> iteration;
@@ -46,12 +48,30 @@ struct Config {
   float normal_search_leaf;
   float voxel_grid_leaf;
   std::string pcd_file;
+  std::string video_file;
   Eigen::Matrix4f T_init;
 };
 
 int main(int argc, char* argv[])
 {
-  Config config("../data/config.yaml");
+  // analyze arugments
+  popl::OptionParser op("Allowed options");
+  auto config_file_path = op.add<popl::Value<std::string>>("c", "config", "config file path");
+  try {
+    op.parse(argc, argv);
+  } catch (const std::exception& e) {
+    std::cerr << e.what() << std::endl;
+    std::cerr << std::endl;
+    std::cerr << op << std::endl;
+    exit(EXIT_FAILURE);
+  }
+  if (!config_file_path->is_set()) {
+    std::cerr << "invalid arguments" << std::endl;
+    exit(EXIT_FAILURE);
+  }
+
+  // create options
+  Config config(config_file_path->value());
 
   // setup for LiDAR map
   pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_target = vllm::loadMapPointCloud(config.pcd_file, config.voxel_grid_leaf);
@@ -59,7 +79,7 @@ int main(int argc, char* argv[])
 
   // setup for OpenVSLAM
   BridgeOpenVSLAM bridge;
-  bridge.setup(argc, argv);
+  bridge.setup(argc, argv, config.video_file);
 
   // setup for Viewer
   vllm::PangolinViewer pangolin_viewer;

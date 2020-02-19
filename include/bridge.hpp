@@ -21,7 +21,7 @@ public:
     SLAM_ptr->shutdown();
   }
 
-  void setup(int argc, char* argv[]);
+  void setup(int argc, char* argv[], const std::string& video_file_path);
   bool execute();
 
   void getLandmarks(

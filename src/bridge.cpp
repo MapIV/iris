@@ -20,7 +20,7 @@
 #include <glog/logging.h>
 #endif
 
-void BridgeOpenVSLAM::setup(int argc, char* argv[])
+void BridgeOpenVSLAM::setup(int argc, char* argv[], const std::string& video_file_path)
 {
 #ifdef USE_STACK_TRACE_LOGGER
   google::InitGoogleLogging(argv[0]);
@@ -31,12 +31,10 @@ void BridgeOpenVSLAM::setup(int argc, char* argv[])
   popl::OptionParser op("Allowed options");
   auto help = op.add<popl::Switch>("h", "help", "produce help message");
   auto vocab_file_path = op.add<popl::Value<std::string>>("v", "vocab", "vocabulary file path");
-  auto video_file_path = op.add<popl::Value<std::string>>("m", "video", "video file path");
   auto config_file_path = op.add<popl::Value<std::string>>("c", "config", "config file path");
   auto _frame_skip = op.add<popl::Value<unsigned int>>("", "frame-skip", "interval of frame skip", 1);
   auto auto_term = op.add<popl::Switch>("", "auto-term", "automatically terminate the viewer");
   auto debug_mode = op.add<popl::Switch>("", "debug", "debug mode");
-
 
   try {
     op.parse(argc, argv);
@@ -54,7 +52,7 @@ void BridgeOpenVSLAM::setup(int argc, char* argv[])
     std::cerr << op << std::endl;
     exit(EXIT_FAILURE);
   }
-  if (!vocab_file_path->is_set() || !video_file_path->is_set() || !config_file_path->is_set()) {
+  if (!vocab_file_path->is_set() || !config_file_path->is_set()) {
     std::cerr << "invalid arguments" << std::endl;
     std::cerr << std::endl;
     std::cerr << op << std::endl;
@@ -84,7 +82,7 @@ void BridgeOpenVSLAM::setup(int argc, char* argv[])
     exit(EXIT_FAILURE);
   }
 
-  video = cv::VideoCapture(video_file_path->value(), cv::CAP_FFMPEG);
+  video = cv::VideoCapture(video_file_path, cv::CAP_FFMPEG);
 
   // build a SLAM system
   SLAM_ptr = std::make_shared<openvslam::system>(cfg, vocab_file_path->value());

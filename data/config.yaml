@@ -1,6 +1,4 @@
 %YAML:1.0
-# Perspective model for room.mp4
-
 #==============#
 # Camera Model #
 #==============#
@@ -11,7 +9,6 @@ Camera.model: "perspective"
 Camera.fps: 30.0
 Camera.cols: 640
 Camera.rows: 480
-
 Camera.fx: 800
 Camera.fy: 800
 Camera.cx: 320
@@ -52,9 +49,13 @@ VLLM.r_init:  !!opencv-matrix
     dt: f
     data: [ -1.2,1.2,-1.2]
 VLLM.s_init: 1.5
-VLLM.pcd_file: "../data/room.pcd"
+
+VLLM.pcd_file: "../../vllm-data/room.pcd"
+VLLM.video_file: "../../vllm-data/room.mp4"
+
 VLLM.voxel_grid_leaf: 0.05
-VLLM.normal_search_leaf: 0.10
+VLLM.normal_search_leaf: 0.20
+
 VLLM.gpd_size: 5
 VLLM.gpd_gain: 0.2
 VLLM.iteration: 10
