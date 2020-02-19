@@ -21,6 +21,10 @@ private:
 public:
   Viewer();
 
+  void addNormals(
+      const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud,
+      const pcl::PointCloud<pcl::Normal>::Ptr& normals);
+
   void addPointCloud(
       const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud, std::string name,
       Color color = Color{}, double size = 3.0);

@@ -45,31 +45,6 @@ void initTransformPointCloud(pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud)
   pcl::transformPointCloud(*cloud, *cloud, T);
 }
 
-// L2 norm is used
-pcl::Correspondences getCorrespondences(const pcXYZ::Ptr& cloud_source, const pcXYZ::Ptr& cloud_target)
-{
-  pcl::PointCloud<pcl::PointXYZRGBA>::Ptr source, target;
-  pcl::registration::CorrespondenceEstimation<pcl::PointXYZ, pcl::PointXYZ> est;
-  est.setInputSource(cloud_source);
-  est.setInputTarget(cloud_target);
-  pcl::Correspondences all_correspondences;
-  est.determineCorrespondences(all_correspondences);
-
-  return all_correspondences;
-}
-
-Eigen::Matrix4f registrationByG2O(
-    const pcXYZ::Ptr& cloud_source,
-    const pcXYZ::Ptr& cloud_target,
-    const pcl::Correspondences& correspondences)
-{
-  vllm::Aligner aligner;
-  Eigen::Matrix4f T;
-  aligner.estimate(
-      *cloud_source, *cloud_target, correspondences, T);
-  return T;
-}
-
 int main(int argc, char** argv)
 {
   float gain = 0.4f;
@@ -82,15 +57,19 @@ int main(int argc, char** argv)
   *cloud_target = *cloud_source;
   initTransformPointCloud(cloud_source);
 
-
   pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_align(new pcl::PointCloud<pcl::PointXYZ>);
   *cloud_align = *cloud_source;
 
+  pcl::PointCloud<pcl::Normal>::Ptr normals = vllm::estimateNormals(cloud_target, 0.2f);
+
+
+  // Initialize viewer
   vllm::Viewer viewer;
   viewer.addPointCloud(cloud_target, "target", vllm::Color(255, 0, 0));
   viewer.addPointCloud(cloud_align, "align", vllm::Color(0, 255, 0));
-  while (viewer.waitKey() != 's')
-    ;
+  viewer.addNormals(cloud_target, normals);
+  // while (viewer.waitKey() != 's')
+  //   ;
 
   vllm::GPD gpd(4);
   gpd.init(cloud_target, gain);
@@ -98,10 +77,10 @@ int main(int argc, char** argv)
   vllm::CorrespondenceRejectorLpd rejector(gpd);
 
   Eigen::Matrix4f pose = Eigen::Matrix4f::Identity();
-  const int DT = 50;
+  const int DT = 100;
   for (int i = 0; i < 100; i++) {
-    // NN
-    pcl::Correspondences correspondences = getCorrespondences(cloud_align, cloud_target);
+    // Search Nearest Neighbor
+    pcl::Correspondences correspondences = vllm::getCorrespondences(cloud_align, cloud_target);
     viewer.updatePointCloud(cloud_align, "align", vllm::Color(0, 255, 0));
     viewer.visualizeCorrespondences(cloud_align, cloud_target, correspondences, "cor", vllm::Color(0, 0, 255));
     if (viewer.waitKey(2 * DT) == 'q') break;
@@ -112,10 +91,16 @@ int main(int argc, char** argv)
     viewer.visualizeCorrespondences(cloud_align, cloud_target, correspondences, "cor", vllm::Color(0, 255, 255));
     if (viewer.waitKey(2 * DT) == 'q') break;
 
-    // Registration
-    Eigen::Matrix4f T = registrationByG2O(cloud_align, cloud_target, correspondences);
+    // Align
+    vllm::Aligner aligner;
+    Eigen::Matrix4f T = aligner.estimate(*cloud_align, *cloud_target, correspondences, *normals);
+    // Eigen::Matrix4f T = aligner.estimate(*cloud_align, *cloud_target, correspondences);
+
+    // Update
     pcl::transformPointCloud(*cloud_align, *cloud_align, T);
     pose = T * pose;
+
+    // Visuzalize
     viewer.updatePointCloud(cloud_align, "align", vllm::Color(0, 255, 0));
     viewer.unvisualizeCorrespondences("cor");
     if (viewer.waitKey(DT) == 'q') break;

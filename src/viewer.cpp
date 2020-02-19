@@ -20,6 +20,7 @@ Viewer::Viewer()
   viewer->addCoordinateSystem(0.1);
 }
 
+
 void Viewer::visualizeGPD(const GPD& gpd)
 {
   const size_t N = gpd.N;
@@ -45,6 +46,13 @@ void Viewer::visualizeGPD(const GPD& gpd)
       }
     }
   }
+}
+
+void Viewer::addNormals(
+    const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud,
+    const pcl::PointCloud<pcl::Normal>::Ptr& normals)
+{
+  viewer->addPointCloudNormals<pcl::PointXYZ, pcl::Normal>(cloud, normals, 10, 0.05f, "normals");
 }
 
 void Viewer::addPointCloud(

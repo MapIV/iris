@@ -48,17 +48,17 @@ public:
     R0.row(0) = normal0.cross(R0.row(1));
   }
 
-  // set up rotation matrix for pos1
-  void makeRot1()
-  {
-    Vector3 y;
-    y << 0, 1, 0;
-    R1.row(2) = normal1;
-    y = y - normal1(1) * normal1;
-    y.normalize();  // need to check if y is close to 0
-    R1.row(1) = y;
-    R1.row(0) = normal1.cross(R1.row(1));
-  }
+  // // set up rotation matrix for pos1
+  // void makeRot1()
+  // {
+  //   Vector3 y;
+  //   y << 0, 1, 0;
+  //   R1.row(2) = normal1;
+  //   y = y - normal1(1) * normal1;
+  //   y.normalize();  // need to check if y is close to 0
+  //   R1.row(1) = y;
+  //   R1.row(0) = normal1.cross(R1.row(1));
+  // }
 
   // returns a precision matrix for point-plane
   Matrix3 prec0(number_t e)
@@ -71,38 +71,38 @@ public:
     return R0.transpose() * prec * R0;
   }
 
-  // returns a precision matrix for point-plane
-  Matrix3 prec1(number_t e)
-  {
-    makeRot1();
-    Matrix3 prec;
-    prec << e, 0, 0,
-        0, e, 0,
-        0, 0, 1;
-    return R1.transpose() * prec * R1;
-  }
+  // // returns a precision matrix for point-plane
+  // Matrix3 prec1(number_t e)
+  // {
+  //   makeRot1();
+  //   Matrix3 prec;
+  //   prec << e, 0, 0,
+  //       0, e, 0,
+  //       0, 0, 1;
+  //   return R1.transpose() * prec * R1;
+  // }
 
-  // return a covariance matrix for plane-plane
-  Matrix3 cov0(number_t e)
-  {
-    makeRot0();
-    Matrix3 cov;
-    cov << 1, 0, 0,
-        0, 1, 0,
-        0, 0, e;
-    return R0.transpose() * cov * R0;
-  }
+  // // return a covariance matrix for plane-plane
+  // Matrix3 cov0(number_t e)
+  // {
+  //   makeRot0();
+  //   Matrix3 cov;
+  //   cov << 1, 0, 0,
+  //       0, 1, 0,
+  //       0, 0, e;
+  //   return R0.transpose() * cov * R0;
+  // }
 
-  // return a covariance matrix for plane-plane
-  Matrix3 cov1(number_t e)
-  {
-    makeRot1();
-    Matrix3 cov;
-    cov << 1, 0, 0,
-        0, 1, 0,
-        0, 0, e;
-    return R1.transpose() * cov * R1;
-  }
+  // // return a covariance matrix for plane-plane
+  // Matrix3 cov1(number_t e)
+  // {
+  //   makeRot1();
+  //   Matrix3 cov;
+  //   cov << 1, 0, 0,
+  //       0, 1, 0,
+  //       0, 0, e;
+  //   return R1.transpose() * cov * R1;
+  // }
 };
 
 class Edge_Sim3_GICP : public g2o::BaseUnaryEdge<3, EdgeGICP, VertexSim3Expmap>
@@ -137,6 +137,7 @@ public:
 
     // Euclidean distance
     _error = p1 - measurement().pos0;
+    // _error = measurement().pos0 - p1 ;
 
     // == for Plane to Plane ==
     // re-define the information matrix. topLeftCorner<3,3>() is the rotation()

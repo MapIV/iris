@@ -96,7 +96,6 @@ int main(int argc, char* argv[])
       continue;
     }
 
-
     // Transform to subtract initial offset
     pcl::transformPointCloud(*local_cloud, *local_cloud, T_init);
     pcl::transformPointCloud(*global_cloud, *global_cloud, T_init);
@@ -110,7 +109,6 @@ int main(int argc, char* argv[])
       correspondences = rejector.refineCorrespondences(correspondences, local_cloud);
       // Align pointclouds
       vllm::Aligner aligner;
-
       Eigen::Matrix4f T = aligner.estimate(*local_cloud, *cloud_target, correspondences, *normals);
 
       camera = T * camera;

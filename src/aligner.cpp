@@ -64,7 +64,6 @@ Eigen::Matrix4f Aligner::estimate(
   return execute(optimizer);
 }
 
-
 void Aligner::setVertexSim3(g2o::SparseOptimizer& optimizer)
 {
   // set up rotation and translation for this node
@@ -142,11 +141,10 @@ void Aligner::setEdgeGICP(
     meas.pos1 = pt1.cast<double>();
 
     Eigen::Vector3f n = normals.at(cor.index_match).getNormalVector3fMap();
+    e->information().setIdentity();
     if (std::isfinite(n.x())) {  // sometime n has NaN
       meas.normal0 = n.cast<double>();
-      e->information() = meas.prec0(0.1f);
-    } else {
-      e->information().setIdentity();
+      e->information() = meas.prec0(0.01f);
     }
     e->setMeasurement(meas);
 
