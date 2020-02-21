@@ -124,7 +124,12 @@ int main(int argc, char* argv[])
 
     // Visualize by OpenCV
     cv::imshow("OpenCV", bridge.getFrame());
-    if (cv::waitKey(10) == 'q') break;
+    int key = cv::waitKey(10);
+    if (key == 'q') break;
+    if (key == 'r') T_align = Eigen::Matrix4f::Identity();
+    if (key == 's')
+      while (cv::waitKey(0) == 's')
+        ;
 
     // `2` means openvslam::tracking_state_t::Tracking
     if (state != 2 || local_cloud->empty()) {
@@ -152,7 +157,11 @@ int main(int argc, char* argv[])
       correspondences = rejector.refineCorrespondences(correspondences, local_cloud);
       // Align pointclouds
       vllm::Aligner aligner;
-      Eigen::Matrix4f T = aligner.estimate(*local_cloud, *cloud_target, correspondences, *normals);
+      Eigen::Matrix4f T;
+      // if (i <= 2)
+      //   T = aligner.estimate7DoF(*local_cloud, *cloud_target, correspondences, normals);
+      // else
+      T = aligner.estimate6DoF(*local_cloud, *cloud_target, correspondences, normals);
 
       // Integrate
       camera = T * camera;
@@ -173,7 +182,7 @@ int main(int argc, char* argv[])
       pangolin_viewer.drawCamera(camera_raw, {1.0f, 1.0f, 1.0f, 1.0f});
       pangolin_viewer.drawNormals(cloud_target, normals, {0.0f, 1.0f, 1.0f, 1.0f});
       pangolin_viewer.drawCorrespondences(local_cloud, cloud_target, correspondences, {0.0f, 0.8f, 0.0f, 1.0f});
-      // pangolin_viewer.drawGPD(gpd);
+      pangolin_viewer.drawGPD(gpd);
       pangolin_viewer.swap();
     }
     vllm_trajectory.push_back(camera.block(0, 3, 3, 1));

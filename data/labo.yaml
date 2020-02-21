@@ -9,8 +9,8 @@ Camera.model: "perspective"
 Camera.fps: 30.0
 Camera.cols: 640
 Camera.rows: 480
-Camera.fx: 900
-Camera.fy: 900
+Camera.fx: 1100
+Camera.fy: 1100
 Camera.cx: 320
 Camera.cy: 240
 
@@ -55,7 +55,7 @@ VLLM.up_init:  !!opencv-matrix
     cols: 1
     dt: f
     data: [ 0,0,1]
-VLLM.s_init: 3.0
+VLLM.s_init: 3.2
 
 VLLM.pcd_file: "../../vllm-data/labo.pcd"
 VLLM.video_file: "../../vllm-data/labo.mp4"
@@ -63,6 +63,6 @@ VLLM.video_file: "../../vllm-data/labo.mp4"
 VLLM.voxel_grid_leaf: 0.05
 VLLM.normal_search_leaf: 0.20
 
-VLLM.gpd_size: 5
+VLLM.gpd_size: 8
 VLLM.gpd_gain: 0.2
 VLLM.iteration: 5

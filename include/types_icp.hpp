@@ -111,7 +111,6 @@ public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
   Edge_Sim3_GICP() {}
   Edge_Sim3_GICP(const Edge_Sim3_GICP* e);
-
   Matrix3 cov0, cov1;
 
   virtual bool read(std::istream&)
@@ -126,34 +125,86 @@ public:
     return false;
   }
 
-  // return the error estimate as a 3-vector
   void computeError()
   {
     // from <ViewPoint> to <Point>
     const VertexSim3Expmap* vp0 = static_cast<const VertexSim3Expmap*>(_vertices[0]);
-
     // get vp1 point into vp0 frame could be more efficient if we computed this transform just once
     Vector3 p1 = vp0->estimate().map(measurement().pos1);
-
     // Euclidean distance
     _error = p1 - measurement().pos0;
-    // _error = measurement().pos0 - p1 ;
 
-    // == for Plane to Plane ==
-    // re-define the information matrix. topLeftCorner<3,3>() is the rotation()
+    // == for Plane to Plane == NOTE: re-define the information matrix
     // const Matrix3 transform = (vp0->estimate().inverse() * vp1->estimate()).matrix().topLeftCorner<3, 3>();
     // information() = (cov0 + transform * cov1 * transform.transpose()).inverse();
   }
+};
 
-#ifdef NOT_NEED
-  // try analytic jacobians
-  virtual void linearizeOplus();
+class Edge_SE3_GICP : public g2o::BaseUnaryEdge<3, EdgeGICP, VertexSE3>
+{
+public:
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
+  Edge_SE3_GICP() {}
+  Edge_SE3_GICP(const Edge_SE3_GICP* e);
+  Matrix3 cov0, cov1;
 
-  // global derivative matrices
-  static Matrix3 dRidx;
-  static Matrix3 dRidy;
-  static Matrix3 dRidz;
-#endif
+  virtual bool read(std::istream&)
+  {
+    std::cerr << __PRETTY_FUNCTION__ << " not implemented yet" << std::endl;
+    return false;
+  }
+
+  virtual bool write(std::ostream&) const
+  {
+    std::cerr << __PRETTY_FUNCTION__ << " not implemented yet" << std::endl;
+    return false;
+  }
+
+  void computeError()
+  {
+    // from <ViewPoint> to <Point>
+    const VertexSE3* vp0 = static_cast<const VertexSE3*>(_vertices[0]);
+    // get vp1 point into vp0 frame could be more efficient if we computed this transform just once
+    // Eigen::Isometry3d cam=vp0->estimate();
+    Vector3 p1 = vp0->estimate()*(measurement().pos1);
+    // Euclidean distance
+    _error = p1 - measurement().pos0;
+
+    // == for Plane to Plane == NOTE: re-define the information matrix
+    // const Matrix3 transform = (vp0->estimate().inverse() * vp1->estimate()).matrix().topLeftCorner<3, 3>();
+    // information() = (cov0 + transform * cov1 * transform.transpose()).inverse();
+  }
+};
+
+
+class Edge_Scale_Regulator : public g2o::BaseUnaryEdge<1, double, VertexSim3Expmap>
+{
+private:
+  double gain;
+
+public:
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
+  Edge_Scale_Regulator(double gain = 10) : gain(gain) {}
+  Edge_Scale_Regulator(const Edge_Scale_Regulator* e);
+
+  virtual bool read(std::istream&)
+  {
+    std::cerr << __PRETTY_FUNCTION__ << " not implemented yet" << std::endl;
+    return false;
+  }
+
+  virtual bool write(std::ostream&) const
+  {
+    std::cerr << __PRETTY_FUNCTION__ << " not implemented yet" << std::endl;
+    return false;
+  }
+
+  void computeError()
+  {
+    const VertexSim3Expmap* vp0 = static_cast<const VertexSim3Expmap*>(_vertices[0]);
+    double scale = vp0->estimate().scale();
+    _error(0) = gain * (scale - measurement());
+  }
 };
 
 }  // namespace vllm

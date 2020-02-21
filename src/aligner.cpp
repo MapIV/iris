@@ -12,8 +12,51 @@
 
 namespace vllm
 {
-Eigen::Matrix4f Aligner::execute(g2o::SparseOptimizer& optimizer)
+Eigen::Matrix4f Aligner::estimate6DoF(
+    const pcl::PointCloud<pcl::PointXYZ>& source,
+    const pcl::PointCloud<pcl::PointXYZ>& target,
+    const pcl::Correspondences& correspondances,
+    const pcl::PointCloud<pcl::Normal>::Ptr& normals)
 {
+  g2o::SparseOptimizer optimizer;
+  g2o::OptimizationAlgorithmLevenberg* solver = new g2o::OptimizationAlgorithmLevenberg(
+      g2o::make_unique<g2o::BlockSolverX>(g2o::make_unique<g2o::LinearSolverDense<g2o::BlockSolverX::PoseMatrixType>>()));
+  optimizer.setAlgorithm(solver);
+
+  setVertexSE3(optimizer);
+  setEdge6DoFGICP(optimizer, source, target, correspondances, normals);
+
+  // execute
+  optimizer.setVerbose(false);
+  optimizer.initializeOptimization();
+  optimizer.computeActiveErrors();
+  optimizer.optimize(10);
+
+  // construct output matrix
+  g2o::VertexSE3* optimized = dynamic_cast<g2o::VertexSE3*>(optimizer.vertices().find(0)->second);
+  Eigen::Matrix3f R = optimized->estimate().rotation().matrix().cast<float>();
+  Eigen::Vector3f t = optimized->estimate().translation().cast<float>();
+
+  Eigen::Matrix4f T = Eigen::Matrix4f::Identity();
+  T.topLeftCorner(3, 3) = R;
+  T.topRightCorner(3, 1) = t;
+  return T;
+}
+Eigen::Matrix4f Aligner::estimate7DoF(
+    const pcl::PointCloud<pcl::PointXYZ>& source,
+    const pcl::PointCloud<pcl::PointXYZ>& target,
+    const pcl::Correspondences& correspondances,
+    const pcl::PointCloud<pcl::Normal>::Ptr& normals)
+{
+  g2o::SparseOptimizer optimizer;
+  g2o::OptimizationAlgorithmLevenberg* solver = new g2o::OptimizationAlgorithmLevenberg(
+      g2o::make_unique<g2o::BlockSolverX>(g2o::make_unique<g2o::LinearSolverDense<g2o::BlockSolverX::PoseMatrixType>>()));
+  optimizer.setAlgorithm(solver);
+
+  setVertexSim3(optimizer);
+  setEdge7DoFGICP(optimizer, source, target, correspondances, normals);
+
+  // execute
   optimizer.setVerbose(false);
   optimizer.initializeOptimization();
   optimizer.computeActiveErrors();
@@ -31,37 +74,23 @@ Eigen::Matrix4f Aligner::execute(g2o::SparseOptimizer& optimizer)
   return T;
 }
 
-Eigen::Matrix4f Aligner::estimate(
-    const pcl::PointCloud<pcl::PointXYZ>& source,
-    const pcl::PointCloud<pcl::PointXYZ>& target,
-    const pcl::Correspondences& correspondances)
+void Aligner::setVertexSE3(g2o::SparseOptimizer& optimizer)
 {
-  // TODO: I don't know I should initialize optimizer in every estimate
-  g2o::SparseOptimizer optimizer;
-  g2o::OptimizationAlgorithmLevenberg* solver = new g2o::OptimizationAlgorithmLevenberg(
-      g2o::make_unique<g2o::BlockSolverX>(g2o::make_unique<g2o::LinearSolverDense<g2o::BlockSolverX::PoseMatrixType>>()));
-  optimizer.setAlgorithm(solver);
+  // set up rotation and translation for this node
+  Eigen::Vector3d t(0, 0, 0);
+  Eigen::Quaterniond q;
+  q.setIdentity();
+  Eigen::Isometry3d camera;
+  camera = q;
+  camera.translation() = t;
 
-  setVertexSim3(optimizer);
-  setEdgeGICP(optimizer, source, target, correspondances);
-  return execute(optimizer);
-}
+  // set up initial parameter
+  g2o::VertexSE3* vc = new g2o::VertexSE3();
+  vc->setEstimate(camera);
+  vc->setId(0);
 
-Eigen::Matrix4f Aligner::estimate(
-    const pcl::PointCloud<pcl::PointXYZ>& source,
-    const pcl::PointCloud<pcl::PointXYZ>& target,
-    const pcl::Correspondences& correspondances,
-    const pcl::PointCloud<pcl::Normal>& normals)
-{
-  // TODO: I don't know I should initialize optimizer in every estimate
-  g2o::SparseOptimizer optimizer;
-  g2o::OptimizationAlgorithmLevenberg* solver = new g2o::OptimizationAlgorithmLevenberg(
-      g2o::make_unique<g2o::BlockSolverX>(g2o::make_unique<g2o::LinearSolverDense<g2o::BlockSolverX::PoseMatrixType>>()));
-  optimizer.setAlgorithm(solver);
-
-  setVertexSim3(optimizer);
-  setEdgeGICP(optimizer, source, target, correspondances, normals);
-  return execute(optimizer);
+  // add to optimizer
+  optimizer.addVertex(vc);
 }
 
 void Aligner::setVertexSim3(g2o::SparseOptimizer& optimizer)
@@ -83,18 +112,19 @@ void Aligner::setVertexSim3(g2o::SparseOptimizer& optimizer)
   optimizer.addVertex(vc);
 }
 
-void Aligner::setEdgeGICP(
+void Aligner::setEdge6DoFGICP(
     g2o::SparseOptimizer& optimizer,
     const pcl::PointCloud<pcl::PointXYZ>& source,
     const pcl::PointCloud<pcl::PointXYZ>& target,
-    const pcl::Correspondences& correspondances)
+    const pcl::Correspondences& correspondances,
+    const pcl::PointCloud<pcl::Normal>::Ptr& normals)
 {
-  for (const pcl::Correspondence& cor : correspondances) {
-    // get Vertex
-    g2o::VertexSim3Expmap* vp0 = dynamic_cast<g2o::VertexSim3Expmap*>(optimizer.vertices().find(0)->second);
+  // get Vertex
+  g2o::VertexSE3* vp0 = dynamic_cast<g2o::VertexSE3*>(optimizer.vertices().find(0)->second);
 
+  for (const pcl::Correspondence& cor : correspondances) {
     // new edge with correct cohort for caching
-    vllm::Edge_Sim3_GICP* e = new vllm::Edge_Sim3_GICP();
+    vllm::Edge_SE3_GICP* e = new vllm::Edge_SE3_GICP();
     e->setVertex(0, vp0);  // set viewpoint
 
     // calculate the relative 3D position of the point
@@ -107,7 +137,14 @@ void Aligner::setEdgeGICP(
     meas.pos1 = pt1.cast<double>();
 
     e->setMeasurement(meas);
-    e->information().setIdentity();  // use this for point-point
+    if (normals) {
+      Eigen::Vector3f n = normals->at(cor.index_match).getNormalVector3fMap();
+      e->information().setIdentity();
+      if (std::isfinite(n.x())) {  // sometime n has NaN
+        meas.normal0 = n.cast<double>();
+        e->information() = meas.prec0(0.01f);
+      }
+    }
 
     // set Huber kernel (default delta = 1.0)
     g2o::RobustKernelHuber* rk = new g2o::RobustKernelHuber;
@@ -116,17 +153,18 @@ void Aligner::setEdgeGICP(
   }
 }
 
-void Aligner::setEdgeGICP(
+
+void Aligner::setEdge7DoFGICP(
     g2o::SparseOptimizer& optimizer,
     const pcl::PointCloud<pcl::PointXYZ>& source,
     const pcl::PointCloud<pcl::PointXYZ>& target,
     const pcl::Correspondences& correspondances,
-    const pcl::PointCloud<pcl::Normal>& normals)
+    const pcl::PointCloud<pcl::Normal>::Ptr& normals)
 {
-  for (const pcl::Correspondence& cor : correspondances) {
-    // get Vertex
-    g2o::VertexSim3Expmap* vp0 = dynamic_cast<g2o::VertexSim3Expmap*>(optimizer.vertices().find(0)->second);
+  // get Vertex
+  g2o::VertexSim3Expmap* vp0 = dynamic_cast<g2o::VertexSim3Expmap*>(optimizer.vertices().find(0)->second);
 
+  for (const pcl::Correspondence& cor : correspondances) {
     // new edge with correct cohort for caching
     vllm::Edge_Sim3_GICP* e = new vllm::Edge_Sim3_GICP();
     e->setVertex(0, vp0);  // set viewpoint
@@ -140,18 +178,26 @@ void Aligner::setEdgeGICP(
     meas.pos0 = pt0.cast<double>();
     meas.pos1 = pt1.cast<double>();
 
-    Eigen::Vector3f n = normals.at(cor.index_match).getNormalVector3fMap();
-    e->information().setIdentity();
-    if (std::isfinite(n.x())) {  // sometime n has NaN
-      meas.normal0 = n.cast<double>();
-      e->information() = meas.prec0(0.01f);
-    }
     e->setMeasurement(meas);
+    if (normals) {
+      Eigen::Vector3f n = normals->at(cor.index_match).getNormalVector3fMap();
+      e->information().setIdentity();
+      if (std::isfinite(n.x())) {  // sometime n has NaN
+        meas.normal0 = n.cast<double>();
+        e->information() = meas.prec0(0.01f);
+      }
+    }
 
     // set Huber kernel (default delta = 1.0)
     g2o::RobustKernelHuber* rk = new g2o::RobustKernelHuber;
     e->setRobustKernel(rk);
     optimizer.addEdge(e);
   }
+
+  // add a Regularization Edge of Scale
+  Edge_Scale_Regulator* e = new Edge_Scale_Regulator(1e5);
+  e->setVertex(0, vp0);
+  e->information().setIdentity();
+  e->setMeasurement(1.0);
 }
 }  // namespace vllm

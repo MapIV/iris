@@ -13,33 +13,34 @@ public:
 
   ~Aligner() {}
 
-  Eigen::Matrix4f estimate(
-      const pcl::PointCloud<pcl::PointXYZ>& source,
-      const pcl::PointCloud<pcl::PointXYZ>& target,
-      const pcl::Correspondences& correspondances);
-
-  Eigen::Matrix4f estimate(
+  Eigen::Matrix4f estimate6DoF(
       const pcl::PointCloud<pcl::PointXYZ>& source,
       const pcl::PointCloud<pcl::PointXYZ>& target,
       const pcl::Correspondences& correspondances,
-      const pcl::PointCloud<pcl::Normal>& normals);  // for target
+      const pcl::PointCloud<pcl::Normal>::Ptr& normals = nullptr);  // for target
+
+  Eigen::Matrix4f estimate7DoF(
+      const pcl::PointCloud<pcl::PointXYZ>& source,
+      const pcl::PointCloud<pcl::PointXYZ>& target,
+      const pcl::Correspondences& correspondances,
+      const pcl::PointCloud<pcl::Normal>::Ptr& normals = nullptr);  // for target
 
 private:
-  Eigen::Matrix4f execute(g2o::SparseOptimizer& optimizer);
-
   void setVertexSim3(g2o::SparseOptimizer& optimizer);
+  void setVertexSE3(g2o::SparseOptimizer& optimizer);
 
-  void setEdgeGICP(
-      g2o::SparseOptimizer& optimizer,
-      const pcl::PointCloud<pcl::PointXYZ>& source,
-      const pcl::PointCloud<pcl::PointXYZ>& target,
-      const pcl::Correspondences& correspondances);
-
-  void setEdgeGICP(
+  void setEdge6DoFGICP(
       g2o::SparseOptimizer& optimizer,
       const pcl::PointCloud<pcl::PointXYZ>& source,
       const pcl::PointCloud<pcl::PointXYZ>& target,
       const pcl::Correspondences& correspondances,
-      const pcl::PointCloud<pcl::Normal>& normals);  // for target
+      const pcl::PointCloud<pcl::Normal>::Ptr& normals);  // for target
+
+  void setEdge7DoFGICP(
+      g2o::SparseOptimizer& optimizer,
+      const pcl::PointCloud<pcl::PointXYZ>& source,
+      const pcl::PointCloud<pcl::PointXYZ>& target,
+      const pcl::Correspondences& correspondances,
+      const pcl::PointCloud<pcl::Normal>::Ptr& normals);  // for target
 };
 }  // namespace vllm
