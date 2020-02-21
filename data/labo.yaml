@@ -1,0 +1,68 @@
+%YAML:1.0
+#==============#
+# Camera Model #
+#==============#
+Camera.name: "Realsense D435"
+Camera.setup: "monocular"
+Camera.model: "perspective"
+
+Camera.fps: 30.0
+Camera.cols: 640
+Camera.rows: 480
+Camera.fx: 900
+Camera.fy: 900
+Camera.cx: 320
+Camera.cy: 240
+
+Camera.k1: 0.0
+Camera.k2: 0.0
+Camera.p1: 0.0
+Camera.p2: 0.0
+Camera.k3: 0.0
+Camera.color_order: "RGB"
+
+#================#
+# ORB Parameters #
+#================#
+Feature.max_num_keypoints: 2000
+Feature.scale_factor: 1.2
+Feature.num_levels: 8
+Feature.ini_fast_threshold: 20
+Feature.min_fast_threshold: 7
+Feature.mask_rectangles:
+  - [0.0, 1.0, 0.0, 0.1]
+  - [0.0, 1.0, 0.84, 1.0]
+  - [0.0, 0.2, 0.7, 1.0]
+  - [0.8, 1.0, 0.7, 1.0]
+
+#=================#
+# VLLM parameters #
+#=================#
+VLLM.t_init:  !!opencv-matrix
+    rows: 3
+    cols: 1
+    dt: f
+    data: [ -2.2, -1.0, 0.0]
+# normal vector of camera
+VLLM.normal_init:  !!opencv-matrix
+    rows: 3
+    cols: 1
+    dt: f
+    data: [ 1,0.4,0]
+# up vector of camera
+VLLM.up_init:  !!opencv-matrix
+    rows: 3
+    cols: 1
+    dt: f
+    data: [ 0,0,1]
+VLLM.s_init: 3.0
+
+VLLM.pcd_file: "../../vllm-data/labo.pcd"
+VLLM.video_file: "../../vllm-data/labo.mp4"
+
+VLLM.voxel_grid_leaf: 0.05
+VLLM.normal_search_leaf: 0.20
+
+VLLM.gpd_size: 5
+VLLM.gpd_gain: 0.2
+VLLM.iteration: 5

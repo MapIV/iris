@@ -17,17 +17,30 @@ struct Config {
   {
     cv::FileStorage fs(yaml_file, cv::FileStorage::READ);
     {
-      cv::Mat t, r;
+      cv::Mat trans, normal, up;
       float s;
-      fs["VLLM.t_init"] >> t;
-      fs["VLLM.r_init"] >> r;
+      fs["VLLM.t_init"] >> trans;
+      fs["VLLM.normal_init"] >> normal;
+      fs["VLLM.up_init"] >> up;
       fs["VLLM.s_init"] >> s;
-      cv::Rodrigues(r, r);
-      cv::Mat T = cv::Mat::eye(4, 4, CV_32FC1);
-      cv::Mat(s * r).copyTo(T.colRange(0, 3).rowRange(0, 3));
-      t.copyTo(T.col(3).rowRange(0, 3));
-      cv::cv2eigen(T, T_init);
-      std::cout << T_init << std::endl;
+
+      Eigen::Vector3f n, u, t;
+      Eigen::Matrix3f R = Eigen::Matrix3f::Zero();
+      cv::cv2eigen(normal, n);
+      cv::cv2eigen(up, u);
+      cv::cv2eigen(trans, t);
+
+      n.normalize();
+      u.normalize();
+      R.row(2) = n;
+      R.row(1) = (n.dot(u) * n - u).normalized();
+      R.row(0) = R.row(1).cross(R.row(2));
+      std::cout << R << std::endl;
+
+      Eigen::Matrix4f T = Eigen::Matrix4f::Identity();
+      T.topLeftCorner(3, 3) = s * R.transpose();
+      T.topRightCorner(3, 1) = t;
+      T_init = T;
     }
 
     fs["VLLM.normal_search_leaf"] >> normal_search_leaf;
@@ -93,6 +106,8 @@ int main(int argc, char* argv[])
   std::vector<Eigen::Vector3f> raw_trajectory;
   std::vector<Eigen::Vector3f> vllm_trajectory;
 
+  Eigen::Matrix4f T_align = Eigen::Matrix4f::Identity();
+
   // == Main Loop ==
   while (true) {
     // Execute vSLAM
@@ -120,7 +135,15 @@ int main(int argc, char* argv[])
     pcl::transformPointCloud(*local_cloud, *local_cloud, T_init);
     pcl::transformPointCloud(*global_cloud, *global_cloud, T_init);
     camera = T_init * camera;
+
+    // raw trajectory
+    Eigen::Matrix4f camera_raw = camera;
     raw_trajectory.push_back(camera.block(0, 3, 3, 1));
+
+    // last estimated
+    camera = T_align * camera;
+    pcl::transformPointCloud(*local_cloud, *local_cloud, T_align);
+    pcl::transformPointCloud(*global_cloud, *global_cloud, T_align);
 
     for (int i = 0; i < config.iteration; i++) {
       // Get all correspodences
@@ -131,9 +154,11 @@ int main(int argc, char* argv[])
       vllm::Aligner aligner;
       Eigen::Matrix4f T = aligner.estimate(*local_cloud, *cloud_target, correspondences, *normals);
 
+      // Integrate
       camera = T * camera;
       pcl::transformPointCloud(*local_cloud, *local_cloud, T);
       pcl::transformPointCloud(*global_cloud, *global_cloud, T);
+      T_align = T * T_align;
 
       // Visualize by Pangolin
       pangolin_viewer.clear();
@@ -145,9 +170,10 @@ int main(int argc, char* argv[])
       pangolin_viewer.drawTrajectory(raw_trajectory, {1.0f, 0.0f, 1.0f, 3.0f});
       pangolin_viewer.drawTrajectory(vllm_trajectory, {1.0f, 0.0f, 0.0f, 3.0f});
       pangolin_viewer.drawCamera(camera, {1.0f, 1.0f, 1.0f, 1.0f});
+      pangolin_viewer.drawCamera(camera_raw, {1.0f, 1.0f, 1.0f, 1.0f});
       pangolin_viewer.drawNormals(cloud_target, normals, {0.0f, 1.0f, 1.0f, 1.0f});
       pangolin_viewer.drawCorrespondences(local_cloud, cloud_target, correspondences, {0.0f, 0.8f, 0.0f, 1.0f});
-      pangolin_viewer.drawGPD(gpd);
+      // pangolin_viewer.drawGPD(gpd);
       pangolin_viewer.swap();
     }
     vllm_trajectory.push_back(camera.block(0, 3, 3, 1));
