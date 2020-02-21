@@ -1,5 +1,5 @@
 #include "aligner.hpp"
-#include "types_icp.hpp"
+#include "types_gicp.hpp"
 
 #include <g2o/core/block_solver.h>
 #include <g2o/core/optimization_algorithm_levenberg.h>
@@ -151,6 +151,12 @@ void Aligner::setEdge6DoFGICP(
     e->setRobustKernel(rk);
     optimizer.addEdge(e);
   }
+
+  // add a Regularization Edge of Scale
+  Edge_Z_Regularizer* e = new Edge_Z_Regularizer();
+  e->setVertex(0, vp0);
+  e->information().setIdentity();
+  e->setMeasurement(0.0);
 }
 
 
@@ -195,9 +201,9 @@ void Aligner::setEdge7DoFGICP(
   }
 
   // add a Regularization Edge of Scale
-  Edge_Scale_Regulator* e = new Edge_Scale_Regulator(1e5);
+  Edge_ZScale_Regularizer* e = new Edge_ZScale_Regularizer();
   e->setVertex(0, vp0);
   e->information().setIdentity();
-  e->setMeasurement(1.0);
+  e->setMeasurement(Eigen::Vector2d(1.0, 0.0));
 }
 }  // namespace vllm

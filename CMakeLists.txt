@@ -100,8 +100,15 @@ add_subdirectory(3rd/openvslam)
 include_directories(${CMAKE_CURRENT_LIST_DIR}/include)
 
 # == main ==
-add_executable(main main.cpp src/bridge.cpp src/aligner.cpp src/pangolin_viewer.cpp
-                    src/util.cpp src/global_point_distribution.cpp)
+add_executable(
+  main
+  main.cpp
+  src/bridge.cpp
+  src/aligner.cpp
+  src/pangolin_viewer.cpp
+  src/util.cpp
+  src/global_point_distribution.cpp
+  src/types_gicp.cpp)
 target_include_directories(
   main SYSTEM
   PRIVATE ${PROJECT_SOURCE_DIR}/3rd/openvslam/src/

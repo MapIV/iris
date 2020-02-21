@@ -158,7 +158,7 @@ int main(int argc, char* argv[])
       // Align pointclouds
       vllm::Aligner aligner;
       Eigen::Matrix4f T;
-      // if (i <= 2)
+      // if (i == 0)
       //   T = aligner.estimate7DoF(*local_cloud, *cloud_target, correspondences, normals);
       // else
       T = aligner.estimate6DoF(*local_cloud, *cloud_target, correspondences, normals);
@@ -182,7 +182,7 @@ int main(int argc, char* argv[])
       pangolin_viewer.drawCamera(camera_raw, {1.0f, 1.0f, 1.0f, 1.0f});
       pangolin_viewer.drawNormals(cloud_target, normals, {0.0f, 1.0f, 1.0f, 1.0f});
       pangolin_viewer.drawCorrespondences(local_cloud, cloud_target, correspondences, {0.0f, 0.8f, 0.0f, 1.0f});
-      pangolin_viewer.drawGPD(gpd);
+      // pangolin_viewer.drawGPD(gpd);
       pangolin_viewer.swap();
     }
     vllm_trajectory.push_back(camera.block(0, 3, 3, 1));
