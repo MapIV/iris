@@ -70,11 +70,9 @@ public:
 class Edge_ZScale_Regularizer : public g2o::BaseUnaryEdge<2, Eigen::Vector2d, VertexSim3Expmap>
 {
 private:
-  double gain;
-
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
-  Edge_ZScale_Regularizer(double gain = 10) : gain(gain) {}
+  Edge_ZScale_Regularizer() {}
   Edge_ZScale_Regularizer(const Edge_ZScale_Regularizer* e);
 
   virtual bool read(std::istream&);
@@ -85,11 +83,9 @@ public:
 class Edge_Z_Regularizer : public g2o::BaseUnaryEdge<1, double, VertexSE3>
 {
 private:
-  double gain;
-
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
-  Edge_Z_Regularizer(double gain = 10) : gain(gain) {}
+  Edge_Z_Regularizer() {}
   Edge_Z_Regularizer(const Edge_Z_Regularizer* e);
 
   virtual bool read(std::istream&);

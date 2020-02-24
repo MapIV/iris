@@ -35,12 +35,12 @@ struct Config {
       R.row(2) = n;
       R.row(1) = (n.dot(u) * n - u).normalized();
       R.row(0) = R.row(1).cross(R.row(2));
-      std::cout << R << std::endl;
 
       Eigen::Matrix4f T = Eigen::Matrix4f::Identity();
       T.topLeftCorner(3, 3) = s * R.transpose();
       T.topRightCorner(3, 1) = t;
       T_init = T;
+      std::cout << T << std::endl;
     }
 
     fs["VLLM.normal_search_leaf"] >> normal_search_leaf;
@@ -118,15 +118,16 @@ int main(int argc, char* argv[])
     // Get some information of vSLAM
     pcl::PointCloud<pcl::PointXYZ>::Ptr local_cloud(new pcl::PointCloud<pcl::PointXYZ>);
     pcl::PointCloud<pcl::PointXYZ>::Ptr global_cloud(new pcl::PointCloud<pcl::PointXYZ>);
+    pcl::PointCloud<pcl::PointXYZ>::Ptr aligned_cloud(new pcl::PointCloud<pcl::PointXYZ>);
     bridge.getLandmarks(local_cloud, global_cloud);
     int state = static_cast<int>(bridge.getState());
-    Eigen::Matrix4f camera = bridge.getCameraPose().inverse().cast<float>();
+    Eigen::Matrix4f camera_raw = bridge.getCameraPose().inverse().cast<float>();
 
     // Visualize by OpenCV
     cv::imshow("OpenCV", bridge.getFrame());
     int key = cv::waitKey(10);
     if (key == 'q') break;
-    if (key == 'r') T_align = Eigen::Matrix4f::Identity();
+    if (key == 'r') T_align = T_init;
     if (key == 's')
       while (cv::waitKey(0) == 's')
         ;
@@ -137,54 +138,49 @@ int main(int argc, char* argv[])
     }
 
     // Transform to subtract initial offset
-    pcl::transformPointCloud(*local_cloud, *local_cloud, T_init);
-    pcl::transformPointCloud(*global_cloud, *global_cloud, T_init);
-    camera = T_init * camera;
+    // pcl::transformPointCloud(*local_cloud, *aligned_cloud, T_init);
+    // pcl::transformPointCloud(*global_cloud, *global_cloud, T_init);
+    // camera = T_init * camera;
 
     // raw trajectory
-    Eigen::Matrix4f camera_raw = camera;
-    raw_trajectory.push_back(camera.block(0, 3, 3, 1));
+    camera_raw = T_init * camera_raw;
+    raw_trajectory.push_back(camera_raw.block(0, 3, 3, 1));
+    pcl::transformPointCloud(*local_cloud, *local_cloud, T_init);
+    pcl::transformPointCloud(*local_cloud, *aligned_cloud, T_align);
 
-    // last estimated
-    camera = T_align * camera;
-    pcl::transformPointCloud(*local_cloud, *local_cloud, T_align);
-    pcl::transformPointCloud(*global_cloud, *global_cloud, T_align);
+    Eigen::Matrix4f camera;
 
     for (int i = 0; i < config.iteration; i++) {
       // Get all correspodences
-      pcl::Correspondences correspondences = vllm::getCorrespondences(local_cloud, cloud_target);
+      pcl::Correspondences correspondences = vllm::getCorrespondences(aligned_cloud, cloud_target);
       // Reject invalid correspondeces
       correspondences = rejector.refineCorrespondences(correspondences, local_cloud);
       // Align pointclouds
       vllm::Aligner aligner;
-      Eigen::Matrix4f T;
-      // if (i == 0)
-      //   T = aligner.estimate7DoF(*local_cloud, *cloud_target, correspondences, normals);
-      // else
-      T = aligner.estimate6DoF(*local_cloud, *cloud_target, correspondences, normals);
-
+      // T_align = aligner.estimate6DoF(T_align, *local_cloud, *cloud_target, correspondences, normals);
+      T_align = aligner.estimate7DoF(T_align, *local_cloud, *cloud_target, correspondences, normals);
       // Integrate
-      camera = T * camera;
-      pcl::transformPointCloud(*local_cloud, *local_cloud, T);
-      pcl::transformPointCloud(*global_cloud, *global_cloud, T);
-      T_align = T * T_align;
+      camera = T_align * camera_raw;
+      pcl::transformPointCloud(*local_cloud, *aligned_cloud, T_align);
 
       // Visualize by Pangolin
       pangolin_viewer.clear();
       pangolin_viewer.drawGridLine();
       pangolin_viewer.drawString("state=" + std::to_string(state) + ", itr=" + std::to_string(i), {1.0f, 0.0f, 0.0f, 2.0f});
-      pangolin_viewer.drawPointCloud(local_cloud, {1.0f, 1.0f, 0.0f, 2.0f});
-      pangolin_viewer.drawPointCloud(global_cloud, {1.0f, 0.0f, 0.0f, 1.0f});
+      // pangolin_viewer.drawPointCloud(local_cloud, {1.0f, 1.0f, 0.0f, 2.0f});
+      pangolin_viewer.drawPointCloud(aligned_cloud, {1.0f, 1.0f, 0.0f, 2.0f});
       pangolin_viewer.drawPointCloud(cloud_target, {0.8f, 0.8f, 0.8f, 1.0f});
       pangolin_viewer.drawTrajectory(raw_trajectory, {1.0f, 0.0f, 1.0f, 3.0f});
       pangolin_viewer.drawTrajectory(vllm_trajectory, {1.0f, 0.0f, 0.0f, 3.0f});
       pangolin_viewer.drawCamera(camera, {1.0f, 1.0f, 1.0f, 1.0f});
       pangolin_viewer.drawCamera(camera_raw, {1.0f, 1.0f, 1.0f, 1.0f});
       pangolin_viewer.drawNormals(cloud_target, normals, {0.0f, 1.0f, 1.0f, 1.0f});
-      pangolin_viewer.drawCorrespondences(local_cloud, cloud_target, correspondences, {0.0f, 0.8f, 0.0f, 1.0f});
+      // pangolin_viewer.drawCorrespondences(local_cloud, cloud_target, correspondences, {0.0f, 0.8f, 0.0f, 1.0f});
+      pangolin_viewer.drawCorrespondences(aligned_cloud, cloud_target, correspondences, {1.0f, 0.0f, 0.0f, 1.0f});
       // pangolin_viewer.drawGPD(gpd);
       pangolin_viewer.swap();
     }
+    std::cout << T_align << std::endl;
     vllm_trajectory.push_back(camera.block(0, 3, 3, 1));
   }
 

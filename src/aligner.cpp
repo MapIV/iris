@@ -1,5 +1,6 @@
 #include "aligner.hpp"
 #include "types_gicp.hpp"
+#include "util.hpp"
 
 #include <g2o/core/block_solver.h>
 #include <g2o/core/optimization_algorithm_levenberg.h>
@@ -13,6 +14,7 @@
 namespace vllm
 {
 Eigen::Matrix4f Aligner::estimate6DoF(
+    Eigen::Matrix4f& T,
     const pcl::PointCloud<pcl::PointXYZ>& source,
     const pcl::PointCloud<pcl::PointXYZ>& target,
     const pcl::Correspondences& correspondances,
@@ -23,7 +25,7 @@ Eigen::Matrix4f Aligner::estimate6DoF(
       g2o::make_unique<g2o::BlockSolverX>(g2o::make_unique<g2o::LinearSolverDense<g2o::BlockSolverX::PoseMatrixType>>()));
   optimizer.setAlgorithm(solver);
 
-  setVertexSE3(optimizer);
+  setVertexSE3(optimizer, T);
   setEdge6DoFGICP(optimizer, source, target, correspondances, normals);
 
   // execute
@@ -37,12 +39,13 @@ Eigen::Matrix4f Aligner::estimate6DoF(
   Eigen::Matrix3f R = optimized->estimate().rotation().matrix().cast<float>();
   Eigen::Vector3f t = optimized->estimate().translation().cast<float>();
 
-  Eigen::Matrix4f T = Eigen::Matrix4f::Identity();
-  T.topLeftCorner(3, 3) = R;
-  T.topRightCorner(3, 1) = t;
-  return T;
+  Eigen::Matrix4f _T = Eigen::Matrix4f::Identity();
+  _T.topLeftCorner(3, 3) = R;
+  _T.topRightCorner(3, 1) = t;
+  return _T;
 }
 Eigen::Matrix4f Aligner::estimate7DoF(
+    Eigen::Matrix4f& T,
     const pcl::PointCloud<pcl::PointXYZ>& source,
     const pcl::PointCloud<pcl::PointXYZ>& target,
     const pcl::Correspondences& correspondances,
@@ -53,7 +56,7 @@ Eigen::Matrix4f Aligner::estimate7DoF(
       g2o::make_unique<g2o::BlockSolverX>(g2o::make_unique<g2o::LinearSolverDense<g2o::BlockSolverX::PoseMatrixType>>()));
   optimizer.setAlgorithm(solver);
 
-  setVertexSim3(optimizer);
+  setVertexSim3(optimizer, T);
   setEdge7DoFGICP(optimizer, source, target, correspondances, normals);
 
   // execute
@@ -68,21 +71,24 @@ Eigen::Matrix4f Aligner::estimate7DoF(
   Eigen::Matrix3f R = optimized->estimate().rotation().matrix().cast<float>();
   Eigen::Vector3f t = optimized->estimate().translation().cast<float>();
 
-  Eigen::Matrix4f T = Eigen::Matrix4f::Identity();
+  std::cout << scale << std::endl;
+  T = Eigen::Matrix4f::Identity();
   T.topLeftCorner(3, 3) = scale * R;
   T.topRightCorner(3, 1) = t;
   return T;
 }
 
-void Aligner::setVertexSE3(g2o::SparseOptimizer& optimizer)
+void Aligner::setVertexSE3(g2o::SparseOptimizer& optimizer, Eigen::Matrix4f& T)
+// void Aligner::setVertexSE3(g2o::SparseOptimizer& optimizer)
 {
   // set up rotation and translation for this node
   Eigen::Vector3d t(0, 0, 0);
   Eigen::Quaterniond q;
   q.setIdentity();
   Eigen::Isometry3d camera;
-  camera = q;
-  camera.translation() = t;
+  Eigen::Matrix3d R = T.topLeftCorner(3, 3).cast<double>();
+  camera = Eigen::Quaterniond(R);
+  camera.translation() = T.topRightCorner(3, 1).cast<double>();
 
   // set up initial parameter
   g2o::VertexSE3* vc = new g2o::VertexSE3();
@@ -93,15 +99,14 @@ void Aligner::setVertexSE3(g2o::SparseOptimizer& optimizer)
   optimizer.addVertex(vc);
 }
 
-void Aligner::setVertexSim3(g2o::SparseOptimizer& optimizer)
+void Aligner::setVertexSim3(g2o::SparseOptimizer& optimizer, Eigen::Matrix4f& T)
 {
   // set up rotation and translation for this node
-  Eigen::Vector3d t(0, 0, 0);
-  Eigen::Quaterniond q;
-  q.setIdentity();
-
-  double r = 1.0;
-  g2o::Sim3 sim3(q, t, r);
+  Eigen::Vector3d t = T.topRightCorner(3, 1).cast<double>();
+  Eigen::Matrix3d R = T.topLeftCorner(3, 3).cast<double>();
+  Eigen::Quaterniond q = Eigen::Quaterniond(R);
+  double s = vllm::getScale(R.cast<float>());
+  g2o::Sim3 sim3(q, t, s);
 
   // set up initial parameter
   g2o::VertexSim3Expmap* vc = new g2o::VertexSim3Expmap();
@@ -157,6 +162,7 @@ void Aligner::setEdge6DoFGICP(
   e->setVertex(0, vp0);
   e->information().setIdentity();
   e->setMeasurement(0.0);
+  optimizer.addEdge(e);
 }
 
 
@@ -205,5 +211,6 @@ void Aligner::setEdge7DoFGICP(
   e->setVertex(0, vp0);
   e->information().setIdentity();
   e->setMeasurement(Eigen::Vector2d(1.0, 0.0));
+  optimizer.addEdge(e);
 }
 }  // namespace vllm

@@ -55,7 +55,7 @@ VLLM.up_init:  !!opencv-matrix
     cols: 1
     dt: f
     data: [ 0,0,1]
-VLLM.s_init: 50
+VLLM.s_init: 100
 
 VLLM.pcd_file: "../../vllm-data/moriyama.pcd"
 VLLM.video_file: "../../vllm-data/moriyama-clip.mp4"

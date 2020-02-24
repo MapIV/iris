@@ -14,20 +14,22 @@ public:
   ~Aligner() {}
 
   Eigen::Matrix4f estimate6DoF(
+      Eigen::Matrix4f& T,
       const pcl::PointCloud<pcl::PointXYZ>& source,
       const pcl::PointCloud<pcl::PointXYZ>& target,
       const pcl::Correspondences& correspondances,
       const pcl::PointCloud<pcl::Normal>::Ptr& normals = nullptr);  // for target
 
   Eigen::Matrix4f estimate7DoF(
+      Eigen::Matrix4f& T,
       const pcl::PointCloud<pcl::PointXYZ>& source,
       const pcl::PointCloud<pcl::PointXYZ>& target,
       const pcl::Correspondences& correspondances,
       const pcl::PointCloud<pcl::Normal>::Ptr& normals = nullptr);  // for target
 
 private:
-  void setVertexSim3(g2o::SparseOptimizer& optimizer);
-  void setVertexSE3(g2o::SparseOptimizer& optimizer);
+  void setVertexSim3(g2o::SparseOptimizer& optimizer, Eigen::Matrix4f& T);
+  void setVertexSE3(g2o::SparseOptimizer& optimizer, Eigen::Matrix4f& T);
 
   void setEdge6DoFGICP(
       g2o::SparseOptimizer& optimizer,

@@ -145,7 +145,7 @@ void Edge_ZScale_Regularizer::computeError()
   double scale = vp0->estimate().scale();
   double z = vp0->estimate().translation()(2);
 
-  _error(0) = 1e3 * (scale - measurement()(0));
+  _error(0) = 1e1 * (scale - measurement()(0));
   _error(1) = 1e4 * (z - measurement()(1));
 }
 
@@ -163,7 +163,7 @@ void Edge_Z_Regularizer::computeError()
 {
   const VertexSE3* vp0 = static_cast<const VertexSE3*>(_vertices[0]);
   double z = vp0->estimate().translation()(2);
-  _error(0) = 1e5 * (z - measurement());
+  _error(0) = 1e4 * (z - measurement());
 }
 
 
