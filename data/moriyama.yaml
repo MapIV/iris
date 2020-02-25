@@ -66,3 +66,7 @@ VLLM.normal_search_leaf: 1.00
 VLLM.gpd_size: 20
 VLLM.gpd_gain: 0.2
 VLLM.iteration: 10
+VLLM.frame_skip: 2
+
+VLLM.scale_gain: 1.0
+VLLM.pitch_gain: 1.0

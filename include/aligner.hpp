@@ -27,7 +27,16 @@ public:
       const pcl::Correspondences& correspondances,
       const pcl::PointCloud<pcl::Normal>::Ptr& normals = nullptr);  // for target
 
+  void setGain(double _scale, double _pitch)
+  {
+    scale_gain = _scale;
+    pitch_gain = _pitch;
+  }
+
 private:
+  double scale_gain = 1.0;
+  double pitch_gain = 1.0;
+
   void setVertexSim3(g2o::SparseOptimizer& optimizer, Eigen::Matrix4f& T);
   void setVertexSE3(g2o::SparseOptimizer& optimizer, Eigen::Matrix4f& T);
 

@@ -20,7 +20,7 @@
 #include <glog/logging.h>
 #endif
 
-void BridgeOpenVSLAM::setup(int argc, char* argv[], const std::string& video_file_path)
+void BridgeOpenVSLAM::setup(int argc, char* argv[], const std::string& video_file_path, int _frame_skip)
 {
 #ifdef USE_STACK_TRACE_LOGGER
   google::InitGoogleLogging(argv[0]);
@@ -32,7 +32,6 @@ void BridgeOpenVSLAM::setup(int argc, char* argv[], const std::string& video_fil
   auto help = op.add<popl::Switch>("h", "help", "produce help message");
   auto vocab_file_path = op.add<popl::Value<std::string>>("v", "vocab", "vocabulary file path");
   auto config_file_path = op.add<popl::Value<std::string>>("c", "config", "config file path");
-  auto _frame_skip = op.add<popl::Value<unsigned int>>("", "frame-skip", "interval of frame skip", 1);
   auto auto_term = op.add<popl::Switch>("", "auto-term", "automatically terminate the viewer");
   auto debug_mode = op.add<popl::Switch>("", "debug", "debug mode");
 
@@ -45,7 +44,7 @@ void BridgeOpenVSLAM::setup(int argc, char* argv[], const std::string& video_fil
     exit(EXIT_FAILURE);
   }
 
-  frame_skip = _frame_skip->value();
+  frame_skip = _frame_skip;
 
   // check validness of options
   if (help->is_set()) {

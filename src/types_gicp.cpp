@@ -127,43 +127,31 @@ void Edge_SE3_GICP::computeError()
 }
 
 
-bool Edge_ZScale_Regularizer::read(std::istream&)
+bool Edge_Scale_Regularizer::read(std::istream&)
 {
   std::cerr << __PRETTY_FUNCTION__ << " not implemented yet" << std::endl;
   return false;
 }
 
-bool Edge_ZScale_Regularizer::write(std::ostream&) const
+bool Edge_Scale_Regularizer::write(std::ostream&) const
 {
   std::cerr << __PRETTY_FUNCTION__ << " not implemented yet" << std::endl;
   return false;
 }
 
-void Edge_ZScale_Regularizer::computeError()
+void Edge_Scale_Regularizer::computeError()
 {
   const VertexSim3Expmap* vp0 = static_cast<const VertexSim3Expmap*>(_vertices[0]);
   double scale = vp0->estimate().scale();
-  double z = vp0->estimate().translation()(2);
-
-  _error(0) = 1e1 * (scale - measurement()(0));
-  _error(1) = 1e4 * (z - measurement()(1));
+  _error(0) = gain * (scale - measurement());
 }
 
-bool Edge_Z_Regularizer::read(std::istream&)
-{
-  std::cerr << __PRETTY_FUNCTION__ << " not implemented yet" << std::endl;
-  return false;
-}
-bool Edge_Z_Regularizer::write(std::ostream&) const
-{
-  std::cerr << __PRETTY_FUNCTION__ << " not implemented yet" << std::endl;
-  return false;
-}
-void Edge_Z_Regularizer::computeError()
+void Edge_RollPitch_Regularizer::computeError()
 {
   const VertexSE3* vp0 = static_cast<const VertexSE3*>(_vertices[0]);
-  double z = vp0->estimate().translation()(2);
-  _error(0) = 1e4 * (z - measurement());
+  Eigen::Matrix3d R = vp0->estimate().rotation();
+  Eigen::Vector3d ez(0, 0, 1);
+  _error(0) = gain * (ez - R * ez).norm();
 }
 
 

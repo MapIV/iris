@@ -50,6 +50,7 @@ pcl::PointCloud<pcl::PointXYZ>::Ptr loadMapPointCloud(const std::string& pcd_fil
   pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_map(new pcl::PointCloud<pcl::PointXYZ>);
   pcl::io::loadPCDFile<pcl::PointXYZ>(pcd_file, *cloud_map);
 
+  std::cout << "leaf size=" << leaf << std::endl;
   if (leaf < 0) {
     return cloud_map;
   }

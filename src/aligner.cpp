@@ -158,7 +158,7 @@ void Aligner::setEdge6DoFGICP(
   }
 
   // add a Regularization Edge of Scale
-  Edge_Z_Regularizer* e = new Edge_Z_Regularizer();
+  Edge_RollPitch_Regularizer* e = new Edge_RollPitch_Regularizer();
   e->setVertex(0, vp0);
   e->information().setIdentity();
   e->setMeasurement(0.0);
@@ -206,11 +206,22 @@ void Aligner::setEdge7DoFGICP(
     optimizer.addEdge(e);
   }
 
+  // add a Regularization Edge of Roll, Pitch
+  {
+    Edge_RollPitch_Regularizer* e = new Edge_RollPitch_Regularizer(pitch_gain);
+    e->setVertex(0, vp0);
+    e->information().setIdentity();
+    e->setMeasurement(0.0);
+    optimizer.addEdge(e);
+  }
+
   // add a Regularization Edge of Scale
-  Edge_ZScale_Regularizer* e = new Edge_ZScale_Regularizer();
-  e->setVertex(0, vp0);
-  e->information().setIdentity();
-  e->setMeasurement(Eigen::Vector2d(1.0, 0.0));
-  optimizer.addEdge(e);
+  {
+    Edge_Scale_Regularizer* e = new Edge_Scale_Regularizer(scale_gain);
+    e->setVertex(0, vp0);
+    e->information().setIdentity();
+    e->setMeasurement(1.0);
+    optimizer.addEdge(e);
+  }
 }
 }  // namespace vllm

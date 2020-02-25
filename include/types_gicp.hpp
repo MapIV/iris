@@ -67,30 +67,41 @@ public:
   void computeError();
 };
 
-class Edge_ZScale_Regularizer : public g2o::BaseUnaryEdge<2, Eigen::Vector2d, VertexSim3Expmap>
+class Edge_Scale_Regularizer : public g2o::BaseUnaryEdge<1, double, VertexSim3Expmap>
 {
 private:
+  double gain = 1.0;
+
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
-  Edge_ZScale_Regularizer() {}
-  Edge_ZScale_Regularizer(const Edge_ZScale_Regularizer* e);
+  Edge_Scale_Regularizer(double gain = 1.0) : gain(gain) {}
+  Edge_Scale_Regularizer(const Edge_Scale_Regularizer* e);
 
   virtual bool read(std::istream&);
   virtual bool write(std::ostream&) const;
   void computeError();
 };
 
-class Edge_Z_Regularizer : public g2o::BaseUnaryEdge<1, double, VertexSE3>
+class Edge_RollPitch_Regularizer : public g2o::BaseUnaryEdge<1, double, VertexSE3>
 {
 private:
+  double gain = 1.0;
+
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
-  Edge_Z_Regularizer() {}
-  Edge_Z_Regularizer(const Edge_Z_Regularizer* e);
+  Edge_RollPitch_Regularizer(double gain = 1.0) : gain(gain) {}
+  Edge_RollPitch_Regularizer(const Edge_RollPitch_Regularizer* e);
 
-  virtual bool read(std::istream&);
-  virtual bool write(std::ostream&) const;
+  virtual bool read(std::istream&)
+  {
+    std::cerr << __PRETTY_FUNCTION__ << " not implemented yet" << std::endl;
+    return false;
+  }
+  virtual bool write(std::ostream&) const
+  {
+    std::cerr << __PRETTY_FUNCTION__ << " not implemented yet" << std::endl;
+    return false;
+  }
   void computeError();
 };
-
 }  // namespace vllm
