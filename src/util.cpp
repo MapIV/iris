@@ -12,14 +12,14 @@
 namespace vllm
 {
 // L2 norm is used
-pcl::Correspondences getCorrespondences(const pcXYZ::Ptr& cloud_source, const pcXYZ::Ptr& cloud_target)
+pcl::CorrespondencesPtr getCorrespondences(const pcXYZ::Ptr& cloud_source, const pcXYZ::Ptr& cloud_target)
 {
   pcl::PointCloud<pcl::PointXYZRGBA>::Ptr source, target;
   pcl::registration::CorrespondenceEstimation<pcl::PointXYZ, pcl::PointXYZ> est;
   est.setInputSource(cloud_source);
   est.setInputTarget(cloud_target);
-  pcl::Correspondences all_correspondences;
-  est.determineCorrespondences(all_correspondences);
+  pcl::CorrespondencesPtr all_correspondences(new pcl::Correspondences);
+  est.determineCorrespondences(*all_correspondences);
 
   return all_correspondences;
 }

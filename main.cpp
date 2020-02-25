@@ -54,11 +54,15 @@ struct Config {
     fs["VLLM.scale_gain"] >> scale_gain;
     fs["VLLM.pitch_gain"] >> pitch_gain;
 
+    fs["VLLM.distance_min"] >> distance_min;
+    fs["VLLM.distance_max"] >> distance_max;
+
     std::cout << "gpd_gain " << gpd_gain << std::endl;
 
     cv::Mat T = cv::Mat::eye(4, 4, CV_32FC1);
   }
 
+  float distance_min, distance_max;
   double scale_gain, pitch_gain;
   int frame_skip;
   int iteration;
@@ -108,6 +112,8 @@ int main(int argc, char* argv[])
   vllm::GPD gpd(config.gpd_size, cloud_target, config.gpd_gain);
   vllm::CorrespondenceRejectorLpd rejector(gpd);
 
+  pcl::registration::CorrespondenceRejectorDistance distance_rejector;
+
   Eigen::Matrix4f T_init = config.T_init;
   std::vector<Eigen::Vector3f> raw_trajectory;
   std::vector<Eigen::Vector3f> vllm_trajectory;
@@ -151,16 +157,28 @@ int main(int argc, char* argv[])
 
     Eigen::Matrix4f camera;
 
+    // setup distance rejector
+
     for (int i = 0; i < config.iteration; i++) {
       // Get all correspodences
-      pcl::Correspondences correspondences = vllm::getCorrespondences(aligned_cloud, cloud_target);
+      pcl::CorrespondencesPtr correspondences = vllm::getCorrespondences(aligned_cloud, cloud_target);
+      std::cout << "raw_corre= " << correspondences->size();
+
+      // Reject enough far correspondences
+      distance_rejector.setInputCorrespondences(correspondences);
+      distance_rejector.setMaximumDistance(config.distance_max - (config.distance_max - config.distance_min) * static_cast<float>(i) / config.iteration);
+      distance_rejector.getCorrespondences(*correspondences);
+      std::cout << " ,dis_rejector= " << correspondences->size();
+
       // Reject invalid correspondeces
       correspondences = rejector.refineCorrespondences(correspondences, local_cloud);
+      std::cout << " ,lpd_rejector= " << correspondences->size() << std::endl;
+
       // Align pointclouds
       vllm::Aligner aligner;
       aligner.setGain(config.scale_gain, config.pitch_gain);
-      // T_align = aligner.estimate6DoF(T_align, *local_cloud, *cloud_target, correspondences, normals);
-      T_align = aligner.estimate7DoF(T_align, *local_cloud, *cloud_target, correspondences, normals);
+      // T_align = aligner.estimate6DoF(T_align, *local_cloud, *cloud_target, *correspondences, normals);
+      T_align = aligner.estimate7DoF(T_align, *local_cloud, *cloud_target, *correspondences, normals);
       // Integrate
       camera = T_align * camera_raw;
       pcl::transformPointCloud(*local_cloud, *aligned_cloud, T_align);
@@ -176,10 +194,10 @@ int main(int argc, char* argv[])
       pangolin_viewer.drawCamera(camera, {1.0f, 1.0f, 1.0f, 1.0f});
       pangolin_viewer.drawCamera(camera_raw, {0.6f, 0.6f, 0.6f, 1.0f});
       pangolin_viewer.drawNormals(cloud_target, normals, {0.0f, 1.0f, 1.0f, 1.0f});
-      pangolin_viewer.drawCorrespondences(aligned_cloud, cloud_target, correspondences, {1.0f, 0.0f, 0.0f, 1.0f});
+      pangolin_viewer.drawCorrespondences(aligned_cloud, cloud_target, *correspondences, {1.0f, 0.0f, 0.0f, 1.0f});
       // pangolin_viewer.drawGPD(gpd);
       // pangolin_viewer.drawPointCloud(local_cloud, {1.0f, 1.0f, 0.0f, 2.0f});
-      // pangolin_viewer.drawCorrespondences(local_cloud, cloud_target, correspondences, {0.0f, 0.8f, 0.0f, 1.0f});
+      // pangolin_viewer.drawCorrespondences(local_cloud, cloud_target, *correspondences, {0.0f, 0.8f, 0.0f, 1.0f});
       pangolin_viewer.swap();
     }
     std::cout << T_align << std::endl;

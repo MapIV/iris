@@ -9,7 +9,7 @@ namespace vllm
 using pcXYZ = pcl::PointCloud<pcl::PointXYZ>;
 
 // L2 norm is used
-pcl::Correspondences getCorrespondences(const pcXYZ::Ptr& cloud_source, const pcXYZ::Ptr& cloud_target);
+pcl::CorrespondencesPtr getCorrespondences(const pcXYZ::Ptr& cloud_source, const pcXYZ::Ptr& cloud_target);
 
 // get scale factor from rotation matrix
 double getScale(const Eigen::Matrix3f& R);

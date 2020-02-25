@@ -13,15 +13,15 @@ public:
 
   CorrespondenceRejectorLpd(GPD gpd) : gpd(gpd) {}
 
-  pcl::Correspondences refineCorrespondences(const pcl::Correspondences& correspondences, const pcXYZ::Ptr& cloud)
+  pcl::CorrespondencesPtr refineCorrespondences(const pcl::CorrespondencesPtr& correspondences, const pcXYZ::Ptr& cloud)
   {
-    pcl::Correspondences refined;
-    for (size_t i = 0, N = correspondences.size(); i < N; i++) {
-      const pcl::Correspondence pair = correspondences.at(i);
+    pcl::CorrespondencesPtr refined(new pcl::Correspondences);
+    for (size_t i = 0, N = correspondences->size(); i < N; i++) {
+      const pcl::Correspondence pair = correspondences->at(i);
       pcl::PointXYZ point = cloud->at(i);
       // pcl::PointXYZ point = cloud->at(pair.index_query);
       if (check(point)) {
-        refined.push_back(pair);
+        refined->push_back(pair);
       }
     }
     return refined;
