@@ -129,9 +129,10 @@ int main(int argc, char* argv[])
 
     // Get some information of vSLAM
     pcl::PointCloud<pcl::PointXYZ>::Ptr local_cloud(new pcl::PointCloud<pcl::PointXYZ>);
-    pcl::PointCloud<pcl::PointXYZ>::Ptr global_cloud(new pcl::PointCloud<pcl::PointXYZ>);
+    pcl::PointCloud<pcl::Normal>::Ptr local_normal(new pcl::PointCloud<pcl::Normal>);
     pcl::PointCloud<pcl::PointXYZ>::Ptr aligned_cloud(new pcl::PointCloud<pcl::PointXYZ>);
-    bridge.getLandmarks(local_cloud, global_cloud);
+    bridge.getLandmarksAndNormals(local_cloud, local_normal);
+
     int state = static_cast<int>(bridge.getState());
     Eigen::Matrix4f camera_raw = bridge.getCameraPose().inverse().cast<float>();
 
@@ -166,7 +167,7 @@ int main(int argc, char* argv[])
 
       // Reject enough far correspondences
       distance_rejector.setInputCorrespondences(correspondences);
-      distance_rejector.setMaximumDistance(config.distance_max - (config.distance_max - config.distance_min) * static_cast<float>(i) / config.iteration);
+      distance_rejector.setMaximumDistance(config.distance_max - (config.distance_max - config.distance_min) * static_cast<float>(i) / static_cast<float>(config.iteration));
       distance_rejector.getCorrespondences(*correspondences);
       std::cout << " ,dis_rejector= " << correspondences->size();
 
@@ -193,8 +194,9 @@ int main(int argc, char* argv[])
       pangolin_viewer.drawTrajectory(vllm_trajectory, {1.0f, 0.0f, 0.0f, 3.0f});
       pangolin_viewer.drawCamera(camera, {1.0f, 1.0f, 1.0f, 1.0f});
       pangolin_viewer.drawCamera(camera_raw, {0.6f, 0.6f, 0.6f, 1.0f});
-      pangolin_viewer.drawNormals(cloud_target, normals, {0.0f, 1.0f, 1.0f, 1.0f});
-      pangolin_viewer.drawCorrespondences(aligned_cloud, cloud_target, *correspondences, {1.0f, 0.0f, 0.0f, 1.0f});
+      pangolin_viewer.drawNormals(aligned_cloud, local_normal, vllm::getOrthogonalRotation(T_align * T_init).eval(), {1.0f, 0.0f, 1.0f, 1.0f});
+      // pangolin_viewer.drawNormals(cloud_target, normals, {0.0f, 1.0f, 1.0f, 1.0f});
+      // pangolin_viewer.drawCorrespondences(aligned_cloud, cloud_target, *correspondences, {1.0f, 0.0f, 0.0f, 1.0f});
       // pangolin_viewer.drawGPD(gpd);
       // pangolin_viewer.drawPointCloud(local_cloud, {1.0f, 1.0f, 0.0f, 2.0f});
       // pangolin_viewer.drawCorrespondences(local_cloud, cloud_target, *correspondences, {0.0f, 0.8f, 0.0f, 1.0f});

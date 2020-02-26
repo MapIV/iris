@@ -128,6 +128,39 @@ void BridgeOpenVSLAM::getLandmarks(
   return;
 }
 
+void BridgeOpenVSLAM::getLandmarksAndNormals(
+    pcl::PointCloud<pcl::PointXYZ>::Ptr local_cloud,
+    pcl::PointCloud<pcl::Normal>::Ptr normals) const
+{
+  std::vector<openvslam::data::landmark*> landmarks;
+  std::set<openvslam::data::landmark*> local_landmarks;
+  SLAM_ptr->get_map_publisher()->get_landmarks(landmarks, local_landmarks);
+
+  if (local_landmarks.empty()) return;
+
+  for (const auto local_lm : local_landmarks) {
+    if (local_lm->will_be_erased()) {
+      continue;
+    }
+    const openvslam::Vec3_t pos = local_lm->get_pos_in_world();
+    const openvslam::Vec3_t normal = local_lm->get_obs_mean_normal();
+
+    pcl::PointXYZ p(
+        static_cast<float>(pos.x()),
+        static_cast<float>(pos.y()),
+        static_cast<float>(pos.z()));
+    local_cloud->push_back(p);
+
+    pcl::Normal n(
+        static_cast<float>(normal.x()),
+        static_cast<float>(normal.y()),
+        static_cast<float>(normal.z()));
+    normals->push_back(n);
+  }
+  return;
+}
+
+
 int BridgeOpenVSLAM::getState() const
 {
   return static_cast<int>(SLAM_ptr->get_frame_publisher()->get_tracking_state());

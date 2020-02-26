@@ -1,5 +1,4 @@
 #pragma once
-
 #include "openvslam/config.h"
 #include "openvslam/system.h"
 #include <opencv2/videoio.hpp>
@@ -27,6 +26,9 @@ public:
   void getLandmarks(
       pcl::PointCloud<pcl::PointXYZ>::Ptr local_cloud,
       pcl::PointCloud<pcl::PointXYZ>::Ptr cloud) const;
+  void getLandmarksAndNormals(
+      pcl::PointCloud<pcl::PointXYZ>::Ptr local_cloud,
+      pcl::PointCloud<pcl::Normal>::Ptr normal) const;
 
   cv::Mat getFrame() const;
 

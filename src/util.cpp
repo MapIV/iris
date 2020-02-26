@@ -119,4 +119,11 @@ Eigen::Matrix3f randomRotation()
   return Eigen::Quaternionf::UnitRandom().toRotationMatrix();
 }
 
+Eigen::Matrix3f getOrthogonalRotation(const Eigen::Matrix4f& T)
+{
+  Eigen::Matrix3f sR = T.topLeftCorner(3, 3);
+  float scale = getScale(sR);
+  return sR / scale;
+}
+
 }  // namespace vllm

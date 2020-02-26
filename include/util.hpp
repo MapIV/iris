@@ -29,4 +29,6 @@ void wait(float ms);
 
 Eigen::Matrix3f randomRotation();
 
+Eigen::Matrix3f getOrthogonalRotation(const Eigen::Matrix4f& T);
+
 }  // namespace vllm
