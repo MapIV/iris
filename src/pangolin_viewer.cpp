@@ -136,31 +136,13 @@ void PangolinViewer::drawLine(const float x1, const float y1, const float z1, co
 void PangolinViewer::drawNormals(
     const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud,
     const pcl::PointCloud<pcl::Normal>::Ptr& normals,
-    const Eigen::Matrix3f& R,
-    const Color& color) const
+    const Color& color,
+    int skip) const
 {
   glBegin(GL_LINES);
   glColor4f(color.r, color.g, color.b, 0.4f);
   glLineWidth(color.size);
-  for (size_t i = 0; i < cloud->size(); i++) {
-    Eigen::Vector3f p = cloud->at(i).getArray3fMap();
-    Eigen::Vector3f n = normals->at(i).getNormalVector3fMap();
-    n = 0.2f * R * n;  // 200mm
-    if (std::isfinite(n.x()))
-      drawLine(p.x(), p.y(), p.z(), p.x() + n.x(), p.y() + n.y(), p.z() + n.z());
-  }
-  glEnd();
-}
-
-void PangolinViewer::drawNormals(
-    const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud,
-    const pcl::PointCloud<pcl::Normal>::Ptr& normals,
-    const Color& color) const
-{
-  glBegin(GL_LINES);
-  glColor4f(color.r, color.g, color.b, 0.4f);
-  glLineWidth(color.size);
-  for (size_t i = 0; i < cloud->size(); i += 20) {
+  for (size_t i = 0; i < cloud->size(); i += skip) {
     Eigen::Vector3f p = cloud->at(i).getArray3fMap();
     Eigen::Vector3f n = normals->at(i).getNormalVector3fMap();
     n = 0.2f * n;  // 200mm

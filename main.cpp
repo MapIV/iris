@@ -129,9 +129,10 @@ int main(int argc, char* argv[])
 
     // Get some information of vSLAM
     pcl::PointCloud<pcl::PointXYZ>::Ptr local_cloud(new pcl::PointCloud<pcl::PointXYZ>);
-    pcl::PointCloud<pcl::Normal>::Ptr local_normals(new pcl::PointCloud<pcl::Normal>);
     pcl::PointCloud<pcl::PointXYZ>::Ptr aligned_cloud(new pcl::PointCloud<pcl::PointXYZ>);
-    bridge.getLandmarksAndNormals(local_cloud, local_normals);
+    pcl::PointCloud<pcl::Normal>::Ptr local_normals_raw(new pcl::PointCloud<pcl::Normal>);
+    pcl::PointCloud<pcl::Normal>::Ptr aligned_normals(new pcl::PointCloud<pcl::Normal>);
+    bridge.getLandmarksAndNormals(local_cloud, local_normals_raw);
 
     int state = static_cast<int>(bridge.getState());
     Eigen::Matrix4f camera_raw = bridge.getCameraPose().inverse().cast<float>();
@@ -155,6 +156,8 @@ int main(int argc, char* argv[])
     raw_trajectory.push_back(camera_raw.block(0, 3, 3, 1));
     pcl::transformPointCloud(*local_cloud, *local_cloud, T_init);
     pcl::transformPointCloud(*local_cloud, *aligned_cloud, T_align);
+    local_normals_raw = vllm::transformNormals(local_normals_raw, T_init);
+    aligned_normals = vllm::transformNormals(local_normals_raw, T_align);
 
     Eigen::Matrix4f camera;
 
@@ -180,10 +183,13 @@ int main(int argc, char* argv[])
       aligner.setGain(config.scale_gain, config.pitch_gain);
       // T_align = aligner.estimate6DoF(T_align, *local_cloud, *cloud_target, *correspondences, normals);
       // T_align = aligner.estimate7DoF(T_align, *local_cloud, *cloud_target, *correspondences, normals);
-      T_align = aligner.estimate6DoF(T_align, *local_cloud, *cloud_target, *correspondences, normals, local_normals);
+      // T_align = aligner.estimate6DoF(T_align, *local_cloud, *cloud_target, *correspondences, normals, local_normals_raw);
+      T_align = aligner.estimate7DoF(T_align, *local_cloud, *cloud_target, *correspondences, normals, local_normals_raw);
+
       // Integrate
       camera = T_align * camera_raw;
       pcl::transformPointCloud(*local_cloud, *aligned_cloud, T_align);
+      aligned_normals = vllm::transformNormals(local_normals_raw, T_align);
 
       // Visualize by Pangolin
       pangolin_viewer.clear();
@@ -195,9 +201,9 @@ int main(int argc, char* argv[])
       pangolin_viewer.drawTrajectory(vllm_trajectory, {1.0f, 0.0f, 0.0f, 3.0f});
       pangolin_viewer.drawCamera(camera, {1.0f, 1.0f, 1.0f, 1.0f});
       pangolin_viewer.drawCamera(camera_raw, {0.6f, 0.6f, 0.6f, 1.0f});
-      pangolin_viewer.drawNormals(aligned_cloud, local_normals, vllm::getOrthogonalRotation(T_align * T_init).eval(), {1.0f, 0.0f, 1.0f, 1.0f});
-      pangolin_viewer.drawNormals(cloud_target, normals, {0.0f, 1.0f, 1.0f, 1.0f});
-      // pangolin_viewer.drawCorrespondences(aligned_cloud, cloud_target, *correspondences, {1.0f, 0.0f, 0.0f, 1.0f});
+      pangolin_viewer.drawNormals(aligned_cloud, aligned_normals, {1.0f, 0.0f, 1.0f, 1.0f});
+      pangolin_viewer.drawNormals(cloud_target, normals, {0.0f, 1.0f, 1.0f, 1.0f}, 30);
+      pangolin_viewer.drawCorrespondences(aligned_cloud, cloud_target, *correspondences, {1.0f, 0.0f, 0.0f, 1.0f});
       // pangolin_viewer.drawGPD(gpd);
       // pangolin_viewer.drawPointCloud(local_cloud, {1.0f, 1.0f, 0.0f, 2.0f});
       // pangolin_viewer.drawCorrespondences(local_cloud, cloud_target, *correspondences, {0.0f, 0.8f, 0.0f, 1.0f});

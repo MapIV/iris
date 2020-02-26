@@ -129,9 +129,7 @@ void Edge_SE3_GICP::computeError()
 
   // NOTE: re-define the information matrix for Plane2Plane ICP
   const Matrix3 R = vp0->estimate().rotation().matrix();
-  information() = (cov0 + R.transpose() * cov1 * R).inverse();
-  // information() = (cov0).inverse();
-  // information() = (R.transpose() * cov1 * R).inverse();
+  information() = (cov0 + R * cov1 * R.transpose()).inverse();
 }
 
 

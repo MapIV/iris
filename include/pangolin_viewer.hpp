@@ -42,12 +42,8 @@ public:
   void drawNormals(
       const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud,
       const pcl::PointCloud<pcl::Normal>::Ptr& normals,
-      const Eigen::Matrix3f& R,
-      const Color& color) const;
-  void drawNormals(
-      const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud,
-      const pcl::PointCloud<pcl::Normal>::Ptr& normals,
-      const Color& color) const;
+      const Color& color,
+      int skip=1) const;
   void drawCorrespondences(
       const pcl::PointCloud<pcl::PointXYZ>::Ptr& source,
       const pcl::PointCloud<pcl::PointXYZ>::Ptr& target,

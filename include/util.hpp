@@ -12,7 +12,7 @@ using pcXYZ = pcl::PointCloud<pcl::PointXYZ>;
 pcl::CorrespondencesPtr getCorrespondences(const pcXYZ::Ptr& cloud_source, const pcXYZ::Ptr& cloud_target);
 
 // get scale factor from rotation matrix
-double getScale(const Eigen::Matrix3f& R);
+float getScale(const Eigen::Matrix3f& R);
 
 // Not compatible with Scaling
 Eigen::Matrix4f icpWithPurePCL(const pcXYZ::Ptr& cloud_query, const pcXYZ::Ptr& cloud_reference);
@@ -29,6 +29,7 @@ void wait(float ms);
 
 Eigen::Matrix3f randomRotation();
 
-Eigen::Matrix3f getOrthogonalRotation(const Eigen::Matrix4f& T);
+Eigen::Matrix3f getNormalizedRotation(const Eigen::Matrix4f& T);
 
+pcl::PointCloud<pcl::Normal>::Ptr transformNormals(const pcl::PointCloud<pcl::Normal>::Ptr& normals, const Eigen::Matrix4f& T);
 }  // namespace vllm

@@ -25,9 +25,9 @@ pcl::CorrespondencesPtr getCorrespondences(const pcXYZ::Ptr& cloud_source, const
 }
 
 // get scale factor from rotation matrix
-double getScale(const Eigen::Matrix3f& R)
+float getScale(const Eigen::Matrix3f& R)
 {
-  return std::sqrt((R.transpose() * R).trace() / 3.0);
+  return static_cast<float>(std::sqrt((R.transpose() * R).trace() / 3.0));
 }
 
 // Not compatible with Scaling
@@ -119,11 +119,23 @@ Eigen::Matrix3f randomRotation()
   return Eigen::Quaternionf::UnitRandom().toRotationMatrix();
 }
 
-Eigen::Matrix3f getOrthogonalRotation(const Eigen::Matrix4f& T)
+Eigen::Matrix3f getNormalizedRotation(const Eigen::Matrix4f& T)
 {
   Eigen::Matrix3f sR = T.topLeftCorner(3, 3);
   float scale = getScale(sR);
   return sR / scale;
+}
+
+pcl::PointCloud<pcl::Normal>::Ptr transformNormals(const pcl::PointCloud<pcl::Normal>::Ptr& normals, const Eigen::Matrix4f& T)
+{
+  Eigen::Matrix3f R = getNormalizedRotation(T);
+  pcl::PointCloud<pcl::Normal>::Ptr transformed(new pcl::PointCloud<pcl::Normal>);
+
+  for (const pcl::Normal& n : *normals) {
+    Eigen::Vector3f _n = R * n.getNormalVector3fMap();
+    transformed->push_back({_n.x(), _n.y(), _n.z()});
+  }
+  return transformed;
 }
 
 }  // namespace vllm
