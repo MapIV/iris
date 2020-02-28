@@ -33,10 +33,12 @@ void PangolinViewer::drawGPD(const GPD& gpd) const
 void PangolinViewer::drawTrajectory(const std::vector<Eigen::Vector3f>& trajectory, const Color& color)
 {
   glBegin(GL_LINE_STRIP);
-  glColor4f(color.r, color.g, color.b, 1.0f);
   glLineWidth(color.size);
+  int i = 0;
   for (const Eigen::Vector3f& v : trajectory) {
+    glColor3fv(convertRGB(Eigen::Vector3f(static_cast<float>(i % 360), 1.f, 1.f)).data());
     glVertex3f(v.x(), v.y(), v.z());
+    i += 5;
   }
   glEnd();
 }
@@ -224,6 +226,21 @@ void PangolinViewer::drawFrustum(const float w) const
   drawLine(-w, h, z, -w, -h, z);
   drawLine(-w, h, z, w, h, z);
   drawLine(-w, -h, z, w, -h, z);
+}
+
+Eigen::Vector3f PangolinViewer::convertRGB(Eigen::Vector3f hsv)
+{
+  const float max = hsv(2);
+  const float min = max * (1 - hsv(1));
+  const float H = hsv(0);
+  const float D = max - min;
+  if (H < 60) return {max, H / 60 * D + min, min};
+  if (H < 120) return {(120 - H) / 60 * D + min, max, min};
+  if (H < 180) return {min, max, (H - 120) / 60 * D + min};
+  if (H < 240) return {min, (240 - H) / 60 * D + min, max};
+  if (H < 300) return {max, min, (H - 240) / 60 * D + min};
+  if (H < 360) return {max, min, (360 - H) / 60 * D + min};
+  return {255, 255, 255};
 }
 
 }  // namespace vllm

@@ -93,5 +93,8 @@ private:
       const float x2, const float y2, const float z2) const;
 
   void drawFrustum(const float w) const;
+
+  // h[0,360],s[0,1],v[0,1]
+  Eigen::Vector3f convertRGB(Eigen::Vector3f hsv);
 };
 }  // namespace vllm
