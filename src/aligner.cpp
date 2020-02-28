@@ -63,7 +63,7 @@ Eigen::Matrix4f Aligner::estimate7DoF(
   setEdge7DoFGICP(optimizer, source, target, correspondances, target_normals, source_normals);
 
   // execute
-  optimizer.setVerbose(false);
+  optimizer.setVerbose(true);
   optimizer.initializeOptimization();
   optimizer.computeActiveErrors();
   optimizer.optimize(10);
@@ -74,7 +74,7 @@ Eigen::Matrix4f Aligner::estimate7DoF(
   Eigen::Matrix3f R = optimized->estimate().rotation().matrix().cast<float>();
   Eigen::Vector3f t = optimized->estimate().translation().cast<float>();
 
-  std::cout << scale << std::endl;
+  std::cout << "scale=" << scale << std::endl;
   T = Eigen::Matrix4f::Identity();
   T.topLeftCorner(3, 3) = scale * R;
   T.topRightCorner(3, 1) = t;
@@ -107,8 +107,9 @@ void Aligner::setVertexSim3(g2o::SparseOptimizer& optimizer, Eigen::Matrix4f& T)
   Eigen::Vector3d t = T.topRightCorner(3, 1).cast<double>();
   Eigen::Matrix3d R = T.topLeftCorner(3, 3).cast<double>();
   Eigen::Quaterniond q = Eigen::Quaterniond(R);
-  double s = vllm::getScale(R.cast<float>());
-  g2o::Sim3 sim3(q, t, s);
+  double scale = vllm::getScale(R.cast<float>());
+  std::cout << "pre-scale=" << scale << std::endl;
+  g2o::Sim3 sim3(q, t, scale);
 
   // set up initial parameter
   g2o::VertexSim3Expmap* vc = new g2o::VertexSim3Expmap();
@@ -133,7 +134,8 @@ void Aligner::setEdge6DoFGICP(
 
   for (const pcl::Correspondence& cor : correspondances) {
     // new edge with correct cohort for caching
-    vllm::Edge_SE3_GICP* e = new vllm::Edge_SE3_GICP(true);
+    vllm::Edge_SE3_GICP* e;
+    e = new vllm::Edge_SE3_GICP(source_normals != nullptr);
     e->setVertex(0, vp0);  // set viewpoint
 
     // calculate the relative 3D position of the point
@@ -173,8 +175,8 @@ void Aligner::setEdge6DoFGICP(
     optimizer.addEdge(e);
   }
 
-  // add a Regularization Edge of Scale
-  Edge_RollPitch_Regularizer* e = new Edge_RollPitch_Regularizer();
+  // add a Regularization Edge of Pitch
+  Edge_RollPitch_Regularizer* e = new Edge_RollPitch_Regularizer(pitch_gain);
   e->setVertex(0, vp0);
   e->information().setIdentity();
   e->setMeasurement(0.0);

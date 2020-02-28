@@ -55,7 +55,7 @@ VLLM.up_init:  !!opencv-matrix
     cols: 1
     dt: f
     data: [ 0,0,1]
-VLLM.s_init: 100
+VLLM.s_init: 50
 
 VLLM.pcd_file: "../../vllm-data/moriyama.pcd"
 VLLM.video_file: "../../vllm-data/moriyama-clip.mp4"
@@ -66,7 +66,7 @@ VLLM.normal_search_leaf: 1.00
 VLLM.gpd_size: 20
 VLLM.gpd_gain: 0.2
 VLLM.iteration: 10
-VLLM.frame_skip: 2
+VLLM.frame_skip: 1
 
 VLLM.scale_gain: 1.0
 VLLM.pitch_gain: 1.0

@@ -149,7 +149,13 @@ void Edge_Scale_Regularizer::computeError()
 {
   const VertexSim3Expmap* vp0 = static_cast<const VertexSim3Expmap*>(_vertices[0]);
   double scale = vp0->estimate().scale();
-  _error(0) = gain * (scale - measurement());
+
+  if (scale < 0.6)
+    _error(0) = 10000;
+  else if (scale > 1.5)
+    _error(0) = 10000;
+  else
+    _error(0) = gain * (scale - 1.0);
 }
 
 void Edge_RollPitch_Regularizer::computeError()
@@ -157,8 +163,11 @@ void Edge_RollPitch_Regularizer::computeError()
   const VertexSE3* vp0 = static_cast<const VertexSE3*>(_vertices[0]);
   Eigen::Matrix3d R = vp0->estimate().rotation();
   Eigen::Vector3d ez(0, 0, 1);
-  _error(0) = gain * (ez - R * ez).norm();
+
+  double swing = (ez - R * ez).norm();
+  if (swing > 0.2)
+    _error(0) = 10000;
+  else
+    _error(0) = gain * swing;
 }
-
-
 }  // namespace vllm

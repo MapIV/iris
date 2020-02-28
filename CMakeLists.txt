@@ -116,6 +116,9 @@ target_include_directories(
           ${PROJECT_SOURCE_DIR}/3rd/openvslam/3rd/spdlog/include)
 target_link_libraries(main PRIVATE ${PCL_LIBRARIES} ${OpenCV_LIBS} pangolin openvslam)
 
+# add_executable(reg test_regularizer.cpp src/aligner.cpp src/util.cpp src/types_gicp.cpp)
+# target_link_libraries(reg PRIVATE ${PCL_LIBRARIES} ${G2O_LIBS})
+
 # == example file ==
 # add_executable(optimize_sim3 optimize_sim3.cpp)
 # target_link_libraries(optimize_sim3 PUBLIC ${G2O_LIBS})

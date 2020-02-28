@@ -120,6 +120,8 @@ int main(int argc, char* argv[])
 
   Eigen::Matrix4f T_align = Eigen::Matrix4f::Identity();
 
+  bool pause = false;
+
   // == Main Loop ==
   while (true) {
     // Execute vSLAM
@@ -141,7 +143,12 @@ int main(int argc, char* argv[])
     cv::imshow("OpenCV", bridge.getFrame());
     int key = cv::waitKey(10);
     if (key == 'q') break;
-    if (key == 'r') T_align = Eigen::Matrix4f::Identity();
+    if (key == 'r') {
+      T_align = Eigen::Matrix4f::Identity();
+      raw_trajectory.clear();
+      vllm_trajectory.clear();
+    }
+    if (key == 'p') pause = !pause;
     if (key == 's')
       while (cv::waitKey(0) == 's')
         ;
@@ -183,8 +190,9 @@ int main(int argc, char* argv[])
       aligner.setGain(config.scale_gain, config.pitch_gain);
       // T_align = aligner.estimate6DoF(T_align, *local_cloud, *cloud_target, *correspondences, normals);
       // T_align = aligner.estimate7DoF(T_align, *local_cloud, *cloud_target, *correspondences, normals);
+      if (!pause)
+        T_align = aligner.estimate7DoF(T_align, *local_cloud, *cloud_target, *correspondences, normals, local_normals_raw);
       // T_align = aligner.estimate6DoF(T_align, *local_cloud, *cloud_target, *correspondences, normals, local_normals_raw);
-      T_align = aligner.estimate7DoF(T_align, *local_cloud, *cloud_target, *correspondences, normals, local_normals_raw);
 
       // Integrate
       camera = T_align * camera_raw;
@@ -194,16 +202,16 @@ int main(int argc, char* argv[])
       // Visualize by Pangolin
       pangolin_viewer.clear();
       pangolin_viewer.drawGridLine();
-      pangolin_viewer.drawString("state=" + std::to_string(state) + ", itr=" + std::to_string(i), {1.0f, 0.0f, 0.0f, 2.0f});
+      pangolin_viewer.drawString("VLLM=" + std::to_string(pause) + ", state=" + std::to_string(state) + ", itr=" + std::to_string(i), {1.0f, 0.0f, 0.0f, 2.0f});
       pangolin_viewer.drawPointCloud(aligned_cloud, {1.0f, 1.0f, 0.0f, 2.0f});
-      pangolin_viewer.drawPointCloud(cloud_target, {0.8f, 0.8f, 0.8f, 1.0f});
-      pangolin_viewer.drawTrajectory(raw_trajectory, {1.0f, 0.0f, 1.0f, 3.0f});
+      pangolin_viewer.drawPointCloud(cloud_target, {0.6f, 0.6f, 0.6f, 1.0f});
+      // pangolin_viewer.drawTrajectory(raw_trajectory, {1.0f, 0.0f, 1.0f, 3.0f});
       pangolin_viewer.drawTrajectory(vllm_trajectory, {1.0f, 0.0f, 0.0f, 3.0f});
-      pangolin_viewer.drawCamera(camera, {1.0f, 1.0f, 1.0f, 1.0f});
-      pangolin_viewer.drawCamera(camera_raw, {0.6f, 0.6f, 0.6f, 1.0f});
+      pangolin_viewer.drawCamera(camera, {1.0f, 0.0f, 0.0f, 1.0f});
+      // pangolin_viewer.drawCamera(camera_raw, {1.0f, 0.0f, 1.0f, 1.0f});
       pangolin_viewer.drawNormals(aligned_cloud, aligned_normals, {1.0f, 0.0f, 1.0f, 1.0f});
-      pangolin_viewer.drawNormals(cloud_target, normals, {0.0f, 1.0f, 1.0f, 1.0f}, 30);
-      pangolin_viewer.drawCorrespondences(aligned_cloud, cloud_target, *correspondences, {1.0f, 0.0f, 0.0f, 1.0f});
+      // pangolin_viewer.drawNormals(cloud_target, normals, {0.0f, 1.0f, 1.0f, 1.0f}, 30);
+      pangolin_viewer.drawCorrespondences(aligned_cloud, cloud_target, *correspondences, {0.0f, 1.0f, 0.0f, 2.0f});
       // pangolin_viewer.drawGPD(gpd);
       // pangolin_viewer.drawPointCloud(local_cloud, {1.0f, 1.0f, 0.0f, 2.0f});
       // pangolin_viewer.drawCorrespondences(local_cloud, cloud_target, *correspondences, {0.0f, 0.8f, 0.0f, 1.0f});
