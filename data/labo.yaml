@@ -42,13 +42,13 @@ VLLM.t_init:  !!opencv-matrix
     rows: 3
     cols: 1
     dt: f
-    data: [ -2.4, -1.6, -0.3]
+    data: [ -2.2, -1.6, -0.3]
 # normal vector of camera
 VLLM.normal_init:  !!opencv-matrix
     rows: 3
     cols: 1
     dt: f
-    data: [ 1,0.2,0.1]
+    data: [ 1,0.4,0.1]
 # up vector of camera
 VLLM.up_init:  !!opencv-matrix
     rows: 3
@@ -66,9 +66,9 @@ VLLM.normal_search_leaf: 0.06
 VLLM.gpd_size: 8
 VLLM.gpd_gain: 0.5
 VLLM.iteration: 5
-VLLM.frame_skip: 2
+VLLM.frame_skip: 4
 
-VLLM.scale_gain: 10.0
+VLLM.scale_gain: 20.0
 VLLM.pitch_gain: 1.0
 
 VLLM.distance_min: 0.2

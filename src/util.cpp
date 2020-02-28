@@ -126,16 +126,33 @@ Eigen::Matrix3f getNormalizedRotation(const Eigen::Matrix4f& T)
   return sR / scale;
 }
 
-pcl::PointCloud<pcl::Normal>::Ptr transformNormals(const pcl::PointCloud<pcl::Normal>::Ptr& normals, const Eigen::Matrix4f& T)
+void transformNormals(
+    const pcl::PointCloud<pcl::Normal>& source,
+    pcl::PointCloud<pcl::Normal>& target,
+    const Eigen::Matrix4f& T)
 {
   Eigen::Matrix3f R = getNormalizedRotation(T);
-  pcl::PointCloud<pcl::Normal>::Ptr transformed(new pcl::PointCloud<pcl::Normal>);
+  // pcl::PointCloud<pcl::Normal>::Ptr target(new pcl::PointCloud<pcl::Normal>);
+  // for (const pcl::Normal& n : source) {
+  //   Eigen::Vector3f _n = R * n.getNormalVector3fMap();
+  //   target->push_back({_n.x(), _n.y(), _n.z()});
+  // }
+  // return target;
 
-  for (const pcl::Normal& n : *normals) {
-    Eigen::Vector3f _n = R * n.getNormalVector3fMap();
-    transformed->push_back({_n.x(), _n.y(), _n.z()});
+  if (&source != &target) {
+    // target.clear();
+    for (const pcl::Normal& n : source) {
+      Eigen::Vector3f _n = R * n.getNormalVector3fMap();
+      target.push_back({_n.x(), _n.y(), _n.z()});
+    }
+    return;
   }
-  return transformed;
+
+  for (pcl::Normal& n : target) {
+    Eigen::Vector3f _n = R * n.getNormalVector3fMap();
+    n = pcl::Normal(_n.x(), _n.y(), _n.z());
+  }
+  return;
 }
 
 }  // namespace vllm

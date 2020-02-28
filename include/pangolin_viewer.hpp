@@ -33,6 +33,32 @@ public:
     d_cam.Activate(s_cam);
   }
 
+  // void visualize()
+  // {
+  //   pangolin_viewer.clear();
+  //   pangolin_viewer.drawGridLine();
+  //   pangolin_viewer.drawString("VLLM", {1.0f, 1.0f, 0.0f, 3.0f});
+
+  //   pangolin_viewer.drawPointCloud(aligned_cloud, {1.0f, 1.0f, 0.0f, 2.0f});
+  //   pangolin_viewer.drawPointCloud(target_cloud, {0.6f, 0.6f, 0.6f, 1.0f});
+  //   pangolin_viewer.drawTrajectory(vllm_trajectory, {1.0f, 0.0f, 0.0f, 3.0f});
+  //   pangolin_viewer.drawCamera(vllm_camera, {1.0f, 0.0f, 0.0f, 1.0f});
+  //   // pangolin_viewer.drawCorrespondences(aligned_cloud, target_cloud, correspondences, {0.0f, 1.0f, 0.0f, 2.0f});
+
+  //   if (gui_raw_camera->value()) {
+  //     pangolin_viewer.drawCamera(raw_camera, {1.0f, 0.0f, 1.0f, 1.0f});
+  //     pangolin_viewer.drawTrajectory(raw_trajectory, {1.0f, 0.0f, 1.0f, 3.0f});
+  //   }
+  //   if (gui_source_normals->value())
+  //     pangolin_viewer.drawNormals(aligned_cloud, aligned_normals, {1.0f, 0.0f, 1.0f, 1.0f});
+  //   if (gui_target_normals->value())
+  //     pangolin_viewer.drawNormals(target_cloud, target_normals, {0.0f, 1.0f, 1.0f, 1.0f}, 30);
+  //   if (gui_gpd->value())
+  //     pangolin_viewer.drawGPD(gpd);
+
+  //   pangolin_viewer.swap();
+  // }
+
   void drawGPD(const GPD& gpd) const;
   void drawGridLine() const;
   void drawString(const std::string& str, const Color& color) const;
@@ -43,18 +69,23 @@ public:
       const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud,
       const pcl::PointCloud<pcl::Normal>::Ptr& normals,
       const Color& color,
-      int skip=1) const;
+      int skip = 1) const;
   void drawCorrespondences(
       const pcl::PointCloud<pcl::PointXYZ>::Ptr& source,
       const pcl::PointCloud<pcl::PointXYZ>::Ptr& target,
-      const pcl::Correspondences& correspondences,
+      const pcl::CorrespondencesPtr& correspondences,
       const Color& color) const;
 
 private:
-  std::shared_ptr<pangolin::Var<double>> ui_double_ptr;
   pangolin::OpenGlRenderState s_cam;
   pangolin::Handler3D handler;
   pangolin::View d_cam;
+
+  // GUI variables
+  std::shared_ptr<pangolin::Var<bool>> gui_raw_camera;
+  std::shared_ptr<pangolin::Var<bool>> gui_source_normals;
+  std::shared_ptr<pangolin::Var<bool>> gui_target_normals;
+  std::shared_ptr<pangolin::Var<bool>> gui_gpd;
 
   void drawRectangular(const float x, const float y, const float z) const;
   void drawLine(

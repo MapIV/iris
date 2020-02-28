@@ -72,10 +72,13 @@ PangolinViewer::PangolinViewer(const Eigen::Vector3f& p0, const Eigen::Vector3f&
 
   // setup GUI
   pangolin::CreatePanel("ui").SetBounds(0.0, 1.0, 0.0, pangolin::Attach::Pix(180));
-  ui_double_ptr = std::make_shared<pangolin::Var<double>>("ui.state", 0.5, 0.0, 1.0);
+  gui_raw_camera = std::make_shared<pangolin::Var<bool>>("ui.raw_camera", false);
+  gui_source_normals = std::make_shared<pangolin::Var<bool>>("ui.source_normals", false);
+  gui_target_normals = std::make_shared<pangolin::Var<bool>>("ui.target_normals", false);
+  gui_gpd = std::make_shared<pangolin::Var<bool>>("ui.gpd", false);
 }
 
-PangolinViewer::PangolinViewer() : PangolinViewer(Eigen::Vector3f(-2, -2, 5), Eigen::Vector3f(0, 0, 0), pangolin::AxisZ) {}
+PangolinViewer::PangolinViewer() : PangolinViewer(Eigen::Vector3f(-2, 0, 5), Eigen::Vector3f(0, 0, 0), pangolin::AxisZ) {}
 
 void PangolinViewer::drawGridLine() const
 {
@@ -155,13 +158,13 @@ void PangolinViewer::drawNormals(
 void PangolinViewer::drawCorrespondences(
     const pcl::PointCloud<pcl::PointXYZ>::Ptr& source,
     const pcl::PointCloud<pcl::PointXYZ>::Ptr& target,
-    const pcl::Correspondences& correspondences,
+    const pcl::CorrespondencesPtr& correspondences,
     const Color& color) const
 {
   glBegin(GL_LINES);
   glColor4f(color.r, color.g, color.b, 0.4f);
   glLineWidth(color.size);
-  for (const pcl::Correspondence& c : correspondences) {
+  for (const pcl::Correspondence& c : *correspondences) {
     pcl::PointXYZ p1 = source->at(c.index_query);
     pcl::PointXYZ p2 = target->at(c.index_match);
     drawLine(p1.x, p1.y, p1.z, p2.x, p2.y, p2.z);

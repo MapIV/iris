@@ -89,8 +89,8 @@ void BridgeOpenVSLAM::setup(int argc, char* argv[], const std::string& video_fil
 }
 
 void BridgeOpenVSLAM::getLandmarks(
-    pcl::PointCloud<pcl::PointXYZ>::Ptr local_cloud,
-    pcl::PointCloud<pcl::PointXYZ>::Ptr cloud) const
+    pcl::PointCloud<pcl::PointXYZ>::Ptr& local_cloud,
+    pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud) const
 {
   std::vector<openvslam::data::landmark*> landmarks;
   std::set<openvslam::data::landmark*> local_landmarks;
@@ -129,14 +129,17 @@ void BridgeOpenVSLAM::getLandmarks(
 }
 
 void BridgeOpenVSLAM::getLandmarksAndNormals(
-    pcl::PointCloud<pcl::PointXYZ>::Ptr local_cloud,
-    pcl::PointCloud<pcl::Normal>::Ptr normals) const
+    pcl::PointCloud<pcl::PointXYZ>::Ptr& local_cloud,
+    pcl::PointCloud<pcl::Normal>::Ptr& normals) const
 {
   std::vector<openvslam::data::landmark*> landmarks;
   std::set<openvslam::data::landmark*> local_landmarks;
   SLAM_ptr->get_map_publisher()->get_landmarks(landmarks, local_landmarks);
 
   if (local_landmarks.empty()) return;
+
+  local_cloud->clear();
+  normals->clear();
 
   for (const auto local_lm : local_landmarks) {
     if (local_lm->will_be_erased()) {

@@ -74,7 +74,8 @@ Eigen::Matrix4f Aligner::estimate7DoF(
   Eigen::Matrix3f R = optimized->estimate().rotation().matrix().cast<float>();
   Eigen::Vector3f t = optimized->estimate().translation().cast<float>();
 
-  std::cout << "scale=" << scale << std::endl;
+  std::cout << "scale= \033[31m" << scale << "\033[m" << std::endl;
+
   T = Eigen::Matrix4f::Identity();
   T.topLeftCorner(3, 3) = scale * R;
   T.topRightCorner(3, 1) = t;

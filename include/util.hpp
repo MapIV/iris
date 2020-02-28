@@ -31,5 +31,14 @@ Eigen::Matrix3f randomRotation();
 
 Eigen::Matrix3f getNormalizedRotation(const Eigen::Matrix4f& T);
 
-pcl::PointCloud<pcl::Normal>::Ptr transformNormals(const pcl::PointCloud<pcl::Normal>::Ptr& normals, const Eigen::Matrix4f& T);
+void transformNormals(
+    const pcl::PointCloud<pcl::Normal>& source,
+    pcl::PointCloud<pcl::Normal>& target,
+    const Eigen::Matrix4f& T);
+
+// pcl::PointCloud<pcl::Normal>::Ptr transformNormals(
+//     const pcl::PointCloud<pcl::Normal>& source,
+//     // pcl::PointCloud<pcl::Normal>& target,
+//     const Eigen::Matrix4f& T);
+
 }  // namespace vllm
