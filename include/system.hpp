@@ -9,6 +9,7 @@
 namespace vllm
 {
 using pcXYZ = pcl::PointCloud<pcl::PointXYZ>;
+using pcNormal = pcl::PointCloud<pcl::Normal>;
 
 class System
 {
@@ -22,11 +23,27 @@ public:
 
   const pcXYZ::Ptr& getAlignedCloud() const { return aligned_cloud; }
   const pcXYZ::Ptr& getTargetCloud() const { return target_cloud; }
-  const std::vector<Eigen::Vector3f>& getTrajectory() const { return vllm_trajectory; }
-  const Eigen::Matrix4f& getCamera() const { return vllm_camera; }
   const pcl::CorrespondencesPtr& getCorrespondences() const { return correspondences; }
 
+  const Eigen::Matrix4f& getCamera() const { return vllm_camera; }
+  const Eigen::Matrix4f& getRawCamera() const { return raw_camera; }
+  const std::vector<Eigen::Vector3f>& getTrajectory() const { return vllm_trajectory; }
+  const std::vector<Eigen::Vector3f>& getRawTrajectory() const { return raw_trajectory; }
+
+  const pcNormal::Ptr& getAlignedNormals() const { return aligned_normals; }
+  const pcNormal::Ptr& getTargetNormals() const { return target_normals; }
+
+  Eigen::Vector2d getGain() const { return {scale_restriction_gain, pitch_restriction_gain}; }
+  void setGain(const Eigen::Vector2d& gain)
+  {
+    scale_restriction_gain = gain(0);
+    pitch_restriction_gain = gain(1);
+  }
+
 private:
+  double scale_restriction_gain = 0;
+  double pitch_restriction_gain = 0;
+
   int vslam_state;
   Config config;
 

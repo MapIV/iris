@@ -8,7 +8,8 @@ int main(int argc, char* argv[])
   vllm::PangolinViewer pangolin_viewer(system);
   cv::namedWindow("VLLM", cv::WINDOW_AUTOSIZE);
 
-  while (true) {
+  bool loop = true;
+  while (loop) {
     int ok = system->update();
     std::cout << "state: " << ok << std::endl;
 
@@ -28,7 +29,9 @@ int main(int argc, char* argv[])
       system->optimize(i);
 
       // visualize by Pangolin
-      pangolin_viewer.execute();
+      int flag = pangolin_viewer.execute();
+      if (flag == -1)
+        loop = false;
     }
   }
 

@@ -40,10 +40,10 @@ public:
     d_cam.Activate(s_cam);
   }
 
-  void execute()
+  int execute()
   {
     if (system_ptr == nullptr)
-      return;
+      return -1;
     clear();
 
     drawGridLine();
@@ -56,18 +56,27 @@ public:
     drawCorrespondences(system_ptr->getAlignedCloud(), system_ptr->getTargetCloud(),
         system_ptr->getCorrespondences(), {0.0f, 1.0f, 0.0f, 2.0f});
 
-    // if (gui_raw_camera->value()) {
-    //     pangolin_viewer.drawCamera(raw_camera, {1.0f, 0.0f, 1.0f, 1.0f});
-    //     pangolin_viewer.drawTrajectory(raw_trajectory, {1.0f, 0.0f, 1.0f, 3.0f});
-    // }
-    // if (gui_source_normals->value())
-    //     pangolin_viewer.drawNormals(aligned_cloud, aligned_normals, {1.0f, 0.0f, 1.0f, 1.0f});
-    // if (gui_target_normals->value())
-    //     pangolin_viewer.drawNormals(target_cloud, target_normals, {0.0f, 1.0f, 1.0f, 1.0f}, 30);
-    //   if (gui_gpd->value())
-    //     pangolin_viewer.drawGPD(gpd);
+    if (*gui_raw_camera) {
+      drawCamera(system_ptr->getRawCamera(), {1.0f, 0.0f, 1.0f, 1.0f});
+      drawTrajectory(system_ptr->getRawTrajectory(), {1.0f, 0.0f, 1.0f, 1.0f});
+    }
+    if (*gui_source_normals)
+      drawNormals(system_ptr->getAlignedCloud(), system_ptr->getAlignedNormals(), {1.0f, 0.0f, 1.0f, 1.0f});
+    if (*gui_target_normals)
+      drawNormals(system_ptr->getTargetCloud(), system_ptr->getTargetNormals(), {0.0f, 1.0f, 1.0f, 1.0f}, 30);
+    // if (*gui_gpd)
+    //   drawGPD(gpd);
+
+
+    Eigen::Vector2d gain(*gui_scale_gain, *gui_pitch_gain);
+    system_ptr->setGain(gain);
 
     swap();
+
+    if (pangolin::Pushed(*gui_quit))
+      return -1;
+
+    return 0;
   }
 
   void
@@ -97,7 +106,10 @@ private:
   std::shared_ptr<pangolin::Var<bool>> gui_raw_camera;
   std::shared_ptr<pangolin::Var<bool>> gui_source_normals;
   std::shared_ptr<pangolin::Var<bool>> gui_target_normals;
-  std::shared_ptr<pangolin::Var<bool>> gui_gpd;
+  std::shared_ptr<pangolin::Var<double>> gui_scale_gain;
+  std::shared_ptr<pangolin::Var<double>> gui_pitch_gain;
+  std::shared_ptr<pangolin::Var<bool>> gui_quit;
+  // std::shared_ptr<pangolin::Var<bool>> gui_gpd;
 
   void drawRectangular(const float x, const float y, const float z) const;
   void drawLine(

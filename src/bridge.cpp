@@ -86,6 +86,7 @@ void BridgeOpenVSLAM::setup(int argc, char* argv[], const std::string& video_fil
   // build a SLAM system
   SLAM_ptr = std::make_shared<openvslam::system>(cfg, vocab_file_path->value());
   SLAM_ptr->startup();
+  SLAM_ptr->disable_loop_detector();
 }
 
 void BridgeOpenVSLAM::getLandmarks(

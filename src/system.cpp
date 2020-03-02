@@ -39,6 +39,8 @@ System::System(int argc, char* argv[])
   bridge.setup(argc, argv, config.video_file, config.frame_skip);
 
   T_init = config.T_init;
+  scale_restriction_gain = config.scale_gain;
+  pitch_restriction_gain = config.pitch_gain;
 }
 
 int System::update()
@@ -76,6 +78,8 @@ int System::update()
 
 int System::optimize(int iteration)
 {
+  if (aligned_cloud->empty())
+    return -1;
   // Get all correspodences
   correspondences = vllm::getCorrespondences(aligned_cloud, target_cloud);
   std::cout << "itr = \033[32m" << iteration << "\033[m";
@@ -93,7 +97,7 @@ int System::optimize(int iteration)
 
   // Align pointclouds
   vllm::Aligner aligner;
-  aligner.setGain(config.scale_gain, config.pitch_gain);
+  aligner.setGain(scale_restriction_gain, pitch_restriction_gain);
   T_align = aligner.estimate7DoF(T_align, *source_cloud, *target_cloud, *correspondences, target_normals, source_normals);
 
   // Integrate

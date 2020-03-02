@@ -2,6 +2,33 @@
 
 namespace vllm
 {
+PangolinViewer::PangolinViewer(const std::shared_ptr<System>& system_ptr)
+    : system_ptr(system_ptr), s_cam(makeCamera()), handler(pangolin::Handler3D(s_cam))
+{
+  // setup Pangolin viewer
+  pangolin::CreateWindowAndBind("VLLM", 1024, 768);
+  glEnable(GL_DEPTH_TEST);
+
+  // Ensure that blending is enabled for rendering text.
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  glEnable(GL_BLEND);
+
+  d_cam = (pangolin::CreateDisplay()
+               .SetBounds(0.0, 1.0, 0.0, 1.0, -640.0f / 480.0f)
+               .SetHandler(&handler));
+
+  // setup GUI
+  pangolin::CreatePanel("ui").SetBounds(0.0, 1.0, 0.0, pangolin::Attach::Pix(180));
+  gui_quit = std::make_shared<pangolin::Var<bool>>("ui.Quit", false, false);
+  gui_raw_camera = std::make_shared<pangolin::Var<bool>>("ui.raw_camera", false, true);
+  gui_source_normals = std::make_shared<pangolin::Var<bool>>("ui.source_normals", false, true);
+  gui_target_normals = std::make_shared<pangolin::Var<bool>>("ui.target_normals", false, true);
+  Eigen::Vector2d gain = system_ptr->getGain();
+  gui_scale_gain = std::make_shared<pangolin::Var<double>>("ui.scale_gain", gain(0), 0.0, 50.0);
+  gui_pitch_gain = std::make_shared<pangolin::Var<double>>("ui.pitch_gain", gain(1), 0.0, 50.0);
+  // gui_gpd = std::make_shared<pangolin::Var<bool>>("ui.global_distribution", false, true);
+}
+
 pangolin::OpenGlRenderState PangolinViewer::makeCamera(
     const Eigen::Vector3f& from,
     const Eigen::Vector3f& to,
@@ -62,29 +89,6 @@ void PangolinViewer::drawPointCloud(const pcl::PointCloud<pcl::PointXYZ>::Ptr& c
 
   PangolinCloud pc(cloud);
   pc.drawPoints();
-}
-
-PangolinViewer::PangolinViewer(const std::shared_ptr<System>& system_ptr)
-    : system_ptr(system_ptr), s_cam(makeCamera()), handler(pangolin::Handler3D(s_cam))
-{
-  // setup Pangolin viewer
-  pangolin::CreateWindowAndBind("VLLM", 1024, 768);
-  glEnable(GL_DEPTH_TEST);
-
-  // Ensure that blending is enabled for rendering text.
-  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-  glEnable(GL_BLEND);
-
-  d_cam = (pangolin::CreateDisplay()
-               .SetBounds(0.0, 1.0, 0.0, 1.0, -640.0f / 480.0f)
-               .SetHandler(&handler));
-
-  // setup GUI
-  pangolin::CreatePanel("ui").SetBounds(0.0, 1.0, 0.0, pangolin::Attach::Pix(180));
-  gui_raw_camera = std::make_shared<pangolin::Var<bool>>("ui.raw_camera", false);
-  gui_source_normals = std::make_shared<pangolin::Var<bool>>("ui.source_normals", false);
-  gui_target_normals = std::make_shared<pangolin::Var<bool>>("ui.target_normals", false);
-  gui_gpd = std::make_shared<pangolin::Var<bool>>("ui.gpd", false);
 }
 
 void PangolinViewer::drawGridLine() const
