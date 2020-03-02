@@ -4,15 +4,32 @@
 
 int main(int argc, char* argv[])
 {
-  vllm::System system(argc, argv);
-
-  // setup for Viewer
-  // vllm::PangolinViewer pangolin_viewer;
-  // cv::namedWindow("OpenCV", cv::WINDOW_AUTOSIZE);
+  std::shared_ptr<vllm::System> system = std::make_shared<vllm::System>(argc, argv);
+  vllm::PangolinViewer pangolin_viewer(system);
+  cv::namedWindow("VLLM", cv::WINDOW_AUTOSIZE);
 
   while (true) {
-    int ok = system.execute();
+    int ok = system->update();
     std::cout << "state: " << ok << std::endl;
+
+    // visualize by OpenCV
+    cv::imshow("VLLM", system->getFrame());
+    int key = cv::waitKey(5);
+    if (key == 'q') break;
+    if (key == 's') {
+      while (key == 's')
+        key = cv::waitKey(0);
+    }
+
+    if (ok != 0)
+      continue;
+
+    for (int i = 0; i < 5; i++) {
+      system->optimize(i);
+
+      // visualize by Pangolin
+      pangolin_viewer.execute();
+    }
   }
 
   return 0;

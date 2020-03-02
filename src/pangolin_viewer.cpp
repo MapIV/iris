@@ -2,6 +2,18 @@
 
 namespace vllm
 {
+pangolin::OpenGlRenderState PangolinViewer::makeCamera(
+    const Eigen::Vector3f& from,
+    const Eigen::Vector3f& to,
+    const pangolin::AxisDirection up)
+{
+  return pangolin::OpenGlRenderState(
+      pangolin::ProjectionMatrix(
+          640, 480, 420, 420, 320, 240, 0.2, 100),
+      pangolin::ModelViewLookAt(
+          from.x(), from.y(), from.z(), to.x(), to.y(), to.z(), up));
+}
+
 void PangolinViewer::drawString(const std::string& str, const Color& color) const
 {
   glColor3f(color.r, color.g, color.b);
@@ -52,12 +64,8 @@ void PangolinViewer::drawPointCloud(const pcl::PointCloud<pcl::PointXYZ>::Ptr& c
   pc.drawPoints();
 }
 
-PangolinViewer::PangolinViewer(const Eigen::Vector3f& p0, const Eigen::Vector3f& p1, const pangolin::AxisDirection up)
-    : s_cam(
-          pangolin::OpenGlRenderState(
-              pangolin::ProjectionMatrix(640, 480, 420, 420, 320, 240, 0.2, 100),
-              pangolin::ModelViewLookAt(p0.x(), p0.y(), p0.z(), p1.x(), p1.y(), p1.z(), up))),
-      handler(pangolin::Handler3D(s_cam))
+PangolinViewer::PangolinViewer(const std::shared_ptr<System>& system_ptr)
+    : system_ptr(system_ptr), s_cam(makeCamera()), handler(pangolin::Handler3D(s_cam))
 {
   // setup Pangolin viewer
   pangolin::CreateWindowAndBind("VLLM", 1024, 768);
@@ -78,8 +86,6 @@ PangolinViewer::PangolinViewer(const Eigen::Vector3f& p0, const Eigen::Vector3f&
   gui_target_normals = std::make_shared<pangolin::Var<bool>>("ui.target_normals", false);
   gui_gpd = std::make_shared<pangolin::Var<bool>>("ui.gpd", false);
 }
-
-PangolinViewer::PangolinViewer() : PangolinViewer(Eigen::Vector3f(-2, 0, 5), Eigen::Vector3f(0, 0, 0), pangolin::AxisZ) {}
 
 void PangolinViewer::drawGridLine() const
 {

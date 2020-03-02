@@ -41,7 +41,7 @@ System::System(int argc, char* argv[])
   T_init = config.T_init;
 }
 
-int System::execute()
+int System::update()
 {
   // Execute vSLAM
   bool success = bridge.execute();
@@ -50,7 +50,7 @@ int System::execute()
 
   // Get some information of vSLAM
   bridge.getLandmarksAndNormals(source_cloud, source_normals);
-  int vslam_state = static_cast<int>(bridge.getState());
+  vslam_state = static_cast<int>(bridge.getState());
   raw_camera = bridge.getCameraPose().inverse().cast<float>();
 
   // `2` means openvslam::tracking_state_t::Tracking
@@ -66,36 +66,42 @@ int System::execute()
   vllm::transformNormals(*source_normals, *source_normals, T_init);
   vllm::transformNormals(*source_normals, *aligned_normals, T_align);
 
-  for (int i = 0; i < config.iteration; i++) {
-    // Get all correspodences
-    pcl::CorrespondencesPtr correspondences = vllm::getCorrespondences(aligned_cloud, target_cloud);
-    std::cout << "raw_crsp= \033[32m" << correspondences->size() << "\033[m";
-
-    // Reject enough far correspondences
-    distance_rejector.setInputCorrespondences(correspondences);
-    distance_rejector.setMaximumDistance(config.distance_max - (config.distance_max - config.distance_min) * static_cast<float>(i) / static_cast<float>(config.iteration));
-    distance_rejector.getCorrespondences(*correspondences);
-    std::cout << " ,rejected by distance= \033[32m" << correspondences->size() << "\033[m";
-
-    // Reject correspondences don't follow the lpd
-    correspondences = lpd_rejector.refineCorrespondences(correspondences, source_cloud);
-    std::cout << " ,rejected by lpd= \033[32m" << correspondences->size() << "\033[m" << std::endl;
-
-    // Align pointclouds
-    vllm::Aligner aligner;
-    aligner.setGain(config.scale_gain, config.pitch_gain);
-    if (!vllm_pause)
-      T_align = aligner.estimate7DoF(T_align, *source_cloud, *target_cloud, *correspondences, target_normals, source_normals);
-
-    // Integrate
-    vllm_camera = T_align * raw_camera;
-    pcl::transformPointCloud(*source_cloud, *aligned_cloud, T_align);
-    vllm::transformNormals(*source_normals, *aligned_normals, T_align);
-  }
-  vllm_trajectory.push_back(vllm_camera.block(0, 3, 3, 1));
+  if (first_set) {
+    first_set = false;
+  } else
+    vllm_trajectory.push_back(vllm_camera.block(0, 3, 3, 1));
 
   return 0;
 }
 
+int System::optimize(int iteration)
+{
+  // Get all correspodences
+  correspondences = vllm::getCorrespondences(aligned_cloud, target_cloud);
+  std::cout << "itr = \033[32m" << iteration << "\033[m";
+  std::cout << " ,raw_crsp= \033[32m" << correspondences->size() << "\033[m";
+
+  // Reject enough far correspondences
+  distance_rejector.setInputCorrespondences(correspondences);
+  distance_rejector.setMaximumDistance(config.distance_max - (config.distance_max - config.distance_min) * static_cast<float>(iteration) / static_cast<float>(config.iteration));
+  distance_rejector.getCorrespondences(*correspondences);
+  std::cout << " ,rejected by distance= \033[32m" << correspondences->size() << "\033[m";
+
+  // Reject correspondences don't follow the lpd
+  correspondences = lpd_rejector.refineCorrespondences(correspondences, source_cloud);
+  std::cout << " ,rejected by lpd= \033[32m" << correspondences->size() << "\033[m" << std::endl;
+
+  // Align pointclouds
+  vllm::Aligner aligner;
+  aligner.setGain(config.scale_gain, config.pitch_gain);
+  T_align = aligner.estimate7DoF(T_align, *source_cloud, *target_cloud, *correspondences, target_normals, source_normals);
+
+  // Integrate
+  vllm_camera = T_align * raw_camera;
+  pcl::transformPointCloud(*source_cloud, *aligned_cloud, T_align);
+  vllm::transformNormals(*source_normals, *aligned_normals, T_align);
+
+  return 0;
+}
 
 }  // namespace vllm

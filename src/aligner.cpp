@@ -63,7 +63,7 @@ Eigen::Matrix4f Aligner::estimate7DoF(
   setEdge7DoFGICP(optimizer, source, target, correspondances, target_normals, source_normals);
 
   // execute
-  optimizer.setVerbose(true);
+  optimizer.setVerbose(false);
   optimizer.initializeOptimization();
   optimizer.computeActiveErrors();
   optimizer.optimize(10);

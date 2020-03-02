@@ -1,6 +1,7 @@
 #pragma once
 #include "global_point_distribution.hpp"
 #include "pangolin_cloud.hpp"
+#include "system.hpp"
 #include <pangolin/pangolin.h>
 #include <pcl/correspondence.h>
 
@@ -17,15 +18,21 @@ struct Color {
 
 class PangolinViewer
 {
+private:
+  std::shared_ptr<System> system_ptr = nullptr;
+
+  pangolin::OpenGlRenderState makeCamera(
+      const Eigen::Vector3f& from = Eigen::Vector3f(-2, 0, 3),
+      const Eigen::Vector3f& to = Eigen::Vector3f(0, 0, 0),
+      const pangolin::AxisDirection up = pangolin::AxisZ);
+
 public:
-  PangolinViewer();
-  PangolinViewer(const Eigen::Vector3f& p0, const Eigen::Vector3f& p1, const pangolin::AxisDirection up);
+  PangolinViewer(const std::shared_ptr<System>& system_ptr);
+  PangolinViewer() : PangolinViewer(nullptr){};
+
   ~PangolinViewer() = default;
 
-  void swap() const
-  {
-    pangolin::FinishFrame();
-  }
+  void swap() const { pangolin::FinishFrame(); }
 
   void clear()
   {
@@ -33,33 +40,38 @@ public:
     d_cam.Activate(s_cam);
   }
 
-  // void visualize()
-  // {
-  //   pangolin_viewer.clear();
-  //   pangolin_viewer.drawGridLine();
-  //   pangolin_viewer.drawString("VLLM", {1.0f, 1.0f, 0.0f, 3.0f});
+  void execute()
+  {
+    if (system_ptr == nullptr)
+      return;
+    clear();
 
-  //   pangolin_viewer.drawPointCloud(aligned_cloud, {1.0f, 1.0f, 0.0f, 2.0f});
-  //   pangolin_viewer.drawPointCloud(target_cloud, {0.6f, 0.6f, 0.6f, 1.0f});
-  //   pangolin_viewer.drawTrajectory(vllm_trajectory, {1.0f, 0.0f, 0.0f, 3.0f});
-  //   pangolin_viewer.drawCamera(vllm_camera, {1.0f, 0.0f, 0.0f, 1.0f});
-  //   // pangolin_viewer.drawCorrespondences(aligned_cloud, target_cloud, correspondences, {0.0f, 1.0f, 0.0f, 2.0f});
+    drawGridLine();
+    drawString("VLLM", {1.0f, 1.0f, 0.0f, 3.0f});
 
-  //   if (gui_raw_camera->value()) {
-  //     pangolin_viewer.drawCamera(raw_camera, {1.0f, 0.0f, 1.0f, 1.0f});
-  //     pangolin_viewer.drawTrajectory(raw_trajectory, {1.0f, 0.0f, 1.0f, 3.0f});
-  //   }
-  //   if (gui_source_normals->value())
-  //     pangolin_viewer.drawNormals(aligned_cloud, aligned_normals, {1.0f, 0.0f, 1.0f, 1.0f});
-  //   if (gui_target_normals->value())
-  //     pangolin_viewer.drawNormals(target_cloud, target_normals, {0.0f, 1.0f, 1.0f, 1.0f}, 30);
-  //   if (gui_gpd->value())
-  //     pangolin_viewer.drawGPD(gpd);
+    drawPointCloud(system_ptr->getAlignedCloud(), {1.0f, 1.0f, 0.0f, 2.0f});
+    drawPointCloud(system_ptr->getTargetCloud(), {0.6f, 0.6f, 0.6f, 1.0f});
+    drawTrajectory(system_ptr->getTrajectory(), {1.0f, 0.0f, 0.0f, 3.0f});
+    drawCamera(system_ptr->getCamera(), {1.0f, 0.0f, 0.0f, 1.0f});
+    drawCorrespondences(system_ptr->getAlignedCloud(), system_ptr->getTargetCloud(),
+        system_ptr->getCorrespondences(), {0.0f, 1.0f, 0.0f, 2.0f});
 
-  //   pangolin_viewer.swap();
-  // }
+    // if (gui_raw_camera->value()) {
+    //     pangolin_viewer.drawCamera(raw_camera, {1.0f, 0.0f, 1.0f, 1.0f});
+    //     pangolin_viewer.drawTrajectory(raw_trajectory, {1.0f, 0.0f, 1.0f, 3.0f});
+    // }
+    // if (gui_source_normals->value())
+    //     pangolin_viewer.drawNormals(aligned_cloud, aligned_normals, {1.0f, 0.0f, 1.0f, 1.0f});
+    // if (gui_target_normals->value())
+    //     pangolin_viewer.drawNormals(target_cloud, target_normals, {0.0f, 1.0f, 1.0f, 1.0f}, 30);
+    //   if (gui_gpd->value())
+    //     pangolin_viewer.drawGPD(gpd);
 
-  void drawGPD(const GPD& gpd) const;
+    swap();
+  }
+
+  void
+  drawGPD(const GPD& gpd) const;
   void drawGridLine() const;
   void drawString(const std::string& str, const Color& color) const;
   void drawTrajectory(const std::vector<Eigen::Vector3f>& trajectory, const Color& color);
@@ -96,5 +108,5 @@ private:
 
   // h[0,360],s[0,1],v[0,1]
   Eigen::Vector3f convertRGB(Eigen::Vector3f hsv);
-};
+};  // namespace vllm
 }  // namespace vllm
