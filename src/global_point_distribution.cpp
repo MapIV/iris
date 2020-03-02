@@ -2,8 +2,10 @@
 
 namespace vllm
 {
-GPD::GPD(const size_t N, const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud, float gain) : N(N)
+
+void GPD::init(size_t _N, const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud, float gain)
 {
+  N = _N;
   data.resize(N);
   for (size_t i = 0; i < N; ++i) {
     data[i].resize(N);

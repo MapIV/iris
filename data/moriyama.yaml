@@ -42,13 +42,13 @@ VLLM.t_init:  !!opencv-matrix
     rows: 3
     cols: 1
     dt: f
-    data: [ 2.0, 20.0, -1.0]
+    data: [ 10.0, 20.0, -1.0]
 # normal vector of camera
 VLLM.normal_init:  !!opencv-matrix
     rows: 3
     cols: 1
     dt: f
-    data: [ 0,1,0]
+    data: [ 0.2,1,0]
 # up vector of camera
 VLLM.up_init:  !!opencv-matrix
     rows: 3

@@ -12,6 +12,11 @@ public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
   CorrespondenceRejectorLpd(GPD gpd) : gpd(gpd) {}
+  CorrespondenceRejectorLpd() {}
+  void init(GPD _gpd)
+  {
+    gpd = _gpd;
+  }
 
   pcl::CorrespondencesPtr refineCorrespondences(const pcl::CorrespondencesPtr& correspondences, const pcXYZ::Ptr& cloud)
   {
@@ -19,7 +24,6 @@ public:
     for (size_t i = 0, N = correspondences->size(); i < N; i++) {
       const pcl::Correspondence pair = correspondences->at(i);
       pcl::PointXYZ point = cloud->at(i);
-      // pcl::PointXYZ point = cloud->at(pair.index_query);
       if (check(point)) {
         refined->push_back(pair);
       }
@@ -39,7 +43,7 @@ public:
 
   bool check(const pcl::PointXYZ& point)
   {
-    LPD lpd = gpd.getLPD(point);
+    const LPD& lpd = gpd.getLPD(point);
     if (lpd.N < 20)
       return false;
 

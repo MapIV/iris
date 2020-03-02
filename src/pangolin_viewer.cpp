@@ -12,13 +12,12 @@ void PangolinViewer::drawString(const std::string& str, const Color& color) cons
 
 void PangolinViewer::drawGPD(const GPD& gpd) const
 {
-  const size_t N = gpd.N;
+  const size_t N = gpd.size();
   for (size_t i = 0; i < N; i++) {
     for (size_t j = 0; j < N; j++) {
       for (size_t k = 0; k < N; k++) {
-        const LPD lpd = gpd.data[i][j][k];
+        const LPD& lpd = gpd.at(i, j, k);
         if (lpd.N < 20) continue;
-
         glPushMatrix();
         glMultMatrixf(lpd.T.transpose().eval().data());
 
@@ -38,7 +37,7 @@ void PangolinViewer::drawTrajectory(const std::vector<Eigen::Vector3f>& trajecto
   for (const Eigen::Vector3f& v : trajectory) {
     glColor3fv(convertRGB(Eigen::Vector3f(static_cast<float>(i % 360), 1.f, 1.f)).data());
     glVertex3f(v.x(), v.y(), v.z());
-    i += 5;
+    i += 2;
   }
   glEnd();
 }
@@ -238,7 +237,7 @@ Eigen::Vector3f PangolinViewer::convertRGB(Eigen::Vector3f hsv)
   if (H < 120) return {(120 - H) / 60 * D + min, max, min};
   if (H < 180) return {min, max, (H - 120) / 60 * D + min};
   if (H < 240) return {min, (240 - H) / 60 * D + min, max};
-  if (H < 300) return {max, min, (H - 240) / 60 * D + min};
+  if (H < 300) return {(H - 240) / 60 * D + min, min, max};
   if (H < 360) return {max, min, (360 - H) / 60 * D + min};
   return {255, 255, 255};
 }

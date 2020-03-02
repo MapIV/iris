@@ -4,7 +4,14 @@
 namespace vllm
 {
 struct Config {
-  Config(std::string yaml_file)
+  Config() {}
+
+  Config(const std::string& yaml_file)
+  {
+    init(yaml_file);
+  }
+
+  void init(const std::string& yaml_file)
   {
     cv::FileStorage fs(yaml_file, cv::FileStorage::READ);
     {

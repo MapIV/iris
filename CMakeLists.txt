@@ -108,6 +108,7 @@ add_executable(
   src/pangolin_viewer.cpp
   src/util.cpp
   src/global_point_distribution.cpp
+  src/system.cpp
   src/types_gicp.cpp)
 target_include_directories(
   main SYSTEM

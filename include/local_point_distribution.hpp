@@ -43,15 +43,15 @@ struct LPD {
   Eigen::Vector3f sigma;
   Eigen::Matrix4f T;
 
-  Eigen::Matrix3f R() { return T.topLeftCorner(3, 3); }
-  Eigen::Vector3f t() { return T.topRightCorner(3, 1); }
+  Eigen::Matrix3f R() const { return T.topLeftCorner(3, 3); }
+  Eigen::Vector3f t() const { return T.topRightCorner(3, 1); }
 
-  Eigen::Matrix3f invR() { return R().transpose(); }
-  Eigen::Vector3f invt() { return -invR() * t(); }
-  Eigen::Matrix4f invT() { return makeT(invR(), invt()); }
+  Eigen::Matrix3f invR() const { return R().transpose(); }
+  Eigen::Vector3f invt() const { return -invR() * t(); }
+  Eigen::Matrix4f invT() const { return makeT(invR(), invt()); }
 
 private:
-  Eigen::Matrix4f makeT(const Eigen::Matrix3f& R, const Eigen::Vector3f& mu)
+  Eigen::Matrix4f makeT(const Eigen::Matrix3f& R, const Eigen::Vector3f& mu) const
   {
     Eigen::Matrix4f T = Eigen::Matrix4f::Identity();
     T.topLeftCorner(3, 3) = R;
@@ -59,7 +59,7 @@ private:
     return T;
   }
 
-  Eigen::Matrix3f correctRotationMatrix(const Eigen::Matrix3f& R)
+  Eigen::Matrix3f correctRotationMatrix(const Eigen::Matrix3f& R) const
   {
     if (R.determinant() < 0) {
       Eigen::Matrix3f A = Eigen::Matrix3f::Identity();
@@ -70,7 +70,7 @@ private:
     }
   }
 
-  Eigen::Vector3f correctSigma(const Eigen::Vector3f& sigma)
+  Eigen::Vector3f correctSigma(const Eigen::Vector3f& sigma) const
   {
     return Eigen::Vector3f(std::abs(sigma.x()), std::abs(sigma.y()), std::abs(sigma.z()));
   }
