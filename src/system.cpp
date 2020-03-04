@@ -31,10 +31,6 @@ System::System(int argc, char* argv[])
   target_cloud = vllm::loadMapPointCloud(config.pcd_file, config.voxel_grid_leaf);
   target_normals = vllm::estimateNormals(target_cloud, config.normal_search_leaf);
 
-  // setup for Rejector
-  gpd.init(config.gpd_size, target_cloud, config.gpd_gain);
-  lpd_rejector.init(gpd);
-
   // setup for OpenVSLAM
   bridge.setup(argc, argv, config.video_file, config.frame_skip);
 
@@ -89,11 +85,7 @@ int System::optimize(int iteration)
   distance_rejector.setInputCorrespondences(correspondences);
   distance_rejector.setMaximumDistance(config.distance_max - (config.distance_max - config.distance_min) * static_cast<float>(iteration) / static_cast<float>(config.iteration));
   distance_rejector.getCorrespondences(*correspondences);
-  std::cout << " ,rejected by distance= \033[32m" << correspondences->size() << "\033[m";
-
-  // Reject correspondences don't follow the lpd
-  correspondences = lpd_rejector.refineCorrespondences(correspondences, source_cloud);
-  std::cout << " ,rejected by lpd= \033[32m" << correspondences->size() << "\033[m" << std::endl;
+  std::cout << " ,rejected by distance= \033[32m" << correspondences->size() << "\033[m" << std::endl;
 
   // Align pointclouds
   vllm::Aligner aligner;

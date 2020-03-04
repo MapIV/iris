@@ -1,5 +1,6 @@
 #include <pcl/common/common.h>
 #include <pcl/filters/crop_box.h>
+#include <pcl/filters/voxel_grid.h>
 #include <pcl/io/pcd_io.h>
 #include <pcl/visualization/pcl_visualizer.h>
 
@@ -28,11 +29,11 @@ void transformPointCloud(pcl::PointCloud<pcl::PointXYZI>::Ptr& cloud)
 {
   // rotation
   Eigen::Matrix3f R;
-  R = Eigen::AngleAxisf(static_cast<float>(-M_PI / 30.0), Eigen::Vector3f(0, 0, 1));
+  R = Eigen::AngleAxisf(static_cast<float>(-30.0 / 180.0 * M_PI), Eigen::Vector3f(0, 0, 1));
 
   // transration
   Eigen::Vector3f t;
-  t << -1.5f, 2.1f, -0.1f;
+  t << 0, 0, 0;
 
   // transform
   Eigen::Matrix4f T = Eigen::Matrix4f::Identity();
@@ -73,7 +74,13 @@ int main(int argc, char** argv)
   }
 
   transformPointCloud(cloud);
-  cloud = cropPointCloud(cloud, Eigen::Vector3f(-2, -1, -1), Eigen::Vector3f(1, 5, 2));
+  cloud = cropPointCloud(cloud, Eigen::Vector3f(-5, -10, -3), Eigen::Vector3f(20, 10, 3));
+
+  // filtering
+  pcl::VoxelGrid<pcl::PointXYZI> filter;
+  filter.setInputCloud(cloud);
+  filter.setLeafSize(0.02, 0.02, 0.02);
+  filter.filter(*cloud);
 
   // // intensity viewer
   // pcl::visualization::PCLVisualizer::Ptr viewer = pcl::visualization::PCLVisualizer::Ptr(new pcl::visualization::PCLVisualizer("viewer"));
@@ -93,7 +100,7 @@ int main(int argc, char** argv)
   // viewer->addCube(Eigen::Vector3f::Zero(), Eigen::Quaternionf(), 3, 6, 3, cube_name);
   // viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_COLOR, 1.0, 1.0, 1.0, cube_name);
   // viewer->setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_OPACITY, 0.2, cube_name);
-  // pcl::io::savePCDFileBinary("room.pcd", *cloud);
+  pcl::io::savePCDFileBinary("room.pcd", *cloud);
 
   viewer->spin();
 }

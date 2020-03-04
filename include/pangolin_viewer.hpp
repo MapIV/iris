@@ -65,7 +65,7 @@ public:
     if (*gui_target_normals)
       drawNormals(system_ptr->getTargetCloud(), system_ptr->getTargetNormals(), {0.0f, 1.0f, 1.0f, 1.0f}, 30);
     // if (*gui_gpd)
-    //   drawGPD(gpd);
+    //   drawGPD(system_ptr->getGPD());
 
 
     Eigen::Vector2d gain(*gui_scale_gain, *gui_pitch_gain);
@@ -79,8 +79,7 @@ public:
     return 0;
   }
 
-  void
-  drawGPD(const GPD& gpd) const;
+  // void drawGPD(const GPD& gpd) const;
   void drawGridLine() const;
   void drawString(const std::string& str, const Color& color) const;
   void drawTrajectory(const std::vector<Eigen::Vector3f>& trajectory, const Color& color);
@@ -120,5 +119,5 @@ private:
 
   // h[0,360],s[0,1],v[0,1]
   Eigen::Vector3f convertRGB(Eigen::Vector3f hsv);
-};  // namespace vllm
+};
 }  // namespace vllm

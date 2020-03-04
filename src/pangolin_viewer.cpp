@@ -49,24 +49,22 @@ void PangolinViewer::drawString(const std::string& str, const Color& color) cons
   pangolin::GlFont::I().Text(str).DrawWindow(200, 50 - 2.0f * pangolin::GlFont::I().Height());
 }
 
-void PangolinViewer::drawGPD(const GPD& gpd) const
-{
-  const size_t N = gpd.size();
-  for (size_t i = 0; i < N; i++) {
-    for (size_t j = 0; j < N; j++) {
-      for (size_t k = 0; k < N; k++) {
-        const LPD& lpd = gpd.at(i, j, k);
-        if (lpd.N < 20) continue;
-        glPushMatrix();
-        glMultMatrixf(lpd.T.transpose().eval().data());
-
-        drawRectangular(lpd.sigma.x(), lpd.sigma.y(), lpd.sigma.z());
-
-        glPopMatrix();
-      }
-    }
-  }
-}
+// void PangolinViewer::drawGPD(const GPD& gpd) const
+// {
+//   const size_t N = gpd.size();
+//   for (size_t i = 0; i < N; i++) {
+//     for (size_t j = 0; j < N; j++) {
+//       for (size_t k = 0; k < N; k++) {
+//         const LPD& lpd = gpd.at(i, j, k);
+//         if (lpd.N < 20) continue;
+//         glPushMatrix();
+//         glMultMatrixf(lpd.T.transpose().eval().data());
+//         drawRectangular(lpd.sigma.x(), lpd.sigma.y(), lpd.sigma.z());
+//         glPopMatrix();
+//       }
+//     }
+//   }
+// }
 
 void PangolinViewer::drawTrajectory(const std::vector<Eigen::Vector3f>& trajectory, const Color& color)
 {
