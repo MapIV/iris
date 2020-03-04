@@ -67,7 +67,8 @@ int System::update()
   pcl::transformPointCloud(*source_cloud, *source_cloud, T_init);
   pcl::transformPointCloud(*source_cloud, *aligned_cloud, T_align);
   vllm::transformNormals(*source_normals, *source_normals, T_init);
-  vllm::transformNormals(*source_normals, *aligned_normals, T_align);
+  vllm::transformNormals(*source_normals, *aligned_normals, Eigen::Matrix4f::Identity());
+  // vllm::transformNormals(*source_normals, *aligned_normals, T_align);
 
   if (first_set) {
     first_set = false;
@@ -79,7 +80,7 @@ int System::update()
 
 std::pair<float, float> System::optimize(int iteration)
 {
-  if (aligned_cloud->empty())
+  if (source_cloud->empty())
     return {0, 0};
   // Get all correspodences
   correspondences = vllm::getCorrespondences(aligned_cloud, target_cloud);

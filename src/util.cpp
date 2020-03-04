@@ -130,15 +130,8 @@ void transformNormals(
     const Eigen::Matrix4f& T)
 {
   Eigen::Matrix3f R = getNormalizedRotation(T);
-  // pcl::PointCloud<pcl::Normal>::Ptr target(new pcl::PointCloud<pcl::Normal>);
-  // for (const pcl::Normal& n : source) {
-  //   Eigen::Vector3f _n = R * n.getNormalVector3fMap();
-  //   target->push_back({_n.x(), _n.y(), _n.z()});
-  // }
-  // return target;
-
   if (&source != &target) {
-    // target.clear();
+    target.clear();
     for (const pcl::Normal& n : source) {
       Eigen::Vector3f _n = R * n.getNormalVector3fMap();
       target.push_back({_n.x(), _n.y(), _n.z()});

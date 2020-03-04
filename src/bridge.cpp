@@ -149,6 +149,10 @@ void BridgeOpenVSLAM::getLandmarksAndNormals(
     const openvslam::Vec3_t pos = local_lm->get_pos_in_world();
     const openvslam::Vec3_t normal = local_lm->get_obs_mean_normal();
 
+    // if (normal.dot(Eigen::Vector3d(0, 0, 1)) < 0.5) {
+    //   std::cout << "EEEEEEEEEEEEEEEEEE" << std::endl;
+    // }
+
     pcl::PointXYZ p(
         static_cast<float>(pos.x()),
         static_cast<float>(pos.y()),
