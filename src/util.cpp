@@ -4,6 +4,7 @@
 #include <pcl/filters/voxel_grid.h>
 #include <pcl/io/pcd_io.h>
 #include <pcl/registration/correspondence_estimation.h>
+#include <pcl/registration/correspondence_estimation_backprojection.h>
 #include <pcl/registration/icp.h>
 #include <pcl/registration/transformation_estimation_svd_scale.h>
 #include <random>
@@ -12,11 +13,26 @@
 namespace vllm
 {
 // L2 norm is used
-pcl::CorrespondencesPtr getCorrespondences(const pcXYZ::Ptr& cloud_source, const pcXYZ::Ptr& cloud_target)
+pcl::CorrespondencesPtr getCorrespondences(const pcXYZ::Ptr& source_cloud, const pcXYZ::Ptr& target_cloud)
 {
   pcl::registration::CorrespondenceEstimation<pcl::PointXYZ, pcl::PointXYZ> est;
-  est.setInputSource(cloud_source);
-  est.setInputTarget(cloud_target);
+  est.setInputSource(source_cloud);
+  est.setInputTarget(target_cloud);
+  pcl::CorrespondencesPtr all_correspondences(new pcl::Correspondences);
+  est.determineCorrespondences(*all_correspondences);
+  return all_correspondences;
+}
+// Normal distance is used
+pcl::CorrespondencesPtr getCorrespondencesWithNormal(
+    const pcXYZ::Ptr& source_cloud, const pcXYZ::Ptr& target_cloud,
+    const pcNormal::Ptr& source_normal, const pcNormal::Ptr& target_normal)
+{
+  pcl::registration::CorrespondenceEstimationBackProjection<pcl::PointXYZ, pcl::PointXYZ, pcl::Normal> est;
+  est.setInputSource(source_cloud);
+  est.setInputTarget(target_cloud);
+  est.setSourceNormals(source_normal);
+  est.setTargetNormals(target_normal);
+  est.setKSearch(10);
   pcl::CorrespondencesPtr all_correspondences(new pcl::Correspondences);
   est.determineCorrespondences(*all_correspondences);
   return all_correspondences;
@@ -124,10 +140,7 @@ Eigen::Matrix3f getNormalizedRotation(const Eigen::Matrix4f& T)
   return sR / scale;
 }
 
-void transformNormals(
-    const pcl::PointCloud<pcl::Normal>& source,
-    pcl::PointCloud<pcl::Normal>& target,
-    const Eigen::Matrix4f& T)
+void transformNormals(const pcNormal& source, pcNormal& target, const Eigen::Matrix4f& T)
 {
   Eigen::Matrix3f R = getNormalizedRotation(T);
   if (&source != &target) {

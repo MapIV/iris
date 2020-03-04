@@ -3,6 +3,7 @@
 #include "config.hpp"
 #include "util.hpp"
 #include <memory>
+#include <pcl/registration/correspondence_estimation_backprojection.h>
 #include <pcl/registration/correspondence_rejection_distance.h>
 
 namespace vllm
@@ -61,10 +62,9 @@ private:
   Eigen::Matrix4f vllm_camera = Eigen::Matrix4f::Identity();
 
   pcl::registration::CorrespondenceRejectorDistance distance_rejector;
+  pcl::registration::CorrespondenceEstimationBackProjection<pcl::PointXYZ, pcl::PointXYZ, pcl::Normal> estimator;
 
   BridgeOpenVSLAM bridge;
-
-  pcl::CorrespondencesPtr correspondences;
 
   pcl::PointCloud<pcl::PointXYZ>::Ptr aligned_cloud;
   pcl::PointCloud<pcl::Normal>::Ptr aligned_normals;
@@ -73,6 +73,8 @@ private:
 
   pcl::PointCloud<pcl::PointXYZ>::Ptr target_cloud;
   pcl::PointCloud<pcl::Normal>::Ptr target_normals;
+
+  pcl::CorrespondencesPtr correspondences;
 };
 
 }  // namespace vllm

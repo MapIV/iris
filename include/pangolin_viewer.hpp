@@ -54,7 +54,7 @@ public:
     drawTrajectory(system_ptr->getTrajectory(), true);
     drawCamera(system_ptr->getCamera(), {1.0f, 0.0f, 0.0f, 1.0f});
     drawCorrespondences(system_ptr->getAlignedCloud(), system_ptr->getTargetCloud(),
-        system_ptr->getCorrespondences(), {0.0f, 1.0f, 0.0f, 2.0f});
+        system_ptr->getCorrespondences(), {0.0f, 0.0f, 0.6f, 2.0f});
 
     if (*gui_raw_camera) {
       drawCamera(system_ptr->getRawCamera(), {1.0f, 0.0f, 1.0f, 1.0f});
@@ -63,7 +63,7 @@ public:
     if (*gui_source_normals)
       drawNormals(system_ptr->getAlignedCloud(), system_ptr->getAlignedNormals(), {1.0f, 0.0f, 1.0f, 1.0f});
     if (*gui_target_normals)
-      drawNormals(system_ptr->getTargetCloud(), system_ptr->getTargetNormals(), {0.0f, 1.0f, 1.0f, 1.0f}, 30);
+      drawNormals(system_ptr->getTargetCloud(), system_ptr->getTargetNormals(), {0.0f, 1.0f, 1.0f, 1.0f}, 50);
 
     Eigen::Vector2d gain(*gui_scale_gain, *gui_pitch_gain);
     system_ptr->setGain(gain);

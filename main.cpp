@@ -25,7 +25,7 @@ int main(int argc, char* argv[])
     if (ok != 0)
       continue;
 
-    // TODO: Actually, I want to put this iteration in the system class,
+    // TODO: I want to put this iteration in the system class,
     // but now the Pangolin-viewer does not allow to do it.
     for (int i = 0; i < 5; i++) {
       auto [t, r] = system->optimize(i);
@@ -36,7 +36,7 @@ int main(int argc, char* argv[])
         loop = false;
 
       // converge condition
-      if (t < 0.02 && r < 0.03)
+      if (t < 0.01 && r < 0.01)
         break;
     }
   }

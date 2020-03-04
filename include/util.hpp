@@ -7,9 +7,12 @@
 namespace vllm
 {
 using pcXYZ = pcl::PointCloud<pcl::PointXYZ>;
+using pcNormal = pcl::PointCloud<pcl::Normal>;
 
 // L2 norm is used
-pcl::CorrespondencesPtr getCorrespondences(const pcXYZ::Ptr& cloud_source, const pcXYZ::Ptr& cloud_target);
+pcl::CorrespondencesPtr getCorrespondences(const pcXYZ::Ptr& source_cloud, const pcXYZ::Ptr& target_cloud);
+// Normal distance is used
+pcl::CorrespondencesPtr getCorrespondencesWithNormal(const pcXYZ::Ptr& source_loud, const pcXYZ::Ptr& target_cloud, const pcNormal::Ptr& source_normal, const pcNormal::Ptr& target_normal);
 
 // get scale factor from rotation matrix
 float getScale(const Eigen::Matrix3f& R);
@@ -31,10 +34,7 @@ Eigen::Matrix3f randomRotation();
 
 Eigen::Matrix3f getNormalizedRotation(const Eigen::Matrix4f& T);
 
-void transformNormals(
-    const pcl::PointCloud<pcl::Normal>& source,
-    pcl::PointCloud<pcl::Normal>& target,
-    const Eigen::Matrix4f& T);
+void transformNormals(const pcNormal& source, pcNormal& target, const Eigen::Matrix4f& T);
 
 // pcl::PointCloud<pcl::Normal>::Ptr transformNormals(
 //     const pcl::PointCloud<pcl::Normal>& source,

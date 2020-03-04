@@ -10,7 +10,8 @@ System::System(int argc, char* argv[])
     : aligned_cloud(new pcl::PointCloud<pcl::PointXYZ>),
       aligned_normals(new pcl::PointCloud<pcl::Normal>),
       source_cloud(new pcl::PointCloud<pcl::PointXYZ>),
-      source_normals(new pcl::PointCloud<pcl::Normal>)
+      source_normals(new pcl::PointCloud<pcl::Normal>),
+      correspondences(new pcl::Correspondences)
 {
   // analyze arugments
   popl::OptionParser op("Allowed options");
@@ -34,6 +35,11 @@ System::System(int argc, char* argv[])
   // setup for OpenVSLAM
   bridge.setup(argc, argv, config.video_file, config.frame_skip);
 
+  // setup correspondence estimator
+  estimator.setInputTarget(target_cloud);
+  estimator.setTargetNormals(target_normals);
+  estimator.setKSearch(10);
+
   T_init = config.T_init;
   scale_restriction_gain = config.scale_gain;
   pitch_restriction_gain = config.pitch_gain;
@@ -51,9 +57,18 @@ int System::update()
   vslam_state = static_cast<int>(bridge.getState());
   raw_camera = bridge.getCameraPose().inverse().cast<float>();
 
-  // `2` means openvslam::tracking_state_t::Tracking
+  // "2" means openvslam::tracking_state_t::Tracking
   if (vslam_state != 2 || source_cloud->empty()) {
     return -2;
+  }
+  // "3" means openvslam::tracking_state_t::Lost
+  if (vslam_state == 3) {
+    std::cout << "\n\033[33m";
+    for (int i = 0; i < 10; i++) {
+      std::cout << "###########" << std::endl;
+      if (i == 5) std::cout << " VSLAM LOST";
+    }
+    std::cout << "\n\033[m" << std::endl;
   }
 
   if (reset_requested) {
@@ -67,8 +82,7 @@ int System::update()
   pcl::transformPointCloud(*source_cloud, *source_cloud, T_init);
   pcl::transformPointCloud(*source_cloud, *aligned_cloud, T_align);
   vllm::transformNormals(*source_normals, *source_normals, T_init);
-  vllm::transformNormals(*source_normals, *aligned_normals, Eigen::Matrix4f::Identity());
-  // vllm::transformNormals(*source_normals, *aligned_normals, T_align);
+  vllm::transformNormals(*source_normals, *aligned_normals, T_align);
 
   if (first_set) {
     first_set = false;
@@ -80,11 +94,15 @@ int System::update()
 
 std::pair<float, float> System::optimize(int iteration)
 {
+  std::cout << "itr = \033[32m" << iteration << "\033[m";
   if (source_cloud->empty())
     return {0, 0};
+
   // Get all correspodences
-  correspondences = vllm::getCorrespondences(aligned_cloud, target_cloud);
-  std::cout << "itr = \033[32m" << iteration << "\033[m";
+  // correspondences = vllm::getCorrespondences(aligned_cloud, target_cloud);
+  estimator.setInputSource(aligned_cloud);
+  estimator.setSourceNormals(aligned_normals);
+  estimator.determineCorrespondences(*correspondences);
   std::cout << " ,raw_crsp= \033[32m" << correspondences->size() << "\033[m";
 
   // Reject enough far correspondences

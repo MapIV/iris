@@ -174,7 +174,7 @@ void PangolinViewer::drawCorrespondences(
     const Color& color) const
 {
   glBegin(GL_LINES);
-  glColor4f(color.r, color.g, color.b, 0.4f);
+  glColor4f(color.r, color.g, color.b, 0.9f);
   glLineWidth(color.size);
   for (const pcl::Correspondence& c : *correspondences) {
     pcl::PointXYZ p1 = source->at(c.index_query);
