@@ -25,13 +25,19 @@ int main(int argc, char* argv[])
     if (ok != 0)
       continue;
 
+    // TODO: Actually, I want to put this iteration in the system class,
+    // but now the Pangolin-viewer does not allow to do it.
     for (int i = 0; i < 5; i++) {
-      system->optimize(i);
+      auto [t, r] = system->optimize(i);
 
       // visualize by Pangolin
       int flag = pangolin_viewer.execute();
       if (flag == -1)
         loop = false;
+
+      // converge condition
+      if (t < 0.02 && r < 0.03)
+        break;
     }
   }
 

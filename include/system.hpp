@@ -1,7 +1,6 @@
 #pragma once
 #include "bridge.hpp"
 #include "config.hpp"
-// #include "rejector_lpd.hpp"
 #include "util.hpp"
 #include <memory>
 #include <pcl/registration/correspondence_rejection_distance.h>
@@ -17,7 +16,7 @@ public:
   System(int argc, char* argv[]);
 
   int update();
-  int optimize(int iteration);
+  std::pair<float, float> optimize(int iteration);
 
   cv::Mat getFrame() const { return bridge.getFrame(); }
 
@@ -32,7 +31,8 @@ public:
 
   const pcNormal::Ptr& getAlignedNormals() const { return aligned_normals; }
   const pcNormal::Ptr& getTargetNormals() const { return target_normals; }
-  // const GPD& getGPD() const { return gpd; }
+
+  void requestReset() { reset_requested = true; }
 
   Eigen::Vector2d getGain() const { return {scale_restriction_gain, pitch_restriction_gain}; }
   void setGain(const Eigen::Vector2d& gain)
@@ -44,6 +44,9 @@ public:
 private:
   double scale_restriction_gain = 0;
   double pitch_restriction_gain = 0;
+  bool reset_requested = false;
+
+  Eigen::Matrix4f last_vllm_camera = Eigen::Matrix4f::Identity();
 
   int vslam_state;
   Config config;
@@ -57,9 +60,6 @@ private:
   Eigen::Matrix4f raw_camera = Eigen::Matrix4f::Identity();
   Eigen::Matrix4f vllm_camera = Eigen::Matrix4f::Identity();
 
-  // Rejector
-  // GPD gpd;
-  // CorrespondenceRejectorLpd lpd_rejector;
   pcl::registration::CorrespondenceRejectorDistance distance_rejector;
 
   BridgeOpenVSLAM bridge;

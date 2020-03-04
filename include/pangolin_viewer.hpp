@@ -22,9 +22,9 @@ private:
   std::shared_ptr<System> system_ptr = nullptr;
 
   pangolin::OpenGlRenderState makeCamera(
-      const Eigen::Vector3f& from = Eigen::Vector3f(-2, 0, 3),
+      const Eigen::Vector3f& from = Eigen::Vector3f(-2, 0, 5),
       const Eigen::Vector3f& to = Eigen::Vector3f(0, 0, 0),
-      const pangolin::AxisDirection up = pangolin::AxisZ);
+      const pangolin::AxisDirection up = pangolin::AxisX);
 
 public:
   PangolinViewer(const std::shared_ptr<System>& system_ptr);
@@ -51,22 +51,19 @@ public:
 
     drawPointCloud(system_ptr->getAlignedCloud(), {1.0f, 1.0f, 0.0f, 2.0f});
     drawPointCloud(system_ptr->getTargetCloud(), {0.6f, 0.6f, 0.6f, 1.0f});
-    drawTrajectory(system_ptr->getTrajectory(), {1.0f, 0.0f, 0.0f, 3.0f});
+    drawTrajectory(system_ptr->getTrajectory(), true);
     drawCamera(system_ptr->getCamera(), {1.0f, 0.0f, 0.0f, 1.0f});
     drawCorrespondences(system_ptr->getAlignedCloud(), system_ptr->getTargetCloud(),
         system_ptr->getCorrespondences(), {0.0f, 1.0f, 0.0f, 2.0f});
 
     if (*gui_raw_camera) {
       drawCamera(system_ptr->getRawCamera(), {1.0f, 0.0f, 1.0f, 1.0f});
-      drawTrajectory(system_ptr->getRawTrajectory(), {1.0f, 0.0f, 1.0f, 1.0f});
+      drawTrajectory(system_ptr->getRawTrajectory(), false, {1.0f, 0.0f, 1.0f, 1.0f});
     }
     if (*gui_source_normals)
       drawNormals(system_ptr->getAlignedCloud(), system_ptr->getAlignedNormals(), {1.0f, 0.0f, 1.0f, 1.0f});
     if (*gui_target_normals)
       drawNormals(system_ptr->getTargetCloud(), system_ptr->getTargetNormals(), {0.0f, 1.0f, 1.0f, 1.0f}, 30);
-    // if (*gui_gpd)
-    //   drawGPD(system_ptr->getGPD());
-
 
     Eigen::Vector2d gain(*gui_scale_gain, *gui_pitch_gain);
     system_ptr->setGain(gain);
@@ -76,13 +73,16 @@ public:
     if (pangolin::Pushed(*gui_quit))
       return -1;
 
+    if (pangolin::Pushed(*gui_reset))
+      system_ptr->requestReset();
+
     return 0;
   }
 
   // void drawGPD(const GPD& gpd) const;
   void drawGridLine() const;
   void drawString(const std::string& str, const Color& color) const;
-  void drawTrajectory(const std::vector<Eigen::Vector3f>& trajectory, const Color& color);
+  void drawTrajectory(const std::vector<Eigen::Vector3f>& trajectory, bool colorful, const Color& color = Color());
   void drawPointCloud(const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud, const Color& color) const;
   void drawCamera(const Eigen::Matrix4f& cam_pose, const Color& color) const;
   void drawNormals(
@@ -108,7 +108,7 @@ private:
   std::shared_ptr<pangolin::Var<double>> gui_scale_gain;
   std::shared_ptr<pangolin::Var<double>> gui_pitch_gain;
   std::shared_ptr<pangolin::Var<bool>> gui_quit;
-  // std::shared_ptr<pangolin::Var<bool>> gui_gpd;
+  std::shared_ptr<pangolin::Var<bool>> gui_reset;
 
   void drawRectangular(const float x, const float y, const float z) const;
   void drawLine(

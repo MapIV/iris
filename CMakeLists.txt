@@ -24,7 +24,7 @@ message("Build Type:\n\t${CMAKE_BUILD_TYPE}")
 
 # == clear "CMAKE_CXX_FLAGS" ==
 set(CMAKE_CXX_FLAGS "")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pipe -fopenmp ")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pipe -fopenmp -Ofast")
 
 # == set warning flags ==
 set(CXX_WARNING_FLAGS
@@ -107,7 +107,6 @@ add_executable(
   src/aligner.cpp
   src/pangolin_viewer.cpp
   src/util.cpp
-  src/global_point_distribution.cpp
   src/system.cpp
   src/types_gicp.cpp)
 target_include_directories(

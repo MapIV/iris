@@ -56,6 +56,11 @@ int System::update()
     return -2;
   }
 
+  if (reset_requested) {
+    reset_requested = false;
+    T_align = Eigen::Matrix4f::Identity();
+  }
+
   // Transform subtract the first pose offset
   raw_camera = T_init * raw_camera;
   raw_trajectory.push_back(raw_camera.block(0, 3, 3, 1));
@@ -72,10 +77,10 @@ int System::update()
   return 0;
 }
 
-int System::optimize(int iteration)
+std::pair<float, float> System::optimize(int iteration)
 {
   if (aligned_cloud->empty())
-    return -1;
+    return {0, 0};
   // Get all correspodences
   correspondences = vllm::getCorrespondences(aligned_cloud, target_cloud);
   std::cout << "itr = \033[32m" << iteration << "\033[m";
@@ -97,7 +102,14 @@ int System::optimize(int iteration)
   pcl::transformPointCloud(*source_cloud, *aligned_cloud, T_align);
   vllm::transformNormals(*source_normals, *aligned_normals, T_align);
 
-  return 0;
+  // Get Inovation
+  float scale = getScale(getNormalizedRotation(vllm_camera));
+  float update_transform = (last_vllm_camera - vllm_camera).topRightCorner(3, 1).norm();        // called "Euclid distance"
+  float update_rotation = (last_vllm_camera - vllm_camera).topLeftCorner(3, 3).norm() / scale;  // called "chordal distance"
+  std::cout << "update= \033[33m" << update_transform << " \033[m,\033[33m " << update_rotation << "\033[m" << std::endl;
+  last_vllm_camera = vllm_camera;
+
+  return {update_transform, update_rotation};
 }
 
 }  // namespace vllm

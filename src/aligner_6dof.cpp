@@ -13,8 +13,7 @@
 
 namespace vllm
 {
-
-Eigen::Matrix4f Aligner::estimate7DoF(
+Eigen::Matrix4f Aligner::estimate6DoF(
     Eigen::Matrix4f& T,
     const pcl::PointCloud<pcl::PointXYZ>& source,
     const pcl::PointCloud<pcl::PointXYZ>& target,
@@ -27,47 +26,47 @@ Eigen::Matrix4f Aligner::estimate7DoF(
       g2o::make_unique<g2o::BlockSolverX>(g2o::make_unique<g2o::LinearSolverDense<g2o::BlockSolverX::PoseMatrixType>>()));
   optimizer.setAlgorithm(solver);
 
-  setVertexSim3(optimizer, T);
-  setEdge7DoFGICP(optimizer, source, target, correspondances, target_normals, source_normals);
+  setVertexSE3(optimizer, T);
+  setEdge6DoFGICP(optimizer, source, target, correspondances, target_normals, source_normals);
 
   // execute
   optimizer.setVerbose(false);
   optimizer.initializeOptimization();
   optimizer.computeActiveErrors();
-  optimizer.optimize(5);
+  optimizer.optimize(10);
 
   // construct output matrix
-  g2o::VertexSim3Expmap* optimized = dynamic_cast<g2o::VertexSim3Expmap*>(optimizer.vertices().find(0)->second);
-  float scale = static_cast<float>(optimized->estimate().scale());
+  g2o::VertexSE3* optimized = dynamic_cast<g2o::VertexSE3*>(optimizer.vertices().find(0)->second);
   Eigen::Matrix3f R = optimized->estimate().rotation().matrix().cast<float>();
   Eigen::Vector3f t = optimized->estimate().translation().cast<float>();
-  std::cout << "scale= \033[31m" << scale << "\033[m" << std::endl;
 
-  T = Eigen::Matrix4f::Identity();
-  T.topLeftCorner(3, 3) = scale * R;
-  T.topRightCorner(3, 1) = t;
-  return T;
+  Eigen::Matrix4f _T = Eigen::Matrix4f::Identity();
+  _T.topLeftCorner(3, 3) = R;
+  _T.topRightCorner(3, 1) = t;
+  return _T;
 }
 
-void Aligner::setVertexSim3(g2o::SparseOptimizer& optimizer, Eigen::Matrix4f& T)
+void Aligner::setVertexSE3(g2o::SparseOptimizer& optimizer, Eigen::Matrix4f& T)
 {
   // set up rotation and translation for this node
-  Eigen::Vector3d t = T.topRightCorner(3, 1).cast<double>();
+  Eigen::Vector3d t(0, 0, 0);
+  Eigen::Quaterniond q;
+  q.setIdentity();
+  Eigen::Isometry3d camera;
   Eigen::Matrix3d R = T.topLeftCorner(3, 3).cast<double>();
-  Eigen::Quaterniond q = Eigen::Quaterniond(R);
-  double scale = vllm::getScale(R.cast<float>());
-  g2o::Sim3 sim3(q, t, scale);
+  camera = Eigen::Quaterniond(R);
+  camera.translation() = T.topRightCorner(3, 1).cast<double>();
 
   // set up initial parameter
-  g2o::VertexSim3Expmap* vc = new g2o::VertexSim3Expmap();
-  vc->setEstimate(sim3);
+  g2o::VertexSE3* vc = new g2o::VertexSE3();
+  vc->setEstimate(camera);
   vc->setId(0);
 
   // add to optimizer
   optimizer.addVertex(vc);
 }
 
-void Aligner::setEdge7DoFGICP(
+void Aligner::setEdge6DoFGICP(
     g2o::SparseOptimizer& optimizer,
     const pcl::PointCloud<pcl::PointXYZ>& source,
     const pcl::PointCloud<pcl::PointXYZ>& target,
@@ -76,12 +75,13 @@ void Aligner::setEdge7DoFGICP(
     const pcl::PointCloud<pcl::Normal>::Ptr& source_normals)
 {
   // get Vertex
-  g2o::VertexSim3Expmap* vp0 = dynamic_cast<g2o::VertexSim3Expmap*>(optimizer.vertices().find(0)->second);
+  g2o::VertexSE3* vp0 = dynamic_cast<g2o::VertexSE3*>(optimizer.vertices().find(0)->second);
   const Eigen::Matrix3d R = vp0->estimate().rotation().matrix();
 
   for (const pcl::Correspondence& cor : correspondances) {
     // new edge with correct cohort for caching
-    vllm::Edge_Sim3_GICP* e = new vllm::Edge_Sim3_GICP(true);
+    vllm::Edge_SE3_GICP* e;
+    e = new vllm::Edge_SE3_GICP(source_normals != nullptr);
     e->setVertex(0, vp0);  // set viewpoint
 
     // calculate the relative 3D position of the point
@@ -95,6 +95,7 @@ void Aligner::setEdge7DoFGICP(
 
     e->setMeasurement(meas);
     e->information().setIdentity();
+
     if (source_normals) {
       Eigen::Vector3f n0 = target_normals->at(cor.index_match).getNormalVector3fMap();
       Eigen::Vector3f n1 = source_normals->at(cor.index_query).getNormalVector3fMap();
@@ -102,8 +103,8 @@ void Aligner::setEdge7DoFGICP(
       // sometime normal0 has NaN
       if (std::isfinite(n0.x())) meas.normal0 = n0.cast<double>();
       meas.normal1 = n1.cast<double>();
-      e->cov0 = meas.cov0(0.01f);  // target
-      e->cov1 = meas.cov1(0.05f);  // source
+      e->cov0 = meas.cov0(0.01f);
+      e->cov1 = meas.cov1(0.01f);
       e->information() = (e->cov0 + R * e->cov1 * R.transpose()).inverse();
 
     } else if (target_normals) {
@@ -120,22 +121,13 @@ void Aligner::setEdge7DoFGICP(
     optimizer.addEdge(e);
   }
 
-  // add a Regularization Edge of Roll, Pitch
-  {
-    Edge_RollPitch_Regularizer* e = new Edge_RollPitch_Regularizer(pitch_gain);
-    e->setVertex(0, vp0);
-    e->information().setIdentity();
-    e->setMeasurement(0.0);
-    optimizer.addEdge(e);
-  }
-
-  // add a Regularization Edge of Scale
-  {
-    Edge_Scale_Regularizer* e = new Edge_Scale_Regularizer(scale_gain);
-    e->setVertex(0, vp0);
-    e->information().setIdentity();
-    e->setMeasurement(1.0);
-    optimizer.addEdge(e);
-  }
+  // add a Regularization Edge of Pitch
+  Edge_RollPitch_Regularizer* e = new Edge_RollPitch_Regularizer(pitch_gain);
+  e->setVertex(0, vp0);
+  e->information().setIdentity();
+  e->setMeasurement(0.0);
+  optimizer.addEdge(e);
 }
+
+
 }  // namespace vllm

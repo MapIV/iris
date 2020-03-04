@@ -20,7 +20,8 @@ PangolinViewer::PangolinViewer(const std::shared_ptr<System>& system_ptr)
   // setup GUI
   pangolin::CreatePanel("ui").SetBounds(0.0, 1.0, 0.0, pangolin::Attach::Pix(180));
   gui_quit = std::make_shared<pangolin::Var<bool>>("ui.Quit", false, false);
-  gui_raw_camera = std::make_shared<pangolin::Var<bool>>("ui.raw_camera", false, true);
+  gui_reset = std::make_shared<pangolin::Var<bool>>("ui.Reset", false, false);
+  gui_raw_camera = std::make_shared<pangolin::Var<bool>>("ui.raw_camera", true, true);
   gui_source_normals = std::make_shared<pangolin::Var<bool>>("ui.source_normals", false, true);
   gui_target_normals = std::make_shared<pangolin::Var<bool>>("ui.target_normals", false, true);
   Eigen::Vector2d gain = system_ptr->getGain();
@@ -66,15 +67,17 @@ void PangolinViewer::drawString(const std::string& str, const Color& color) cons
 //   }
 // }
 
-void PangolinViewer::drawTrajectory(const std::vector<Eigen::Vector3f>& trajectory, const Color& color)
+void PangolinViewer::drawTrajectory(const std::vector<Eigen::Vector3f>& trajectory, bool colorful, const Color& color)
 {
   glBegin(GL_LINE_STRIP);
   glLineWidth(color.size);
+  glColor3f(color.r, color.g, color.b);
+
   int i = 0;
   for (const Eigen::Vector3f& v : trajectory) {
-    glColor3fv(convertRGB(Eigen::Vector3f(static_cast<float>(i % 360), 1.f, 1.f)).data());
+    if (colorful)
+      glColor3fv(convertRGB(Eigen::Vector3f(static_cast<float>(i++ % 360), 1.f, 1.f)).data());
     glVertex3f(v.x(), v.y(), v.z());
-    i += 2;
   }
   glEnd();
 }

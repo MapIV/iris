@@ -60,16 +60,16 @@ VLLM.s_init: 6.0
 VLLM.pcd_file: "../../vllm-data/corridor.pcd"
 VLLM.video_file: "../../vllm-data/loop3.avi"
 
-VLLM.voxel_grid_leaf: 0.030
+VLLM.voxel_grid_leaf: 0.050
 VLLM.normal_search_leaf: 0.06
 
 VLLM.gpd_size: 8
 VLLM.gpd_gain: 0.5
 VLLM.iteration: 5
-VLLM.frame_skip: 4
+VLLM.frame_skip: 3
 
 VLLM.scale_gain: 20.0
-VLLM.pitch_gain: 1.0
+VLLM.pitch_gain: 10.0
 
-VLLM.distance_min: 0.2
-VLLM.distance_max: 0.8
+VLLM.distance_min: 0.05
+VLLM.distance_max: 1.0
