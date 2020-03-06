@@ -168,7 +168,8 @@ void BridgeOpenVSLAM::getLandmarksAndNormals(
       << "landmark ratio \033[34m" << local_cloud->size()
       << "\033[m / \033[34m" << local_landmarks.size()
       << "\033[m , latest keyframe \033[34m" << max_id
-      << "\033[m , recollection \033[34m" << recollection << std::endl;
+      << "\033[m , recollection \033[34m" << recollection
+      << "\033[m" << std::endl;
   return;
 }
 

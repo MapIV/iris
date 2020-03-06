@@ -43,6 +43,8 @@ System::System(int argc, char* argv[])
   T_init = config.T_init;
   scale_restriction_gain = config.scale_gain;
   pitch_restriction_gain = config.pitch_gain;
+  search_distance_min = config.distance_min;
+  search_distance_max = config.distance_max;
 }
 
 int System::update()
@@ -99,7 +101,6 @@ std::pair<float, float> System::optimize(int iteration)
     return {0, 0};
 
   // Get all correspodences
-  // correspondences = vllm::getCorrespondences(aligned_cloud, target_cloud);
   estimator.setInputSource(aligned_cloud);
   estimator.setSourceNormals(aligned_normals);
   estimator.determineCorrespondences(*correspondences);
@@ -107,7 +108,8 @@ std::pair<float, float> System::optimize(int iteration)
 
   // Reject enough far correspondences
   distance_rejector.setInputCorrespondences(correspondences);
-  distance_rejector.setMaximumDistance(config.distance_max - (config.distance_max - config.distance_min) * static_cast<float>(iteration) / static_cast<float>(config.iteration));
+  distance_rejector.setMaximumDistance(
+      search_distance_max - (search_distance_max - search_distance_min) * static_cast<double>(iteration) / static_cast<double>(config.iteration));
   distance_rejector.getCorrespondences(*correspondences);
   std::cout << " ,rejected by distance= \033[32m" << correspondences->size() << "\033[m" << std::endl;
 

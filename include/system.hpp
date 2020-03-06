@@ -15,12 +15,11 @@ class System
 {
 public:
   System(int argc, char* argv[]);
-
   int update();
   std::pair<float, float> optimize(int iteration);
 
+public:
   cv::Mat getFrame() const { return bridge.getFrame(); }
-
   const pcXYZ::Ptr& getAlignedCloud() const { return aligned_cloud; }
   const pcXYZ::Ptr& getTargetCloud() const { return target_cloud; }
   const pcl::CorrespondencesPtr& getCorrespondences() const { return correspondences; }
@@ -37,6 +36,7 @@ public:
 
   unsigned int getRecollection() const { return recollection; }
   void setRecollection(unsigned int recollection_) { recollection = recollection_; }
+
   Eigen::Vector2d getGain() const { return {scale_restriction_gain, pitch_restriction_gain}; }
   void setGain(const Eigen::Vector2d& gain)
   {
@@ -44,7 +44,17 @@ public:
     pitch_restriction_gain = gain(1);
   }
 
+  Eigen::Vector2d getSearchDistance() const { return {search_distance_min, search_distance_max}; }
+  void setSearchDistance(const Eigen::Vector2d& distance)
+  {
+    search_distance_min = distance(0);
+    search_distance_max = distance(1);
+  }
+
 private:
+  double search_distance_min = 0;
+  double search_distance_max = 0;
+
   double scale_restriction_gain = 0;
   double pitch_restriction_gain = 0;
   bool reset_requested = false;

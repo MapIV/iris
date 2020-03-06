@@ -68,6 +68,7 @@ struct Config {
   int gpd_size;
   float normal_search_leaf;
   float voxel_grid_leaf;
+
   std::string pcd_file;
   std::string video_file;
   Eigen::Matrix4f T_init;

@@ -39,7 +39,7 @@ int main(int argc, char* argv[])
         loop = false;
 
       // converge condition
-      if (t < 0.01 && r < 0.01)
+      if (t < 0.03 && r < 0.03)
         break;
     }
     auto dur = std::chrono::system_clock::now() - m_start;
