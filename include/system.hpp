@@ -35,6 +35,8 @@ public:
 
   void requestReset() { reset_requested = true; }
 
+  unsigned int getRecollection() const { return recollection; }
+  void setRecollection(unsigned int recollection_) { recollection = recollection_; }
   Eigen::Vector2d getGain() const { return {scale_restriction_gain, pitch_restriction_gain}; }
   void setGain(const Eigen::Vector2d& gain)
   {
@@ -46,6 +48,7 @@ private:
   double scale_restriction_gain = 0;
   double pitch_restriction_gain = 0;
   bool reset_requested = false;
+  unsigned int recollection = 50;
 
   Eigen::Matrix4f last_vllm_camera = Eigen::Matrix4f::Identity();
 

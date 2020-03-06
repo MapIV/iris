@@ -131,7 +131,8 @@ void BridgeOpenVSLAM::getLandmarks(
 
 void BridgeOpenVSLAM::getLandmarksAndNormals(
     pcl::PointCloud<pcl::PointXYZ>::Ptr& local_cloud,
-    pcl::PointCloud<pcl::Normal>::Ptr& normals) const
+    pcl::PointCloud<pcl::Normal>::Ptr& normals,
+    unsigned int recollection) const
 {
   std::vector<openvslam::data::landmark*> landmarks;
   std::set<openvslam::data::landmark*> local_landmarks;
@@ -142,10 +143,12 @@ void BridgeOpenVSLAM::getLandmarksAndNormals(
   local_cloud->clear();
   normals->clear();
 
+  unsigned int max_id = SLAM_ptr->get_map_publisher()->get_max_keyframe_id();
   for (const auto local_lm : local_landmarks) {
-    if (local_lm->will_be_erased()) {
-      continue;
-    }
+    if (local_lm->will_be_erased()) continue;
+    if (local_lm->get_observed_ratio() < 0.5) continue;
+    if (max_id > recollection && local_lm->last_observed_keyfrm_id_ < max_id - recollection) continue;
+
     const openvslam::Vec3_t pos = local_lm->get_pos_in_world();
     const openvslam::Vec3_t normal = local_lm->get_obs_mean_normal();
 
@@ -161,9 +164,13 @@ void BridgeOpenVSLAM::getLandmarksAndNormals(
         static_cast<float>(normal.z()));
     normals->push_back(n);
   }
+  std::cout
+      << "landmark ratio \033[34m" << local_cloud->size()
+      << "\033[m / \033[34m" << local_landmarks.size()
+      << "\033[m , latest keyframe \033[34m" << max_id
+      << "\033[m , recollection \033[34m" << recollection << std::endl;
   return;
 }
-
 
 int BridgeOpenVSLAM::getState() const
 {

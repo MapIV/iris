@@ -1,5 +1,6 @@
 #include "pangolin_viewer.hpp"
 #include "system.hpp"
+#include <chrono>
 #include <opencv2/opencv.hpp>
 
 int main(int argc, char* argv[])
@@ -9,9 +10,11 @@ int main(int argc, char* argv[])
   cv::namedWindow("VLLM", cv::WINDOW_AUTOSIZE);
 
   bool loop = true;
+  std::chrono::system_clock::time_point m_start;
   while (loop) {
+    m_start = std::chrono::system_clock::now();
+
     int ok = system->update();
-    std::cout << "state: " << ok << std::endl;
 
     // visualize by OpenCV
     cv::imshow("VLLM", system->getFrame());
@@ -39,6 +42,8 @@ int main(int argc, char* argv[])
       if (t < 0.01 && r < 0.01)
         break;
     }
+    auto dur = std::chrono::system_clock::now() - m_start;
+    std::cout << std::chrono::duration_cast<std::chrono::milliseconds>(dur).count() << " ms" << std::endl;
   }
 
   return 0;

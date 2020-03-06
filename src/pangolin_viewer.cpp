@@ -25,9 +25,10 @@ PangolinViewer::PangolinViewer(const std::shared_ptr<System>& system_ptr)
   gui_source_normals = std::make_shared<pangolin::Var<bool>>("ui.source_normals", false, true);
   gui_target_normals = std::make_shared<pangolin::Var<bool>>("ui.target_normals", false, true);
   Eigen::Vector2d gain = system_ptr->getGain();
+  unsigned int recollect = system_ptr->getRecollection();
   gui_scale_gain = std::make_shared<pangolin::Var<double>>("ui.scale_gain", gain(0), 0.0, 50.0);
   gui_pitch_gain = std::make_shared<pangolin::Var<double>>("ui.pitch_gain", gain(1), 0.0, 50.0);
-  // gui_gpd = std::make_shared<pangolin::Var<bool>>("ui.global_distribution", false, true);
+  gui_recollection = std::make_shared<pangolin::Var<unsigned int>>("ui.recollection", recollect, 0, 200);
 }
 
 pangolin::OpenGlRenderState PangolinViewer::makeCamera(

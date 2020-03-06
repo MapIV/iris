@@ -54,7 +54,7 @@ public:
     drawTrajectory(system_ptr->getTrajectory(), true);
     drawCamera(system_ptr->getCamera(), {1.0f, 0.0f, 0.0f, 1.0f});
     drawCorrespondences(system_ptr->getAlignedCloud(), system_ptr->getTargetCloud(),
-        system_ptr->getCorrespondences(), {0.0f, 0.0f, 0.6f, 2.0f});
+        system_ptr->getCorrespondences(), {0.0f, 0.0f, 1.0f, 2.0f});
 
     if (*gui_raw_camera) {
       drawCamera(system_ptr->getRawCamera(), {1.0f, 0.0f, 1.0f, 1.0f});
@@ -67,6 +67,7 @@ public:
 
     Eigen::Vector2d gain(*gui_scale_gain, *gui_pitch_gain);
     system_ptr->setGain(gain);
+    system_ptr->setRecollection(*gui_recollection);
 
     swap();
 
@@ -107,6 +108,7 @@ private:
   std::shared_ptr<pangolin::Var<bool>> gui_target_normals;
   std::shared_ptr<pangolin::Var<double>> gui_scale_gain;
   std::shared_ptr<pangolin::Var<double>> gui_pitch_gain;
+  std::shared_ptr<pangolin::Var<unsigned int>> gui_recollection;
   std::shared_ptr<pangolin::Var<bool>> gui_quit;
   std::shared_ptr<pangolin::Var<bool>> gui_reset;
 

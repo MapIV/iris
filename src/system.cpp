@@ -53,7 +53,7 @@ int System::update()
     return -1;
 
   // Get some information of vSLAM
-  bridge.getLandmarksAndNormals(source_cloud, source_normals);
+  bridge.getLandmarksAndNormals(source_cloud, source_normals, recollection);
   vslam_state = static_cast<int>(bridge.getState());
   raw_camera = bridge.getCameraPose().inverse().cast<float>();
 
