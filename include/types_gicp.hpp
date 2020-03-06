@@ -15,6 +15,20 @@ using g2o::Vector3;
 using g2o::VertexSE3;
 using g2o::VertexSim3Expmap;
 
+class VelocityModel
+{
+public:
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
+
+  Eigen::Vector3d pre_pos, pre_pre_pos, camera_pos;
+  VelocityModel()
+  {
+    pre_pos.setZero();
+    pre_pre_pos.setZero();
+    camera_pos.setZero();
+  }
+};
+
 class EdgeGICP
 {
 public:
@@ -83,6 +97,29 @@ public:
 
   virtual bool read(std::istream&);
   virtual bool write(std::ostream&) const;
+  void computeError();
+};
+
+class Edge_Const_Velocity : public g2o::BaseUnaryEdge<3, VelocityModel, VertexSim3Expmap>
+{
+private:
+  double gain = 1.0;
+
+public:
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
+  Edge_Const_Velocity(double gain = 1.0) : gain(gain) {}
+  Edge_Const_Velocity(const Edge_Const_Velocity* e);
+
+  virtual bool read(std::istream&)
+  {
+    std::cerr << __PRETTY_FUNCTION__ << " not implemented yet" << std::endl;
+    return false;
+  }
+  virtual bool write(std::ostream&) const
+  {
+    std::cerr << __PRETTY_FUNCTION__ << " not implemented yet" << std::endl;
+    return false;
+  }
   void computeError();
 };
 

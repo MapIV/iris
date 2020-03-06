@@ -137,5 +137,18 @@ void Aligner::setEdge7DoFGICP(
     e->setMeasurement(1.0);
     optimizer.addEdge(e);
   }
+
+  // add a const velocity Model Constraint Edge of Scale
+  if (model_constraint) {
+    Edge_Const_Velocity* e = new Edge_Const_Velocity(model_gain);
+    e->setVertex(0, vp0);
+    e->information().setIdentity();
+    VelocityModel model;
+    model.camera_pos = camera_pos.cast<double>();
+    model.pre_pos = pre_pos.cast<double>();
+    model.pre_pre_pos = pre_pre_pos.cast<double>();
+    e->setMeasurement(model);
+    optimizer.addEdge(e);
+  }
 }
 }  // namespace vllm

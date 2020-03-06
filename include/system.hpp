@@ -37,11 +37,12 @@ public:
   unsigned int getRecollection() const { return recollection; }
   void setRecollection(unsigned int recollection_) { recollection = recollection_; }
 
-  Eigen::Vector2d getGain() const { return {scale_restriction_gain, pitch_restriction_gain}; }
-  void setGain(const Eigen::Vector2d& gain)
+  Eigen::Vector3d getGain() const { return {scale_restriction_gain, pitch_restriction_gain, model_restriction_gain}; }
+  void setGain(const Eigen::Vector3d& gain)
   {
     scale_restriction_gain = gain(0);
     pitch_restriction_gain = gain(1);
+    model_restriction_gain = gain(2);
   }
 
   Eigen::Vector2d getSearchDistance() const { return {search_distance_min, search_distance_max}; }
@@ -57,6 +58,8 @@ private:
 
   double scale_restriction_gain = 0;
   double pitch_restriction_gain = 0;
+  double model_restriction_gain = 0;
+
   bool reset_requested = false;
   unsigned int recollection = 50;
 

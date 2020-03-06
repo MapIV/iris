@@ -119,7 +119,6 @@ void Edge_SE3_GICP::computeError()
   // from <ViewPoint> to <Point>
   const VertexSE3* vp0 = static_cast<const VertexSE3*>(_vertices[0]);
   // get vp1 point into vp0 frame could be more efficient if we computed this transform just once
-  // Eigen::Isometry3d cam=vp0->estimate();
   Vector3 p1 = vp0->estimate() * (measurement().pos1);
   // Euclidean distance
   _error = p1 - measurement().pos0;
@@ -156,6 +155,17 @@ void Edge_Scale_Regularizer::computeError()
     _error(0) = 10000;
   else
     _error(0) = gain * (scale - 1.0);
+}
+
+void Edge_Const_Velocity::computeError()
+{
+  const VertexSim3Expmap* vp0 = static_cast<const VertexSim3Expmap*>(_vertices[0]);
+
+  Eigen::Vector3d pre_pre = measurement().pre_pre_pos;
+  Eigen::Vector3d pre = measurement().pre_pos;
+  Eigen::Vector3d next = vp0->estimate().map(measurement().camera_pos);
+
+  _error = gain * (next - pre - pre + pre_pre);
 }
 
 void Edge_RollPitch_Regularizer::computeError()

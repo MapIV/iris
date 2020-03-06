@@ -70,6 +70,7 @@ VLLM.frame_skip: 4
 
 VLLM.scale_gain: 20.0
 VLLM.pitch_gain: 1.0
+VLLM.model_gain: 5.0
 
 VLLM.distance_min: 0.1
 VLLM.distance_max: 1.0

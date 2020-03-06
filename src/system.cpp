@@ -43,6 +43,7 @@ System::System(int argc, char* argv[])
   T_init = config.T_init;
   scale_restriction_gain = config.scale_gain;
   pitch_restriction_gain = config.pitch_gain;
+  model_restriction_gain = config.model_gain;
   search_distance_min = config.distance_min;
   search_distance_max = config.distance_max;
 }
@@ -109,13 +110,15 @@ std::pair<float, float> System::optimize(int iteration)
   // Reject enough far correspondences
   distance_rejector.setInputCorrespondences(correspondences);
   distance_rejector.setMaximumDistance(
-      search_distance_max - (search_distance_max - search_distance_min) * static_cast<double>(iteration) / static_cast<double>(config.iteration));
+      search_distance_max - (search_distance_max - search_distance_min) * static_cast<float>(iteration) / static_cast<float>(config.iteration));
   distance_rejector.getCorrespondences(*correspondences);
   std::cout << " ,rejected by distance= \033[32m" << correspondences->size() << "\033[m" << std::endl;
 
   // Align pointclouds
   vllm::Aligner aligner;
-  aligner.setGain(scale_restriction_gain, pitch_restriction_gain);
+  // TODO:
+  // aligner.setPrePosition();
+  aligner.setGain(scale_restriction_gain, pitch_restriction_gain, model_restriction_gain);
   T_align = aligner.estimate7DoF(T_align, *source_cloud, *target_cloud, *correspondences, target_normals, source_normals);
 
   // Integrate

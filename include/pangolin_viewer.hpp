@@ -65,7 +65,7 @@ public:
     if (*gui_target_normals)
       drawNormals(system_ptr->getTargetCloud(), system_ptr->getTargetNormals(), {0.0f, 1.0f, 1.0f, 1.0f}, 50);
 
-    Eigen::Vector2d gain(*gui_scale_gain, *gui_pitch_gain);
+    Eigen::Vector3d gain(*gui_scale_gain, *gui_pitch_gain, *gui_model_gain);
     Eigen::Vector2d distance(*gui_distance_min, *gui_distance_max);
     system_ptr->setGain(gain);
     system_ptr->setSearchDistance(distance);
@@ -110,6 +110,7 @@ private:
   std::shared_ptr<pangolin::Var<bool>> gui_target_normals;
   std::shared_ptr<pangolin::Var<double>> gui_scale_gain;
   std::shared_ptr<pangolin::Var<double>> gui_pitch_gain;
+  std::shared_ptr<pangolin::Var<double>> gui_model_gain;
   std::shared_ptr<pangolin::Var<double>> gui_distance_min;
   std::shared_ptr<pangolin::Var<double>> gui_distance_max;
   std::shared_ptr<pangolin::Var<unsigned int>> gui_recollection;
