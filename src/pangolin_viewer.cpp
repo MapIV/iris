@@ -3,8 +3,17 @@
 namespace vllm
 {
 PangolinViewer::PangolinViewer(const std::shared_ptr<System>& system_ptr)
-    : system_ptr(system_ptr)
+    : system_ptr(system_ptr), loop_flag(true) {}
+
+void PangolinViewer::clear()
 {
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  d_cam.Activate(*s_cam);
+}
+
+void PangolinViewer::swap()
+{
+  pangolin::FinishFrame();
 }
 
 void PangolinViewer::init()
@@ -42,6 +51,71 @@ void PangolinViewer::init()
   // gui_recollection = std::make_shared<pangolin::Var<unsigned int>>("ui.recollection", recollect, 0, 200);
   // gui_distance_min = std::make_shared<pangolin::Var<double>>("ui.distance_min", distance(0), 0.0, 1.0);
   // gui_distance_max = std::make_shared<pangolin::Var<double>>("ui.distance_max", distance(1), 0.0, 3.0);
+}
+
+void PangolinViewer::loop()
+{
+  init();
+  while (loop_flag.load()) {
+    execute();
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+  }
+}
+
+void PangolinViewer::startLoop()
+{
+  if (system_ptr == nullptr) {
+    std::cout << "syste_ptr is nullptr" << std::endl;
+    exit(EXIT_FAILURE);
+  }
+  viewer_thread = std::thread(&PangolinViewer::loop, this);
+}
+
+void PangolinViewer::quitLoop()
+{
+  loop_flag.store(false);
+}
+
+void PangolinViewer::execute()
+{
+  clear();
+
+  drawGridLine();
+  drawString("VLLM", {1.0f, 1.0f, 0.0f, 3.0f});
+
+  drawPointCloud(system_ptr->getTargetCloud(), {0.6f, 0.6f, 0.6f, 1.0f});
+  if (*gui_target_normals)
+    drawNormals(system_ptr->getTargetCloud(), system_ptr->getTargetNormals(), {0.0f, 1.0f, 1.0f, 1.0f}, 50);
+
+  drawPointCloud(system_ptr->getAlignedCloud(), {1.0f, 1.0f, 0.0f, 2.0f});
+  if (*gui_source_normals)
+    drawNormals(system_ptr->getAlignedCloud(), system_ptr->getAlignedNormals(), {1.0f, 0.0f, 1.0f, 1.0f});
+
+  if (*gui_raw_camera) {
+    drawCamera(system_ptr->getRawCamera(), {1.0f, 0.0f, 1.0f, 1.0f});
+    drawTrajectory(system_ptr->getRawTrajectory(), false, {1.0f, 0.0f, 1.0f, 1.0f});
+  }
+
+  drawTrajectory(system_ptr->getTrajectory(), true);
+  drawCamera(system_ptr->getCamera(), {1.0f, 0.0f, 0.0f, 1.0f});
+
+  // drawCorrespondences(system_ptr->getAlignedCloud(), system_ptr->getTargetCloud(),
+  //     system_ptr->getCorrespondences(), {0.0f, 0.0f, 1.0f, 2.0f});
+
+
+  // Eigen::Vector3d gain(*gui_scale_gain, *gui_pitch_gain, *gui_model_gain);
+  // Eigen::Vector2d distance(*gui_distance_min, *gui_distance_max);
+  // system_ptr->setGain(gain);
+  // system_ptr->setSearchDistance(distance);
+  // system_ptr->setRecollection(*gui_recollection);
+
+  swap();
+
+  // if (pangolin::Pushed(*gui_quit))
+  //   return -1;
+
+  // if (pangolin::Pushed(*gui_reset))
+  //   system_ptr->requestReset();
 }
 
 pangolin::OpenGlRenderState PangolinViewer::makeCamera(

@@ -20,8 +20,7 @@ int main(int argc, char* argv[])
 
     // visualize by OpenCV
     cv::imshow("VLLM", system->getFrame());
-    int key = cv::waitKey(5);
-
+    int key = cv::waitKey(1);
     if (key == 'q') break;
     if (key == 's') {
       while (key == 's')
@@ -41,5 +40,6 @@ int main(int argc, char* argv[])
     std::cout << std::chrono::duration_cast<std::chrono::milliseconds>(dur).count() << " ms" << std::endl;
   }
 
+  pangolin_viewer.quitLoop();
   return 0;
 }

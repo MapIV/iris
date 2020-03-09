@@ -29,7 +29,8 @@ public:
   void getLandmarksAndNormals(
       pcl::PointCloud<pcl::PointXYZ>::Ptr& local_cloud,
       pcl::PointCloud<pcl::Normal>::Ptr& normal,
-      unsigned int recollection) const;
+      unsigned int recollection,
+      double accuracy) const;
 
   cv::Mat getFrame() const;
 

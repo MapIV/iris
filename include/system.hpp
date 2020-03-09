@@ -97,7 +97,6 @@ private:
 
   Eigen::Matrix4f last_vllm_camera = Eigen::Matrix4f::Identity();
 
-  int vslam_state;
   Config config;
 
   mutable std::mutex mtx;
@@ -114,6 +113,7 @@ private:
   pcl::registration::CorrespondenceEstimationBackProjection<pcl::PointXYZ, pcl::PointXYZ, pcl::Normal> estimator;
 
   BridgeOpenVSLAM bridge;
+  double accuracy = 0.5;
 
   pcl::PointCloud<pcl::PointXYZ>::Ptr aligned_cloud;
   pcl::PointCloud<pcl::Normal>::Ptr aligned_normals;

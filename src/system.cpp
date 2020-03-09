@@ -56,8 +56,9 @@ int System::update()
     return -1;
 
   // Get some information of vSLAM
-  bridge.getLandmarksAndNormals(source_cloud, source_normals, recollection);
-  vslam_state = static_cast<int>(bridge.getState());
+  bridge.getLandmarksAndNormals(source_cloud, source_normals, recollection, accuracy);
+
+  int vslam_state = static_cast<int>(bridge.getState());
   raw_camera = bridge.getCameraPose().inverse().cast<float>();
 
   // "2" means openvslam::tracking_state_t::Tracking
@@ -78,6 +79,12 @@ int System::update()
     reset_requested = false;
     T_align = Eigen::Matrix4f::Identity();
   }
+
+  // update threshold to adjust the number of points
+  if (source_cloud->size() < 400)
+    accuracy -= 0.01;
+  if (source_cloud->size() > 600)
+    accuracy += 0.01;
 
   // Transform subtract the first pose offset
   {
