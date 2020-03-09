@@ -95,11 +95,11 @@ int System::update()
   return 0;
 }
 
-std::pair<float, float> System::optimize(int iteration)
+bool System::optimize(int iteration)
 {
   std::cout << "itr = \033[32m" << iteration << "\033[m";
   if (source_cloud->empty())
-    return {0, 0};
+    return true;
 
   // Get all correspodences
   estimator.setInputSource(aligned_cloud);
@@ -135,7 +135,11 @@ std::pair<float, float> System::optimize(int iteration)
   pre_pre_camera = pre_camera;
   pre_camera = vllm_camera.topRightCorner(3, 1);
 
-  return {update_transform, update_rotation};
+  if (config.converge_translation > update_transform
+      && config.converge_rotation > update_rotation)
+    return true;
+
+  return false;
 }
 
 }  // namespace vllm

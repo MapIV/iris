@@ -74,3 +74,6 @@ VLLM.model_gain: 10.0
 
 VLLM.distance_min: 0.5
 VLLM.distance_max: 3.0
+
+VLLM.converge_translation: 0.10
+VLLM.converge_rotation: 0.3

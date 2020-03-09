@@ -31,7 +31,7 @@ int main(int argc, char* argv[])
     // TODO: I want to put this iteration in the system class,
     // but now the Pangolin-viewer does not allow to do it.
     for (int i = 0; i < 5; i++) {
-      auto [t, r] = system->optimize(i);
+      bool is_converged = system->optimize(i);
 
       // visualize by Pangolin
       int flag = pangolin_viewer.execute();
@@ -39,7 +39,7 @@ int main(int argc, char* argv[])
         loop = false;
 
       // converge condition
-      if (t < 0.03 && r < 0.03)
+      if (is_converged)
         break;
     }
     auto dur = std::chrono::system_clock::now() - m_start;

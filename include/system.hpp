@@ -16,7 +16,7 @@ class System
 public:
   System(int argc, char* argv[]);
   int update();
-  std::pair<float, float> optimize(int iteration);
+  bool optimize(int iteration);
 
 public:
   cv::Mat getFrame() const { return bridge.getFrame(); }

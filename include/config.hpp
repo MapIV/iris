@@ -56,6 +56,9 @@ struct Config {
     fs["VLLM.distance_min"] >> distance_min;
     fs["VLLM.distance_max"] >> distance_max;
 
+    fs["VLLM.converge_translation"] >> converge_translation;
+    fs["VLLM.converge_rotation"] >> converge_rotation;
+
     std::cout << "gpd_gain " << gpd_gain << std::endl;
 
     cv::Mat T = cv::Mat::eye(4, 4, CV_32FC1);
@@ -69,6 +72,8 @@ struct Config {
   int gpd_size;
   float normal_search_leaf;
   float voxel_grid_leaf;
+  float converge_translation;
+  float converge_rotation;
 
   std::string pcd_file;
   std::string video_file;
