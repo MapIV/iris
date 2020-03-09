@@ -80,17 +80,17 @@ int System::update()
   }
 
   // Transform subtract the first pose offset
-  raw_camera = T_init * raw_camera;
-  raw_trajectory.push_back(raw_camera.block(0, 3, 3, 1));
-  pcl::transformPointCloud(*source_cloud, *source_cloud, T_init);
-  pcl::transformPointCloud(*source_cloud, *aligned_cloud, T_align);
-  vllm::transformNormals(*source_normals, *source_normals, T_init);
-  vllm::transformNormals(*source_normals, *aligned_normals, T_align);
-
-  if (first_set) {
-    first_set = false;
-  } else
+  {
+    std::lock_guard<std::mutex> lock(mtx);
+    raw_camera = T_init * raw_camera;
+    vllm_camera = T_align * raw_camera;
+    raw_trajectory.push_back(raw_camera.block(0, 3, 3, 1));
     vllm_trajectory.push_back(vllm_camera.block(0, 3, 3, 1));
+    pcl::transformPointCloud(*source_cloud, *source_cloud, T_init);
+    pcl::transformPointCloud(*source_cloud, *aligned_cloud, T_align);
+    vllm::transformNormals(*source_normals, *source_normals, T_init);
+    vllm::transformNormals(*source_normals, *aligned_normals, T_align);
+  }
 
   return 0;
 }
@@ -120,10 +120,14 @@ bool System::optimize(int iteration)
   aligner.setGain(scale_restriction_gain, pitch_restriction_gain, model_restriction_gain);
   T_align = aligner.estimate7DoF(T_align, *source_cloud, *target_cloud, *correspondences, target_normals, source_normals);
 
-  // Integrate
-  vllm_camera = T_align * raw_camera;
-  pcl::transformPointCloud(*source_cloud, *aligned_cloud, T_align);
-  vllm::transformNormals(*source_normals, *aligned_normals, T_align);
+  {
+    // Integrate
+    std::lock_guard<std::mutex> lock(mtx);
+
+    vllm_camera = T_align * raw_camera;
+    pcl::transformPointCloud(*source_cloud, *aligned_cloud, T_align);
+    vllm::transformNormals(*source_normals, *aligned_normals, T_align);
+  }
 
   // Get Inovation
   float scale = getScale(getNormalizedRotation(vllm_camera));

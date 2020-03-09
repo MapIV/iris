@@ -4,6 +4,7 @@
 #include "system.hpp"
 #include <pangolin/pangolin.h>
 #include <pcl/correspondence.h>
+#include <thread>
 
 namespace vllm
 {
@@ -26,9 +27,13 @@ private:
       const Eigen::Vector3f& to = Eigen::Vector3f(0, 0, 0),
       const pangolin::AxisDirection up = pangolin::AxisX);
 
+  std::thread viewer_thread;
+
 public:
   PangolinViewer(const std::shared_ptr<System>& system_ptr);
   PangolinViewer() : PangolinViewer(nullptr){};
+
+  void init();
 
   ~PangolinViewer() = default;
 
@@ -37,47 +42,67 @@ public:
   void clear()
   {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    d_cam.Activate(s_cam);
+    d_cam.Activate(*s_cam);
+  }
+
+  void startLoop()
+  {
+    if (system_ptr == nullptr) {
+      std::cout << "syste_ptr is nullptr" << std::endl;
+      exit(EXIT_FAILURE);
+    }
+    viewer_thread = std::thread(&PangolinViewer::loop, this);
+  }
+
+  void loop()
+  {
+    init();
+    while (true) {
+      execute();
+      std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    }
   }
 
   int execute()
   {
-    if (system_ptr == nullptr)
-      return -1;
     clear();
 
     drawGridLine();
-    drawString("VLLM", {1.0f, 1.0f, 0.0f, 3.0f});
+    // drawString("VLLM", {1.0f, 1.0f, 0.0f, 3.0f});
+
+    drawPointCloud(system_ptr->getTargetCloud(), {0.6f, 0.6f, 0.6f, 1.0f});
+    if (*gui_target_normals)
+      drawNormals(system_ptr->getTargetCloud(), system_ptr->getTargetNormals(), {0.0f, 1.0f, 1.0f, 1.0f}, 50);
 
     drawPointCloud(system_ptr->getAlignedCloud(), {1.0f, 1.0f, 0.0f, 2.0f});
-    drawPointCloud(system_ptr->getTargetCloud(), {0.6f, 0.6f, 0.6f, 1.0f});
-    drawTrajectory(system_ptr->getTrajectory(), true);
-    drawCamera(system_ptr->getCamera(), {1.0f, 0.0f, 0.0f, 1.0f});
-    drawCorrespondences(system_ptr->getAlignedCloud(), system_ptr->getTargetCloud(),
-        system_ptr->getCorrespondences(), {0.0f, 0.0f, 1.0f, 2.0f});
+    if (*gui_source_normals)
+      drawNormals(system_ptr->getAlignedCloud(), system_ptr->getAlignedNormals(), {1.0f, 0.0f, 1.0f, 1.0f});
 
     if (*gui_raw_camera) {
       drawCamera(system_ptr->getRawCamera(), {1.0f, 0.0f, 1.0f, 1.0f});
       drawTrajectory(system_ptr->getRawTrajectory(), false, {1.0f, 0.0f, 1.0f, 1.0f});
     }
-    if (*gui_source_normals)
-      drawNormals(system_ptr->getAlignedCloud(), system_ptr->getAlignedNormals(), {1.0f, 0.0f, 1.0f, 1.0f});
-    if (*gui_target_normals)
-      drawNormals(system_ptr->getTargetCloud(), system_ptr->getTargetNormals(), {0.0f, 1.0f, 1.0f, 1.0f}, 50);
 
-    Eigen::Vector3d gain(*gui_scale_gain, *gui_pitch_gain, *gui_model_gain);
-    Eigen::Vector2d distance(*gui_distance_min, *gui_distance_max);
-    system_ptr->setGain(gain);
-    system_ptr->setSearchDistance(distance);
-    system_ptr->setRecollection(*gui_recollection);
+    drawTrajectory(system_ptr->getTrajectory(), true);
+    drawCamera(system_ptr->getCamera(), {1.0f, 0.0f, 0.0f, 1.0f});
+
+    // drawCorrespondences(system_ptr->getAlignedCloud(), system_ptr->getTargetCloud(),
+    //     system_ptr->getCorrespondences(), {0.0f, 0.0f, 1.0f, 2.0f});
+
+
+    // Eigen::Vector3d gain(*gui_scale_gain, *gui_pitch_gain, *gui_model_gain);
+    // Eigen::Vector2d distance(*gui_distance_min, *gui_distance_max);
+    // system_ptr->setGain(gain);
+    // system_ptr->setSearchDistance(distance);
+    // system_ptr->setRecollection(*gui_recollection);
 
     swap();
 
-    if (pangolin::Pushed(*gui_quit))
-      return -1;
+    // if (pangolin::Pushed(*gui_quit))
+    //   return -1;
 
-    if (pangolin::Pushed(*gui_reset))
-      system_ptr->requestReset();
+    // if (pangolin::Pushed(*gui_reset))
+    //   system_ptr->requestReset();
 
     return 0;
   }
@@ -100,8 +125,8 @@ public:
       const Color& color) const;
 
 private:
-  pangolin::OpenGlRenderState s_cam;
-  pangolin::Handler3D handler;
+  std::shared_ptr<pangolin::OpenGlRenderState> s_cam;
+  std::shared_ptr<pangolin::Handler3D> handler;
   pangolin::View d_cam;
 
   // GUI variables

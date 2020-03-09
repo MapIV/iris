@@ -3,8 +3,16 @@
 namespace vllm
 {
 PangolinViewer::PangolinViewer(const std::shared_ptr<System>& system_ptr)
-    : system_ptr(system_ptr), s_cam(makeCamera()), handler(pangolin::Handler3D(s_cam))
+    : system_ptr(system_ptr)
 {
+}
+
+void PangolinViewer::init()
+{
+  std::cout << "Pangolin Initialized" << std::endl;
+  s_cam = std::make_shared<pangolin::OpenGlRenderState>(makeCamera());
+  handler = std::make_shared<pangolin::Handler3D>(pangolin::Handler3D(*s_cam));
+
   // setup Pangolin viewer
   pangolin::CreateWindowAndBind("VLLM", 1024, 768);
   glEnable(GL_DEPTH_TEST);
@@ -15,7 +23,7 @@ PangolinViewer::PangolinViewer(const std::shared_ptr<System>& system_ptr)
 
   d_cam = (pangolin::CreateDisplay()
                .SetBounds(0.0, 1.0, 0.0, 1.0, -640.0f / 480.0f)
-               .SetHandler(&handler));
+               .SetHandler(&(*handler)));
 
   // setup GUI
   pangolin::CreatePanel("ui").SetBounds(0.0, 1.0, 0.0, pangolin::Attach::Pix(180));
@@ -25,15 +33,15 @@ PangolinViewer::PangolinViewer(const std::shared_ptr<System>& system_ptr)
   gui_source_normals = std::make_shared<pangolin::Var<bool>>("ui.source_normals", false, true);
   gui_target_normals = std::make_shared<pangolin::Var<bool>>("ui.target_normals", false, true);
 
-  Eigen::Vector3d gain = system_ptr->getGain();
-  Eigen::Vector2d distance = system_ptr->getSearchDistance();
-  unsigned int recollect = system_ptr->getRecollection();
-  gui_scale_gain = std::make_shared<pangolin::Var<double>>("ui.scale_gain", gain(0), 0.0, 50.0);
-  gui_pitch_gain = std::make_shared<pangolin::Var<double>>("ui.pitch_gain", gain(1), 0.0, 50.0);
-  gui_model_gain = std::make_shared<pangolin::Var<double>>("ui.model_gain", gain(2), 0.0, 50.0);
-  gui_recollection = std::make_shared<pangolin::Var<unsigned int>>("ui.recollection", recollect, 0, 200);
-  gui_distance_min = std::make_shared<pangolin::Var<double>>("ui.distance_min", distance(0), 0.0, 1.0);
-  gui_distance_max = std::make_shared<pangolin::Var<double>>("ui.distance_max", distance(1), 0.0, 3.0);
+  // Eigen::Vector3d gain = system_ptr->getGain();
+  // Eigen::Vector2d distance = system_ptr->getSearchDistance();
+  // unsigned int recollect = system_ptr->getRecollection();
+  // gui_scale_gain = std::make_shared<pangolin::Var<double>>("ui.scale_gain", gain(0), 0.0, 50.0);
+  // gui_pitch_gain = std::make_shared<pangolin::Var<double>>("ui.pitch_gain", gain(1), 0.0, 50.0);
+  // gui_model_gain = std::make_shared<pangolin::Var<double>>("ui.model_gain", gain(2), 0.0, 50.0);
+  // gui_recollection = std::make_shared<pangolin::Var<unsigned int>>("ui.recollection", recollect, 0, 200);
+  // gui_distance_min = std::make_shared<pangolin::Var<double>>("ui.distance_min", distance(0), 0.0, 1.0);
+  // gui_distance_max = std::make_shared<pangolin::Var<double>>("ui.distance_max", distance(1), 0.0, 3.0);
 }
 
 pangolin::OpenGlRenderState PangolinViewer::makeCamera(

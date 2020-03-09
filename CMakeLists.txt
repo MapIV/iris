@@ -114,7 +114,8 @@ target_include_directories(
   PRIVATE ${PROJECT_SOURCE_DIR}/3rd/openvslam/src/
           ${PROJECT_SOURCE_DIR}/3rd/openvslam/3rd/popl/include
           ${PROJECT_SOURCE_DIR}/3rd/openvslam/3rd/spdlog/include)
-target_link_libraries(main PRIVATE ${PCL_LIBRARIES} ${OpenCV_LIBS} pangolin openvslam)
+target_link_libraries(main PRIVATE ${PCL_LIBRARIES} ${OpenCV_LIBS} pangolin openvslam
+                                   pthread)
 
 # add_executable(reg test_regularizer.cpp src/aligner.cpp src/util.cpp src/types_gicp.cpp)
 # target_link_libraries(reg PRIVATE ${PCL_LIBRARIES} ${G2O_LIBS})

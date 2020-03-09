@@ -3,6 +3,7 @@
 #include "config.hpp"
 #include "util.hpp"
 #include <memory>
+#include <mutex>
 #include <pcl/registration/correspondence_estimation_backprojection.h>
 #include <pcl/registration/correspondence_rejection_distance.h>
 
@@ -14,45 +15,76 @@ using pcNormal = pcl::PointCloud<pcl::Normal>;
 class System
 {
 public:
+  // ===== for Main ====
   System(int argc, char* argv[]);
   int update();
   bool optimize(int iteration);
 
 public:
+  // ==== for GUI ====
   cv::Mat getFrame() const { return bridge.getFrame(); }
-  const pcXYZ::Ptr& getAlignedCloud() const { return aligned_cloud; }
-  const pcXYZ::Ptr& getTargetCloud() const { return target_cloud; }
-  const pcl::CorrespondencesPtr& getCorrespondences() const { return correspondences; }
 
-  const Eigen::Matrix4f& getCamera() const { return vllm_camera; }
-  const Eigen::Matrix4f& getRawCamera() const { return raw_camera; }
-  const std::vector<Eigen::Vector3f>& getTrajectory() const { return vllm_trajectory; }
-  const std::vector<Eigen::Vector3f>& getRawTrajectory() const { return raw_trajectory; }
-
-  const pcNormal::Ptr& getAlignedNormals() const { return aligned_normals; }
-  const pcNormal::Ptr& getTargetNormals() const { return target_normals; }
-
-  void requestReset() { reset_requested = true; }
-
-  unsigned int getRecollection() const { return recollection; }
-  void setRecollection(unsigned int recollection_) { recollection = recollection_; }
-
-  Eigen::Vector3d getGain() const { return {scale_restriction_gain, pitch_restriction_gain, model_restriction_gain}; }
-  void setGain(const Eigen::Vector3d& gain)
+  const pcXYZ::Ptr& getTargetCloud() const
   {
-    scale_restriction_gain = gain(0);
-    pitch_restriction_gain = gain(1);
-    model_restriction_gain = gain(2);
+    std::lock_guard<std::mutex> lock(mtx);
+    return target_cloud;
+  }
+  const pcNormal::Ptr& getTargetNormals() const
+  {
+    std::lock_guard<std::mutex> lock(mtx);
+    return target_normals;
+  }
+  Eigen::Matrix4f getCamera() const
+  {
+    std::lock_guard<std::mutex> lock(mtx);
+    return vllm_camera;
+  }
+  Eigen::Matrix4f getRawCamera() const
+  {
+    std::lock_guard<std::mutex> lock(mtx);
+    return raw_camera;
+  }
+  pcXYZ::Ptr getAlignedCloud() const
+  {
+    std::lock_guard<std::mutex> lock(mtx);
+    pcXYZ::Ptr cloud(new pcXYZ);
+    pcl::copyPointCloud(*aligned_cloud, *cloud);
+    return cloud;
+  }
+  pcNormal::Ptr getAlignedNormals() const
+  {
+    std::lock_guard<std::mutex> lock(mtx);
+    pcNormal::Ptr normals(new pcNormal);
+    pcl::copyPointCloud(*aligned_normals, *normals);
+    return normals;
+  }
+  std::vector<Eigen::Vector3f> getRawTrajectory() const
+  {
+    std::lock_guard<std::mutex> lock(mtx);
+    std::vector<Eigen::Vector3f> trajectory = raw_trajectory;
+    return trajectory;
+  }
+  std::vector<Eigen::Vector3f> getTrajectory() const
+  {
+    std::lock_guard<std::mutex> lock(mtx);
+    std::vector<Eigen::Vector3f> trajectory = vllm_trajectory;
+    return trajectory;
   }
 
-  Eigen::Vector2d getSearchDistance() const { return {search_distance_min, search_distance_max}; }
-  void setSearchDistance(const Eigen::Vector2d& distance)
-  {
-    search_distance_min = distance(0);
-    search_distance_max = distance(1);
-  }
+  // pcl::Correspondences getCorrespondences() const { return correspondences; }
+  // void requestReset() { reset_requested = true; }
+  // unsigned int getRecollection() const { return recollection; }
+  // void setRecollection(unsigned int recollection_) { recollection = recollection_; }
+  // Eigen::Vector3d getGain() const { return {scale_restriction_gain, pitch_restriction_gain, model_restriction_gain}; }
+  // void setGain(const Eigen::Vector3d& gain)
+  // {
+  //   scale_restriction_gain = gain(0);
+  //   pitch_restriction_gain = gain(1);
+  //   model_restriction_gain = gain(2);
+  // }
 
 private:
+  // ==== private member ====
   double search_distance_min = 0;
   double search_distance_max = 0;
 
@@ -68,7 +100,8 @@ private:
   int vslam_state;
   Config config;
 
-  // setup for others
+  mutable std::mutex mtx;
+
   bool first_set = true;
   Eigen::Matrix4f T_init;
   Eigen::Matrix4f T_align = Eigen::Matrix4f::Identity();
