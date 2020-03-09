@@ -116,8 +116,7 @@ std::pair<float, float> System::optimize(int iteration)
 
   // Align pointclouds
   vllm::Aligner aligner;
-  // TODO:
-  // aligner.setPrePosition();
+  aligner.setPrePosition(raw_camera.topRightCorner(3, 1), pre_camera, pre_pre_camera);
   aligner.setGain(scale_restriction_gain, pitch_restriction_gain, model_restriction_gain);
   T_align = aligner.estimate7DoF(T_align, *source_cloud, *target_cloud, *correspondences, target_normals, source_normals);
 
@@ -132,6 +131,9 @@ std::pair<float, float> System::optimize(int iteration)
   float update_rotation = (last_vllm_camera - vllm_camera).topLeftCorner(3, 3).norm() / scale;  // called "chordal distance"
   std::cout << "update= \033[33m" << update_transform << " \033[m,\033[33m " << update_rotation << "\033[m" << std::endl;
   last_vllm_camera = vllm_camera;
+
+  pre_pre_camera = pre_camera;
+  pre_camera = vllm_camera.topRightCorner(3, 1);
 
   return {update_transform, update_rotation};
 }

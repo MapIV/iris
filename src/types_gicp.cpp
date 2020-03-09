@@ -165,7 +165,11 @@ void Edge_Const_Velocity::computeError()
   Eigen::Vector3d pre = measurement().pre_pos;
   Eigen::Vector3d next = vp0->estimate().map(measurement().camera_pos);
 
-  _error = gain * (next - pre - pre + pre_pre);
+  Eigen::Vector3d dx = next - pre - pre + pre_pre;
+  if (dx.cwiseAbs().maxCoeff() > 0.1)
+    _error = 1e4 * Eigen::Vector3d::Ones();
+  else
+    _error = gain * (dx);
 }
 
 void Edge_RollPitch_Regularizer::computeError()

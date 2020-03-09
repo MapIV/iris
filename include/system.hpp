@@ -91,6 +91,9 @@ private:
   pcl::PointCloud<pcl::Normal>::Ptr target_normals;
 
   pcl::CorrespondencesPtr correspondences;
+
+  Eigen::Vector3f pre_camera = Eigen::Vector3f::Zero();
+  Eigen::Vector3f pre_pre_camera = Eigen::Vector3f::Zero();
 };
 
 }  // namespace vllm
