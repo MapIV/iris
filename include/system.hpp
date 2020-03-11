@@ -2,6 +2,7 @@
 #include "bridge.hpp"
 #include "config.hpp"
 #include "util.hpp"
+#include <atomic>
 #include <memory>
 #include <mutex>
 #include <pcl/registration/correspondence_estimation_backprojection.h>
@@ -75,8 +76,17 @@ public:
     std::lock_guard<std::mutex> lock(mtx);
     return correspondences_for_viewer;
   }
+  Eigen::Matrix4f getPrePose() const
+  {
+    std::lock_guard<std::mutex> lock(mtx);
+    return last_last_vllm_camera;
+  }
 
-  // void requestReset() { reset_requested = true; }
+  void requestReset()
+  {
+    reset_requested.store(true);
+  }
+
   // unsigned int getRecollection() const { return recollection; }
   // void setRecollection(unsigned int recollection_) { recollection = recollection_; }
   // Eigen::Vector3d getGain() const { return {scale_restriction_gain, pitch_restriction_gain, model_restriction_gain}; }
@@ -96,10 +106,11 @@ private:
   double pitch_restriction_gain = 0;
   double model_restriction_gain = 0;
 
-  bool reset_requested = false;
+  std::atomic<bool> reset_requested = false;
   unsigned int recollection = 50;
 
   Eigen::Matrix4f last_vllm_camera = Eigen::Matrix4f::Identity();
+  Eigen::Matrix4f last_last_vllm_camera = Eigen::Matrix4f::Identity();
 
   Config config;
 
@@ -110,8 +121,10 @@ private:
   Eigen::Matrix4f T_align = Eigen::Matrix4f::Identity();
   std::vector<Eigen::Vector3f> raw_trajectory;
   std::vector<Eigen::Vector3f> vllm_trajectory;
+
   Eigen::Matrix4f raw_camera = Eigen::Matrix4f::Identity();
   Eigen::Matrix4f vllm_camera = Eigen::Matrix4f::Identity();
+  Eigen::Matrix4f offset_camera = Eigen::Matrix4f::Identity();
 
   pcl::registration::CorrespondenceRejectorDistance distance_rejector;
   pcl::registration::CorrespondenceEstimationBackProjection<pcl::PointXYZ, pcl::PointXYZ, pcl::Normal> estimator;

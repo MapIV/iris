@@ -166,7 +166,7 @@ void Edge_Const_Velocity::computeError()
   Eigen::Vector3d next = vp0->estimate().map(measurement().camera_pos);
 
   Eigen::Vector3d dx = next - pre - pre + pre_pre;
-  if (dx.cwiseAbs().maxCoeff() > 0.1)
+  if (dx.cwiseAbs().maxCoeff() > 0.5)
     _error = 1e4 * Eigen::Vector3d::Ones();
   else
     _error = gain * (dx);

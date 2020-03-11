@@ -22,6 +22,7 @@ public:
 
   void setup(int argc, char* argv[], const std::string& video_file_path, int frame_skip);
   bool execute();
+  void requestReset();
 
   void getLandmarks(
       pcl::PointCloud<pcl::PointXYZ>::Ptr& local_cloud,

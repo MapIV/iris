@@ -19,9 +19,8 @@ int main(int argc, char* argv[])
 
     system->execute();
 
-    auto dur = std::chrono::system_clock::now() - m_start;
     std::cout << "time= \033[35m"
-              << std::chrono::duration_cast<std::chrono::milliseconds>(dur).count()
+              << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - m_start).count()
               << "\033[m ms" << std::endl;
 
     // visualize by OpenCV

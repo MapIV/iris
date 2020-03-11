@@ -42,13 +42,13 @@ VLLM.t_init:  !!opencv-matrix
     rows: 3
     cols: 1
     dt: f
-    data: [ -1.0, -3.0, 0.0]
+    data: [ 13.0, 48.0, 0.0]
 # normal vector of camera
 VLLM.normal_init:  !!opencv-matrix
     rows: 3
     cols: 1
     dt: f
-    data: [ 1,0.6,0]
+    data: [ -0.6,0.8,0]
 # up vector of camera
 VLLM.up_init:  !!opencv-matrix
     rows: 3
@@ -58,10 +58,10 @@ VLLM.up_init:  !!opencv-matrix
 VLLM.s_init: 40.0
 
 VLLM.pcd_file: "../../vllm-data/asano-filt.pcd"
-VLLM.video_file: "../../vllm-data/asano-5min.mp4"
+VLLM.video_file: "../../vllm-data/asano-lost.mp4"
 
 VLLM.voxel_grid_leaf: 0.100
-VLLM.normal_search_leaf: 0.30
+VLLM.normal_search_leaf: 0.10
 
 VLLM.gpd_size: 8
 VLLM.gpd_gain: 0.5

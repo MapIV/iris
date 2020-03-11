@@ -64,7 +64,7 @@ void PangolinViewer::loop()
   init();
   while (loop_flag.load()) {
     execute();
-    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    std::this_thread::sleep_for(std::chrono::milliseconds(30));
   }
 }
 
@@ -111,6 +111,7 @@ void PangolinViewer::execute()
   drawTrajectory(system_ptr->getTrajectory(), true);
   drawCamera(system_ptr->getCamera(), {1.0f, 0.0f, 0.0f, 1.0f});
 
+  drawCamera(system_ptr->getPrePose(), {1.0f, 1.0f, 0.0f, 1.0f});
 
   // Eigen::Vector3d gain(*gui_scale_gain, *gui_pitch_gain, *gui_model_gain);
   // Eigen::Vector2d distance(*gui_distance_min, *gui_distance_max);
@@ -123,8 +124,8 @@ void PangolinViewer::execute()
   // if (pangolin::Pushed(*gui_quit))
   //   return -1;
 
-  // if (pangolin::Pushed(*gui_reset))
-  //   system_ptr->requestReset();
+  if (pangolin::Pushed(*gui_reset))
+    system_ptr->requestReset();
 }
 
 pangolin::OpenGlRenderState PangolinViewer::makeCamera(

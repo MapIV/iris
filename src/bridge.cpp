@@ -139,10 +139,10 @@ void BridgeOpenVSLAM::getLandmarksAndNormals(
   std::set<openvslam::data::landmark*> local_landmarks;
   SLAM_ptr->get_map_publisher()->get_landmarks(landmarks, local_landmarks);
 
-  if (local_landmarks.empty()) return;
-
   local_cloud->clear();
   normals->clear();
+
+  if (local_landmarks.empty()) return;
 
   unsigned int max_id = SLAM_ptr->get_map_publisher()->get_max_keyframe_id();
   for (const auto local_lm : local_landmarks) {
@@ -191,11 +191,18 @@ Eigen::Matrix4d BridgeOpenVSLAM::getCameraPose() const
   return SLAM_ptr->get_map_publisher()->get_current_cam_pose();
 }
 
+void BridgeOpenVSLAM::requestReset()
+{
+  if (!SLAM_ptr->reset_is_requested())
+    SLAM_ptr->request_reset();
+}
+
 
 bool BridgeOpenVSLAM::execute()
 {
   if (!is_not_end)
     return false;
+
 
   cv::Mat frame;
   for (int i = 0; i < frame_skip && is_not_end; i++)

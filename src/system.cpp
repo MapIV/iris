@@ -60,11 +60,15 @@ int System::execute()
   bridge.getLandmarksAndNormals(source_cloud, source_normals, recollection, accuracy);
 
   int vslam_state = static_cast<int>(bridge.getState());
-  raw_camera = bridge.getCameraPose().inverse().cast<float>();
+  if (vslam_state == 2)
+    raw_camera = bridge.getCameraPose().inverse().cast<float>() * offset_camera;
+  else
+    raw_camera = offset_camera;
 
-  // "2" means openvslam::tracking_state_t::Tracking
-  if (vslam_state != 2 || source_cloud->empty()) {
-    return -2;
+
+  if (reset_requested.load()) {
+    reset_requested.store(false);
+    vslam_state = 3;
   }
 
   // "3" means openvslam::tracking_state_t::Lost
@@ -72,21 +76,25 @@ int System::execute()
     std::cout << "\n\033[33m";
     for (int i = 0; i < 10; i++) {
       std::cout << "###########" << std::endl;
-      if (i == 5) std::cout << " VSLAM LOST";
+      if (i == 5) std::cout << " Request Reset";
     }
     std::cout << "\n\033[m" << std::endl;
+    bridge.requestReset();
+    offset_camera = raw_camera;
+    scale_restriction_gain = 0;
+    model_restriction_gain = 100;
   }
 
   // reset estimated transform
-  if (reset_requested) {
-    reset_requested = false;
-    T_align = Eigen::Matrix4f::Identity();
-  }
+  // if (reset_requested) {
+  //   reset_requested = false;
+  //   T_align = Eigen::Matrix4f::Identity();
+  // }
 
   // update threshold to adjust the number of points
-  if (source_cloud->size() < 400)
+  if (source_cloud->size() < 400 && accuracy > 0.01)
     accuracy -= 0.01;
-  if (source_cloud->size() > 600)
+  if (source_cloud->size() > 600 && accuracy < 0.99)
     accuracy += 0.01;
 
 
@@ -105,11 +113,17 @@ int System::execute()
     // Copy data for viewer
     std::lock_guard<std::mutex> lock(mtx);
     vllm_camera = T_align * raw_camera;
+    std::cout << vllm_camera.topRightCorner(3, 1).transpose() << " " << pre_camera.transpose() << " " << pre_pre_camera.transpose() << std::endl;
+
     pcl::transformPointCloud(*source_cloud, *aligned_cloud, T_align);
     vllm::transformNormals(*source_normals, *aligned_normals, T_align);
+
     raw_trajectory.push_back(raw_camera.block(0, 3, 3, 1));
     vllm_trajectory.push_back(vllm_camera.block(0, 3, 3, 1));
     *correspondences_for_viewer = *correspondences;
+
+    pre_pre_camera = pre_camera;
+    pre_camera = vllm_camera.topRightCorner(3, 1);
   }
 
   return 0;
@@ -118,8 +132,6 @@ int System::execute()
 bool System::optimize(int iteration)
 {
   std::cout << "itr= \033[32m" << iteration << "\033[m";
-  if (source_cloud->empty())
-    return true;
 
   // Integrate
   pcl::PointCloud<pcl::PointXYZ>::Ptr tmp_cloud(new pcl::PointCloud<pcl::PointXYZ>);
@@ -154,10 +166,8 @@ bool System::optimize(int iteration)
   float update_transform = (last_vllm_camera - now_camera).topRightCorner(3, 1).norm();        // called "Euclid distance"
   float update_rotation = (last_vllm_camera - now_camera).topLeftCorner(3, 3).norm() / scale;  // called "chordal distance"
   std::cout << "update= \033[33m" << update_transform << " \033[m,\033[33m " << update_rotation << "\033[m" << std::endl;
+  last_last_vllm_camera = last_vllm_camera;
   last_vllm_camera = now_camera;
-
-  pre_pre_camera = pre_camera;
-  pre_camera = now_camera.topRightCorner(3, 1);
 
   if (config.converge_translation > update_transform
       && config.converge_rotation > update_rotation)
