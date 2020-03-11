@@ -42,6 +42,12 @@ void PangolinViewer::init()
   gui_source_normals = std::make_shared<pangolin::Var<bool>>("ui.source_normals", false, true);
   gui_target_normals = std::make_shared<pangolin::Var<bool>>("ui.target_normals", false, true);
 
+  target_cloud = pcl::PointCloud<pcl::PointXYZ>::Ptr(new pcl::PointCloud<pcl::PointXYZ>);
+  *target_cloud = *system_ptr->getTargetCloud();
+
+  target_normals = pcl::PointCloud<pcl::Normal>::Ptr(new pcl::PointCloud<pcl::Normal>);
+  *target_normals = *system_ptr->getTargetNormals();
+
   // Eigen::Vector3d gain = system_ptr->getGain();
   // Eigen::Vector2d distance = system_ptr->getSearchDistance();
   // unsigned int recollect = system_ptr->getRecollection();
@@ -74,6 +80,8 @@ void PangolinViewer::startLoop()
 void PangolinViewer::quitLoop()
 {
   loop_flag.store(false);
+  if (viewer_thread.joinable())
+    viewer_thread.join();
 }
 
 void PangolinViewer::execute()
@@ -83,13 +91,17 @@ void PangolinViewer::execute()
   drawGridLine();
   drawString("VLLM", {1.0f, 1.0f, 0.0f, 3.0f});
 
-  drawPointCloud(system_ptr->getTargetCloud(), {0.6f, 0.6f, 0.6f, 1.0f});
+  drawPointCloud(target_cloud, {0.6f, 0.6f, 0.6f, 1.0f});
   if (*gui_target_normals)
-    drawNormals(system_ptr->getTargetCloud(), system_ptr->getTargetNormals(), {0.0f, 1.0f, 1.0f, 1.0f}, 50);
+    drawNormals(target_cloud, target_normals, {0.0f, 1.0f, 1.0f, 1.0f}, 50);
 
-  drawPointCloud(system_ptr->getAlignedCloud(), {1.0f, 1.0f, 0.0f, 2.0f});
+  pcl::PointCloud<pcl::PointXYZ>::Ptr aligned_cloud = system_ptr->getAlignedCloud();
+  drawCorrespondences(aligned_cloud, target_cloud,
+      system_ptr->getCorrespondences(), {0.0f, 0.0f, 1.0f, 2.0f});
+
+  drawPointCloud(aligned_cloud, {1.0f, 1.0f, 0.0f, 2.0f});
   if (*gui_source_normals)
-    drawNormals(system_ptr->getAlignedCloud(), system_ptr->getAlignedNormals(), {1.0f, 0.0f, 1.0f, 1.0f});
+    drawNormals(aligned_cloud, system_ptr->getAlignedNormals(), {1.0f, 0.0f, 1.0f, 1.0f});
 
   if (*gui_raw_camera) {
     drawCamera(system_ptr->getRawCamera(), {1.0f, 0.0f, 1.0f, 1.0f});
@@ -98,9 +110,6 @@ void PangolinViewer::execute()
 
   drawTrajectory(system_ptr->getTrajectory(), true);
   drawCamera(system_ptr->getCamera(), {1.0f, 0.0f, 0.0f, 1.0f});
-
-  // drawCorrespondences(system_ptr->getAlignedCloud(), system_ptr->getTargetCloud(),
-  //     system_ptr->getCorrespondences(), {0.0f, 0.0f, 1.0f, 2.0f});
 
 
   // Eigen::Vector3d gain(*gui_scale_gain, *gui_pitch_gain, *gui_model_gain);
@@ -265,6 +274,14 @@ void PangolinViewer::drawCorrespondences(
   glColor4f(color.r, color.g, color.b, 0.9f);
   glLineWidth(color.size);
   for (const pcl::Correspondence& c : *correspondences) {
+    if (source->size() <= c.index_query) {
+      std::cout << "debug " << source->size() << " " << c.index_query << std::endl;
+      continue;
+    }
+    if (target->size() <= c.index_match) {
+      std::cout << "DEBUG " << target->size() << " " << c.index_query << std::endl;
+      continue;
+    }
     pcl::PointXYZ p1 = source->at(c.index_query);
     pcl::PointXYZ p2 = target->at(c.index_match);
     drawLine(p1.x, p1.y, p1.z, p2.x, p2.y, p2.z);

@@ -57,6 +57,9 @@ private:
   std::thread viewer_thread;
   std::atomic<bool> loop_flag;
 
+  pcl::PointCloud<pcl::PointXYZ>::Ptr target_cloud;
+  pcl::PointCloud<pcl::Normal>::Ptr target_normals;
+
   pangolin::OpenGlRenderState makeCamera(
       const Eigen::Vector3f& from = Eigen::Vector3f(-2, 0, 5),
       const Eigen::Vector3f& to = Eigen::Vector3f(0, 0, 0),

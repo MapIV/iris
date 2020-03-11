@@ -16,7 +16,13 @@ int main(int argc, char* argv[])
 
   while (loop) {
     m_start = std::chrono::system_clock::now();
-    int ok = system->update();
+
+    system->execute();
+
+    auto dur = std::chrono::system_clock::now() - m_start;
+    std::cout << "time= \033[35m"
+              << std::chrono::duration_cast<std::chrono::milliseconds>(dur).count()
+              << "\033[m ms" << std::endl;
 
     // visualize by OpenCV
     cv::imshow("VLLM", system->getFrame());
@@ -26,18 +32,6 @@ int main(int argc, char* argv[])
       while (key == 's')
         key = cv::waitKey(0);
     }
-
-    if (ok != 0)
-      continue;
-
-    // TODO: I want to put this iteration in the system class,
-    // but now the Pangolin-viewer does not allow to do it.
-    for (int i = 0; i < 5; i++) {
-      if (system->optimize(i))
-        break;
-    }
-    auto dur = std::chrono::system_clock::now() - m_start;
-    std::cout << std::chrono::duration_cast<std::chrono::milliseconds>(dur).count() << " ms" << std::endl;
   }
 
   pangolin_viewer.quitLoop();

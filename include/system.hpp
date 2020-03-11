@@ -17,7 +17,7 @@ class System
 public:
   // ===== for Main ====
   System(int argc, char* argv[]);
-  int update();
+  int execute();
   bool optimize(int iteration);
 
 public:
@@ -70,8 +70,12 @@ public:
     std::vector<Eigen::Vector3f> trajectory = vllm_trajectory;
     return trajectory;
   }
+  pcl::CorrespondencesPtr getCorrespondences() const
+  {
+    std::lock_guard<std::mutex> lock(mtx);
+    return correspondences_for_viewer;
+  }
 
-  // pcl::Correspondences getCorrespondences() const { return correspondences; }
   // void requestReset() { reset_requested = true; }
   // unsigned int getRecollection() const { return recollection; }
   // void setRecollection(unsigned int recollection_) { recollection = recollection_; }
@@ -124,6 +128,7 @@ private:
   pcl::PointCloud<pcl::Normal>::Ptr target_normals;
 
   pcl::CorrespondencesPtr correspondences;
+  pcl::CorrespondencesPtr correspondences_for_viewer;
 
   Eigen::Vector3f pre_camera = Eigen::Vector3f::Zero();
   Eigen::Vector3f pre_pre_camera = Eigen::Vector3f::Zero();
