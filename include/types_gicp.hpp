@@ -21,11 +21,12 @@ public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
 
   Eigen::Vector3d camera_pos, pre_pos, pre_pre_pos;
+
   VelocityModel()
   {
     pre_pos.setZero();
     pre_pre_pos.setZero();
-    camera_pos.setIdentity();
+    camera_pos.setZero();
   }
 };
 

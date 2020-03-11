@@ -109,6 +109,7 @@ private:
   std::atomic<bool> reset_requested = false;
   unsigned int recollection = 50;
 
+  Eigen::Matrix4f last_raw_camera = Eigen::Matrix4f::Identity();
   Eigen::Matrix4f last_vllm_camera = Eigen::Matrix4f::Identity();
   Eigen::Matrix4f last_last_vllm_camera = Eigen::Matrix4f::Identity();
 
