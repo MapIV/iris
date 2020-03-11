@@ -96,22 +96,20 @@ void PangolinViewer::execute()
     drawNormals(target_cloud, target_normals, {0.0f, 1.0f, 1.0f, 1.0f}, 50);
 
   pcl::PointCloud<pcl::PointXYZ>::Ptr aligned_cloud = system_ptr->getAlignedCloud();
-  drawCorrespondences(aligned_cloud, target_cloud,
-      system_ptr->getCorrespondences(), {0.0f, 0.0f, 1.0f, 2.0f});
+  // drawCorrespondences(aligned_cloud, target_cloud,
+  //     system_ptr->getCorrespondences(), {0.0f, 0.0f, 1.0f, 2.0f});
 
   drawPointCloud(aligned_cloud, {1.0f, 1.0f, 0.0f, 2.0f});
   if (*gui_source_normals)
     drawNormals(aligned_cloud, system_ptr->getAlignedNormals(), {1.0f, 0.0f, 1.0f, 1.0f});
 
   if (*gui_raw_camera) {
-    drawCamera(system_ptr->getRawCamera(), {1.0f, 0.0f, 1.0f, 1.0f});
+    drawCamera(system_ptr->getOffsetCamera(), {1.0f, 0.0f, 1.0f, 1.0f});
     drawTrajectory(system_ptr->getRawTrajectory(), false, {1.0f, 0.0f, 1.0f, 1.0f});
   }
 
   drawTrajectory(system_ptr->getTrajectory(), true);
   drawCamera(system_ptr->getCamera(), {1.0f, 0.0f, 0.0f, 1.0f});
-
-  drawCamera(system_ptr->getPrePose(), {1.0f, 1.0f, 0.0f, 1.0f});
 
   // Eigen::Vector3d gain(*gui_scale_gain, *gui_pitch_gain, *gui_model_gain);
   // Eigen::Vector2d distance(*gui_distance_min, *gui_distance_max);

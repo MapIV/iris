@@ -53,7 +53,6 @@ System::System(int argc, char* argv[])
   last_vllm_camera = T_init;
 }
 
-int last_vslam_state = 0;
 
 int System::execute()
 {
@@ -66,10 +65,9 @@ int System::execute()
   bridge.getLandmarksAndNormals(source_cloud, source_normals, recollection, accuracy);
 
   int vslam_state = static_cast<int>(bridge.getState());
+  Eigen::Matrix4f vslam_camera = Eigen::Matrix4f::Identity();
   if (vslam_state == 2)
-    raw_camera = bridge.getCameraPose().inverse().cast<float>();
-  else
-    raw_camera = Eigen::Matrix4f::Identity();
+    vslam_camera = bridge.getCameraPose().inverse().cast<float>();
 
   std::cout << "state " << vslam_state << std::endl;
 
@@ -78,21 +76,14 @@ int System::execute()
     vslam_state = 3;
   }
 
-  // strike back with regaining lost grounds
-  if (last_vslam_state == 1 && vslam_state == 2) {
-    scale_restriction_gain = config.scale_gain;
-  }
-  last_vslam_state = vslam_state;
-
   // update threshold to adjust the number of points
   if (source_cloud->size() < 400 && accuracy > 0.01)
     accuracy -= 0.01;
   if (source_cloud->size() > 600 && accuracy < 0.99)
     accuracy += 0.01;
 
-
   // Transform subtract the first pose offset
-  raw_camera = T_init * raw_camera;
+  offset_camera = T_init * vslam_camera;
 
   pcl::transformPointCloud(*source_cloud, *source_cloud, T_init);
   vllm::transformNormals(*source_normals, *source_normals, T_init);
@@ -100,64 +91,58 @@ int System::execute()
   // "3" means openvslam::tracking_state_t::Lost
   if (vslam_state == 3) {
     std::cout << "\n\033[33m";
-    for (int i = 0; i < 10; i++) {
-      std::cout << "###########" << std::endl;
-      if (i == 5) std::cout << " Request Reset";
-    }
+    std::cout << "##### Request Reset #####";
     std::cout << "\n\033[m" << std::endl;
     bridge.requestReset();
 
-    // NOTE:
-    T_init = last_raw_camera;
-    raw_camera = last_raw_camera;
+    // NOTE: After restart, origin vSLAM changes
+    T_init = offset_camera = last_offset_camera;
     std::cout << "Tinit\n"
               << T_init << std::endl;
 
-    // NOTE:
+    // NOTE: Scale of vSLAM may change significantly after reboot
     scale_restriction_gain = 0;
   }
+
   if (vslam_state == 2) {
     if (scale_restriction_gain < config.scale_gain) {
       scale_restriction_gain += config.scale_gain / 50.0;
-      std::cout << "scale_gain " << scale_restriction_gain << std::endl;
     }
   }
+  std::cout << "scale_gain " << scale_restriction_gain << " " << config.scale_gain / 50.0 << std::endl;
 
   // Main Optimization
   for (int i = 0; i < 5; i++) {
     if (optimize(i))
       break;
   }
-
-  // std::cout << "rawCamera\n"
-  //           << raw_camera << std::endl;
+  std::cout << "now= " << vllm_camera.topRightCorner(3, 1).transpose() << " pre=" << pre_camera.transpose() << " prepre=" << pre_pre_camera.transpose() << std::endl;
 
   {
     // Copy data for viewer
     std::lock_guard<std::mutex> lock(mtx);
-    vllm_camera = T_align * raw_camera;
-    std::cout << "now= " << vllm_camera.topRightCorner(3, 1).transpose() << " pre=" << pre_camera.transpose() << " prepre=" << pre_pre_camera.transpose() << std::endl;
-
     pcl::transformPointCloud(*source_cloud, *aligned_cloud, T_align);
     vllm::transformNormals(*source_normals, *aligned_normals, T_align);
 
-    raw_trajectory.push_back(raw_camera.block(0, 3, 3, 1));
+    raw_trajectory.push_back(offset_camera.block(0, 3, 3, 1));
     vllm_trajectory.push_back(vllm_camera.block(0, 3, 3, 1));
     *correspondences_for_viewer = *correspondences;
-
-    pre_pre_camera = pre_camera;
-    pre_camera = vllm_camera.topRightCorner(3, 1);
+    view_vllm_camera = vllm_camera;
+    view_offset_camera = offset_camera;
   }
 
-  last_raw_camera = raw_camera;
+  pre_pre_camera = pre_camera;
+  pre_camera = vllm_camera.topRightCorner(3, 1);
+
+  last_offset_camera = offset_camera;
 
   return 0;
 }
 
 bool System::optimize(int iteration)
 {
+  std::cout << "offset= " << offset_camera.topRightCorner(3, 1).transpose() << std::endl;
   std::cout << "itr= \033[32m" << iteration << "\033[m";
-  std::cout << "raw= " << raw_camera.topRightCorner(3, 1).transpose() << std::endl;
 
   // Integrate
   pcl::PointCloud<pcl::PointXYZ>::Ptr tmp_cloud(new pcl::PointCloud<pcl::PointXYZ>);
@@ -180,20 +165,19 @@ bool System::optimize(int iteration)
 
   // Align pointclouds
   vllm::Aligner aligner;
-  aligner.setPrePosition(raw_camera.topRightCorner(3, 1), pre_camera, pre_pre_camera);
+  aligner.setPrePosition(offset_camera.topRightCorner(3, 1), pre_camera, pre_pre_camera);
   aligner.setGain(scale_restriction_gain, pitch_restriction_gain, model_restriction_gain);
   T_align = aligner.estimate7DoF(T_align, *source_cloud, *target_cloud, *correspondences, target_normals, source_normals);
 
   // Integrate
-  Eigen::Matrix4f now_camera = T_align * raw_camera;
+  vllm_camera = T_align * offset_camera;
 
   // Get Inovation
-  float scale = getScale(getNormalizedRotation(now_camera));
-  float update_transform = (last_vllm_camera - now_camera).topRightCorner(3, 1).norm();        // called "Euclid distance"
-  float update_rotation = (last_vllm_camera - now_camera).topLeftCorner(3, 3).norm() / scale;  // called "chordal distance"
+  float scale = getScale(getNormalizedRotation(vllm_camera));
+  float update_transform = (last_vllm_camera - vllm_camera).topRightCorner(3, 1).norm();        // called "Euclid distance"
+  float update_rotation = (last_vllm_camera - vllm_camera).topLeftCorner(3, 3).norm() / scale;  // called "chordal distance"
   std::cout << "update= \033[33m" << update_transform << " \033[m,\033[33m " << update_rotation << "\033[m" << std::endl;
-  last_last_vllm_camera = last_vllm_camera;
-  last_vllm_camera = now_camera;
+  last_vllm_camera = vllm_camera;
 
   if (config.converge_translation > update_transform
       && config.converge_rotation > update_rotation)

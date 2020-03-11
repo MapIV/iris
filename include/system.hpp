@@ -38,12 +38,12 @@ public:
   Eigen::Matrix4f getCamera() const
   {
     std::lock_guard<std::mutex> lock(mtx);
-    return vllm_camera;
+    return view_vllm_camera;
   }
-  Eigen::Matrix4f getRawCamera() const
+  Eigen::Matrix4f getOffsetCamera() const
   {
     std::lock_guard<std::mutex> lock(mtx);
-    return raw_camera;
+    return view_offset_camera;
   }
   pcXYZ::Ptr getAlignedCloud() const
   {
@@ -76,11 +76,6 @@ public:
     std::lock_guard<std::mutex> lock(mtx);
     return correspondences_for_viewer;
   }
-  Eigen::Matrix4f getPrePose() const
-  {
-    std::lock_guard<std::mutex> lock(mtx);
-    return last_last_vllm_camera;
-  }
 
   void requestReset()
   {
@@ -109,10 +104,6 @@ private:
   std::atomic<bool> reset_requested = false;
   unsigned int recollection = 50;
 
-  Eigen::Matrix4f last_raw_camera = Eigen::Matrix4f::Identity();
-  Eigen::Matrix4f last_vllm_camera = Eigen::Matrix4f::Identity();
-  Eigen::Matrix4f last_last_vllm_camera = Eigen::Matrix4f::Identity();
-
   Config config;
 
   mutable std::mutex mtx;
@@ -123,9 +114,13 @@ private:
   std::vector<Eigen::Vector3f> raw_trajectory;
   std::vector<Eigen::Vector3f> vllm_trajectory;
 
-  Eigen::Matrix4f raw_camera = Eigen::Matrix4f::Identity();
-  Eigen::Matrix4f vllm_camera = Eigen::Matrix4f::Identity();
+  Eigen::Matrix4f last_offset_camera = Eigen::Matrix4f::Identity();
+  Eigen::Matrix4f last_vllm_camera = Eigen::Matrix4f::Identity();
   Eigen::Matrix4f offset_camera = Eigen::Matrix4f::Identity();
+  Eigen::Matrix4f vllm_camera = Eigen::Matrix4f::Identity();
+
+  Eigen::Matrix4f view_vllm_camera = Eigen::Matrix4f::Identity();
+  Eigen::Matrix4f view_offset_camera = Eigen::Matrix4f::Identity();
 
   pcl::registration::CorrespondenceRejectorDistance distance_rejector;
   pcl::registration::CorrespondenceEstimationBackProjection<pcl::PointXYZ, pcl::PointXYZ, pcl::Normal> estimator;
