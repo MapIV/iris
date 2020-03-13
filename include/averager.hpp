@@ -43,6 +43,27 @@ Eigen::Matrix3f exp(const Eigen::Vector3f& xi)
 }
 }  // namespace so3
 
+Eigen::Matrix4f inverse(const Eigen::Matrix4f& T)
+{
+  Eigen::Matrix4f inv = Eigen::Matrix4f::Identity();
+  inv.topLeftCorner(3, 3) = T.topLeftCorner(3, 3).transpose();
+}
+
+Eigen::Vector3f calcAverageTransform(const Eigen::Matrix3f& R, const Eigen::Vector3f& t, int n)
+{
+  Eigen::Matrix3f A = Eigen::Matrix3f::Zero();
+
+  for (int i = 0; i < n; i++) {
+    Eigen::Matrix3f tmp = Eigen::Matrix3f::Identity();
+    for (int j = 0; j < i; j++) {
+      tmp = R * tmp;
+    }
+    A += tmp;
+  }
+
+  return A.inverse() * t;
+}
+
 Eigen::Matrix4f calcVelocity(const std::list<Eigen::Matrix4f>& poses)
 {
   Eigen::Matrix4f V = Eigen::Matrix4f::Identity();
@@ -51,30 +72,54 @@ Eigen::Matrix4f calcVelocity(const std::list<Eigen::Matrix4f>& poses)
   std::cout << "###### calcVelocity ##### dt= " << dt << std::endl;
 
 
-  Eigen::Matrix4f T0 = *std::next(poses.begin());
-  Eigen::Matrix4f Tn = *std::prev(poses.end());
+  Eigen::Matrix4f T0 = getNormalizedPose(*std::next(poses.begin()));
+  Eigen::Matrix4f Tn = getNormalizedPose(*std::prev(poses.end()));
   std::cout << T0 << "\n"
             << Tn << std::endl;
 
-  Eigen::Matrix3f R0 = vllm::getNormalizedRotation(T0.topLeftCorner(3, 3));
-  Eigen::Matrix3f Rn = vllm::getNormalizedRotation(Tn.topLeftCorner(3, 3));
-
-  Eigen::Vector3f t0 = T0.topRightCorner(3, 1);
-  Eigen::Vector3f tn = Tn.topRightCorner(3, 1);
-
-  V.topRightCorner(3, 1) = (t0 - tn) / dt;
-  V.topLeftCorner(3, 3) = so3::exp((so3::log(R0) - so3::log(Rn)) / dt);
-
-  std::cout << V << std::endl;
+  V = T0 * Tn.inverse();
+  auto tmp = V;
+  Eigen::Matrix3f R = V.topLeftCorner(3, 3);
+  Eigen::Vector3f t = V.topRightCorner(3, 1);
+  Eigen::Matrix3f root_R = so3::exp(so3::log(R) / dt);
+  V.topLeftCorner(3, 3) = root_R;
+  V.topRightCorner(3, 1) = calcAverageTransform(root_R, t, dt);
   return V;
 }
 
-Eigen::Matrix4f entrywiseProduct(const Eigen::Matrix4f& T1, const Eigen::Matrix4f& T2)
-{
-  Eigen::Matrix4f T = Eigen::Matrix4f::Identity();
-  T.topLeftCorner(3, 3) = T1.topLeftCorner(3, 3) * T2.topLeftCorner(3, 3);
-  T.topRightCorner(3, 1) = T1.topRightCorner(3, 1) + T2.topRightCorner(3, 1);
-  return T;
-}
+
+// Eigen::Matrix4f calcVelocity2(const std::list<Eigen::Matrix4f>& poses)
+// {
+//   Eigen::Matrix4f V = Eigen::Matrix4f::Identity();
+
+//   const int dt = poses.size() - 2;
+//   std::cout << "###### calcVelocity ##### dt= " << dt << std::endl;
+
+
+//   Eigen::Matrix4f T0 = *std::next(poses.begin());
+//   Eigen::Matrix4f Tn = *std::prev(poses.end());
+//   std::cout << T0 << "\n"
+//             << Tn << std::endl;
+
+//   Eigen::Matrix3f R0 = vllm::getNormalizedRotation(T0.topLeftCorner(3, 3));
+//   Eigen::Matrix3f Rn = vllm::getNormalizedRotation(Tn.topLeftCorner(3, 3));
+
+//   Eigen::Vector3f t0 = T0.topRightCorner(3, 1);
+//   Eigen::Vector3f tn = Tn.topRightCorner(3, 1);
+
+//   V.topRightCorner(3, 1) = (t0 - tn) / dt;
+//   V.topLeftCorner(3, 3) = so3::exp((so3::log(R0) - so3::log(Rn)) / dt);
+
+//   std::cout << V << std::endl;
+//   return V;
+// }
+
+// Eigen::Matrix4f entrywiseProduct(const Eigen::Matrix4f& T1, const Eigen::Matrix4f& T2)
+// {
+//   Eigen::Matrix4f T = Eigen::Matrix4f::Identity();
+//   T.topLeftCorner(3, 3) = T1.topLeftCorner(3, 3) * T2.topLeftCorner(3, 3);
+//   T.topRightCorner(3, 1) = T1.topRightCorner(3, 1) + T2.topRightCorner(3, 1);
+//   return T;
+// }
 
 }  // namespace vllm

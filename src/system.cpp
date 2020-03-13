@@ -116,12 +116,7 @@ int System::execute()
     offset_cloud->clear();
     offset_normals->clear();
 
-    std::cout << "camera_velocity\n"
-              << camera_velocity << std::endl;
-    std::cout << "old_vllm_camera\n"
-              << old_vllm_camera << std::endl;
-
-    T_init = entrywiseProduct(camera_velocity, old_vllm_camera);
+    T_init = camera_velocity * old_vllm_camera;
     T_align.setIdentity();
     offset_camera = T_init;
     vllm_camera = T_init;

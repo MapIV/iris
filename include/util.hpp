@@ -33,6 +33,7 @@ void wait(float ms);
 Eigen::Matrix3f randomRotation();
 
 Eigen::Matrix3f getNormalizedRotation(const Eigen::Matrix4f& T);
+Eigen::Matrix4f getNormalizedPose(const Eigen::Matrix4f& T);
 
 void transformNormals(const pcNormal& source, pcNormal& target, const Eigen::Matrix4f& T);
 

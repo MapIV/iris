@@ -152,6 +152,12 @@ Eigen::Matrix3f getNormalizedRotation(const Eigen::Matrix4f& T)
   float scale = getScale(sR);
   return normalize(sR / scale);
 }
+Eigen::Matrix4f getNormalizedPose(const Eigen::Matrix4f& sT)
+{
+  Eigen::Matrix4f T = sT;
+  T.topLeftCorner(3, 3) = getNormalizedRotation(sT);
+  return T;
+}
 
 void transformNormals(const pcNormal& source, pcNormal& target, const Eigen::Matrix4f& T)
 {
