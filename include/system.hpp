@@ -140,6 +140,9 @@ private:
   pcl::PointCloud<pcl::Normal>::Ptr offset_normals;
   pcl::PointCloud<pcl::Normal>::Ptr view_vllm_normals;
 
+  const int history = 5;
+  std::list<Eigen::Matrix4f> camera_history;
+  Eigen::Matrix4f camera_velocity;
 
   pcl::CorrespondencesPtr correspondences;
   pcl::CorrespondencesPtr correspondences_for_viewer;

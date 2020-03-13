@@ -1,5 +1,6 @@
 #include "system.hpp"
 #include "aligner.hpp"
+#include "averager.hpp"
 #include <opencv2/core/eigen.hpp>
 #include <pcl/common/transforms.h>
 #include <popl.hpp>
@@ -52,6 +53,9 @@ System::System(int argc, char* argv[])
 
   old_vllm_camera = T_init;
   older_vllm_camera = T_init;
+
+  for (int i = 0; i < history; i++)
+    camera_history.push_front(T_init);
 }
 
 
@@ -76,9 +80,6 @@ int System::execute()
     bridge.requestReset();
   }
 
-  // reset database
-  source_cloud->clear();
-  source_normals->clear();
 
   std::cout << "state " << vslam_state << std::endl;
   aligning_mode = (vslam_state == 2);
@@ -104,31 +105,32 @@ int System::execute()
       if (optimize(i))
         break;
     }
+    camera_velocity.setZero();
   }
   // Inertial model
   else {
-    // Assumes the scale does not change
-    double scale = vllm::getScale(old_vllm_camera.topLeftCorner(3, 3));
-    Eigen::Matrix3f R1 = vllm::getNormalizedRotation(old_vllm_camera);
-    Eigen::Matrix3f R2 = vllm::getNormalizedRotation(older_vllm_camera);
-    Eigen::Vector3f t1 = old_vllm_camera.topRightCorner(3, 1);
-    Eigen::Vector3f t2 = older_vllm_camera.topRightCorner(3, 1);
+    if (camera_velocity.isZero()) {
+      camera_velocity = calcVelocity(camera_history);
+    }
 
-    T_init.topLeftCorner(3, 3) = scale * (R1 * R2.transpose() * R1);
-    T_init.topRightCorner(3, 1) = 2 * t1 - t2;
+    offset_cloud->clear();
+    offset_normals->clear();
 
-    double scale3 = vllm::getScale((R1 * R2.transpose() * R1));
-    double scale2 = vllm::getScale(T_init.topLeftCorner(3, 3));
+    std::cout << "camera_velocity\n"
+              << camera_velocity << std::endl;
+    std::cout << "old_vllm_camera\n"
+              << old_vllm_camera << std::endl;
 
-    std::cout << "T_init: " << scale << " " << scale2 << " " << scale3 << "\n"
-              << T_init << std::endl;
-
+    T_init = entrywiseProduct(camera_velocity, old_vllm_camera);
     T_align.setIdentity();
     offset_camera = T_init;
     vllm_camera = T_init;
   }
 
-  // std::cout << "now= " << vllm_camera.topRightCorner(3, 1).transpose()
+  std::cout << "T_init\n"
+            << T_init << std::endl;
+
+  std::cout << "now= " << vllm_camera.topRightCorner(3, 1).transpose() << std::endl;
   //           << " pre=" << old_vllm_camera.topRightCorner(3, 1).transpose()
   //           << " prepre=" << older_vllm_camera.topRightCorner(3, 1).transpose() << std::endl;
 
@@ -149,6 +151,8 @@ int System::execute()
   // update old data
   older_vllm_camera = old_vllm_camera;
   old_vllm_camera = vllm_camera;
+  camera_history.pop_back();
+  camera_history.push_front(vllm_camera);
   return 0;
 }
 

@@ -61,14 +61,14 @@ VLLM.pcd_file: "../../vllm-data/asano-filt.pcd"
 VLLM.video_file: "../../vllm-data/asano-5min.mp4"
 
 VLLM.voxel_grid_leaf: 0.100
-VLLM.normal_search_leaf: 0.20
+VLLM.normal_search_leaf: 0.30
 
 VLLM.gpd_size: 8
 VLLM.gpd_gain: 0.5
 VLLM.iteration: 5
 VLLM.frame_skip: 3
 
-VLLM.scale_gain: 30.0
+VLLM.scale_gain: 40.0
 VLLM.pitch_gain: 30.0
 VLLM.model_gain: 10.0
 
