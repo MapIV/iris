@@ -161,11 +161,11 @@ void Edge_Const_Velocity::computeError()
 {
   const VertexSim3Expmap* vp0 = static_cast<const VertexSim3Expmap*>(_vertices[0]);
 
-  Eigen::Vector3d pre_pre = measurement().pre_pre_pos;
-  Eigen::Vector3d pre = measurement().pre_pos;
-  Eigen::Vector3d next = vp0->estimate().map(measurement().camera_pos);
+  Eigen::Vector3d older = measurement().older_pos;
+  Eigen::Vector3d old = measurement().old_pos;
+  Eigen::Vector3d now = vp0->estimate().map(measurement().camera_pos);
 
-  Eigen::Vector3d dx = next - pre - pre + pre_pre;
+  Eigen::Vector3d dx = now - old - old + older;
   if (dx.cwiseAbs().maxCoeff() > 0.5)
     _error = 1e4 * Eigen::Vector3d::Ones();
   else

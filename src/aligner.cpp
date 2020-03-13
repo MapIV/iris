@@ -144,9 +144,9 @@ void Aligner::setEdge7DoFGICP(
     e->setVertex(0, vp0);
     e->information().setIdentity();
     VelocityModel model;
-    model.camera_pos = camera_pos.cast<double>();
-    model.pre_pos = pre_pos.cast<double>();
-    model.pre_pre_pos = pre_pre_pos.cast<double>();
+    model.camera_pos = camera_pos.topRightCorner(3, 1).cast<double>();
+    model.old_pos = old_pos.topRightCorner(3, 1).cast<double>();
+    model.older_pos = older_pos.topRightCorner(3, 1).cast<double>();
     e->setMeasurement(model);
     optimizer.addEdge(e);
   }

@@ -20,12 +20,12 @@ class VelocityModel
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
 
-  Eigen::Vector3d camera_pos, pre_pos, pre_pre_pos;
+  Eigen::Vector3d camera_pos, old_pos, older_pos;
 
   VelocityModel()
   {
-    pre_pos.setZero();
-    pre_pre_pos.setZero();
+    old_pos.setZero();
+    older_pos.setZero();
     camera_pos.setZero();
   }
 };

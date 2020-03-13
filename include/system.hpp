@@ -49,20 +49,20 @@ public:
   {
     std::lock_guard<std::mutex> lock(mtx);
     pcXYZ::Ptr cloud(new pcXYZ);
-    pcl::copyPointCloud(*aligned_cloud, *cloud);
+    pcl::copyPointCloud(*view_vllm_cloud, *cloud);
     return cloud;
   }
   pcNormal::Ptr getAlignedNormals() const
   {
     std::lock_guard<std::mutex> lock(mtx);
     pcNormal::Ptr normals(new pcNormal);
-    pcl::copyPointCloud(*aligned_normals, *normals);
+    pcl::copyPointCloud(*view_vllm_normals, *normals);
     return normals;
   }
-  std::vector<Eigen::Vector3f> getRawTrajectory() const
+  std::vector<Eigen::Vector3f> getOffsetTrajectory() const
   {
     std::lock_guard<std::mutex> lock(mtx);
-    std::vector<Eigen::Vector3f> trajectory = raw_trajectory;
+    std::vector<Eigen::Vector3f> trajectory = offset_trajectory;
     return trajectory;
   }
   std::vector<Eigen::Vector3f> getTrajectory() const
@@ -111,13 +111,13 @@ private:
   bool first_set = true;
   Eigen::Matrix4f T_init;
   Eigen::Matrix4f T_align = Eigen::Matrix4f::Identity();
-  std::vector<Eigen::Vector3f> raw_trajectory;
+  std::vector<Eigen::Vector3f> offset_trajectory;
   std::vector<Eigen::Vector3f> vllm_trajectory;
 
-  Eigen::Matrix4f last_offset_camera = Eigen::Matrix4f::Identity();
-  Eigen::Matrix4f last_vllm_camera = Eigen::Matrix4f::Identity();
+  Eigen::Matrix4f vllm_camera = Eigen::Matrix4f::Identity();        // t
+  Eigen::Matrix4f old_vllm_camera = Eigen::Matrix4f::Identity();    // t-1
+  Eigen::Matrix4f older_vllm_camera = Eigen::Matrix4f::Identity();  // t-2
   Eigen::Matrix4f offset_camera = Eigen::Matrix4f::Identity();
-  Eigen::Matrix4f vllm_camera = Eigen::Matrix4f::Identity();
 
   Eigen::Matrix4f view_vllm_camera = Eigen::Matrix4f::Identity();
   Eigen::Matrix4f view_offset_camera = Eigen::Matrix4f::Identity();
@@ -128,19 +128,21 @@ private:
   BridgeOpenVSLAM bridge;
   double accuracy = 0.5;
 
-  pcl::PointCloud<pcl::PointXYZ>::Ptr aligned_cloud;
-  pcl::PointCloud<pcl::Normal>::Ptr aligned_normals;
-  pcl::PointCloud<pcl::PointXYZ>::Ptr source_cloud;
-  pcl::PointCloud<pcl::Normal>::Ptr source_normals;
+  bool aligning_mode = false;
 
+  pcl::PointCloud<pcl::PointXYZ>::Ptr view_vllm_cloud;
+  pcl::PointCloud<pcl::PointXYZ>::Ptr source_cloud;
+  pcl::PointCloud<pcl::PointXYZ>::Ptr offset_cloud;
   pcl::PointCloud<pcl::PointXYZ>::Ptr target_cloud;
+
   pcl::PointCloud<pcl::Normal>::Ptr target_normals;
+  pcl::PointCloud<pcl::Normal>::Ptr source_normals;
+  pcl::PointCloud<pcl::Normal>::Ptr offset_normals;
+  pcl::PointCloud<pcl::Normal>::Ptr view_vllm_normals;
+
 
   pcl::CorrespondencesPtr correspondences;
   pcl::CorrespondencesPtr correspondences_for_viewer;
-
-  Eigen::Vector3f pre_camera = Eigen::Vector3f::Zero();
-  Eigen::Vector3f pre_pre_camera = Eigen::Vector3f::Zero();
 };
 
 }  // namespace vllm

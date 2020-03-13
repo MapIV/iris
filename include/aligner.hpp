@@ -21,12 +21,12 @@ public:
       const pcl::PointCloud<pcl::Normal>::Ptr& target_normals = nullptr,
       const pcl::PointCloud<pcl::Normal>::Ptr& source_normals = nullptr);
 
-  void setPrePosition(const Eigen::Vector3f& camera_pos_, const Eigen::Vector3f& pre_pos_, const Eigen::Vector3f& pre_pre_pos_)
+  void setPrePosition(const Eigen::Matrix4f& camera_pos_, const Eigen::Matrix4f& old_pos_, const Eigen::Matrix4f& older_pos_)
   {
     model_constraint = true;
     camera_pos = camera_pos_;
-    pre_pos = pre_pos_;
-    pre_pre_pos = pre_pre_pos_;
+    old_pos = old_pos_;
+    older_pos = older_pos_;
   }
 
   Eigen::Matrix4f estimate7DoF(
@@ -50,7 +50,7 @@ private:
   double pitch_gain = 1.0;
   double model_gain = 1.0;
 
-  Eigen::Vector3f camera_pos, pre_pos, pre_pre_pos;
+  Eigen::Matrix4f camera_pos, old_pos, older_pos;
 
   void setVertexSim3(g2o::SparseOptimizer& optimizer, Eigen::Matrix4f& T);
   void setVertexSE3(g2o::SparseOptimizer& optimizer, Eigen::Matrix4f& T);

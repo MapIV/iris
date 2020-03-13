@@ -133,11 +133,24 @@ Eigen::Matrix3f randomRotation()
   return Eigen::Quaternionf::UnitRandom().toRotationMatrix();
 }
 
+Eigen::Matrix3f normalize(const Eigen::Matrix3f& R)
+{
+  Eigen::JacobiSVD<Eigen::Matrix3f> svd(R, Eigen::ComputeFullU | Eigen::ComputeFullV);
+  Eigen::Matrix3f U = svd.matrixU();
+  Eigen::Matrix3f Vt = svd.matrixV().transpose();
+  if (R.determinant() < 0) {
+    return -U * Vt;
+  }
+
+  return U * Vt;
+}
+
+
 Eigen::Matrix3f getNormalizedRotation(const Eigen::Matrix4f& T)
 {
   Eigen::Matrix3f sR = T.topLeftCorner(3, 3);
   float scale = getScale(sR);
-  return sR / scale;
+  return normalize(sR / scale);
 }
 
 void transformNormals(const pcNormal& source, pcNormal& target, const Eigen::Matrix4f& T)

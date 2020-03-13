@@ -38,7 +38,7 @@ void PangolinViewer::init()
   pangolin::CreatePanel("ui").SetBounds(0.0, 1.0, 0.0, pangolin::Attach::Pix(180));
   gui_quit = std::make_shared<pangolin::Var<bool>>("ui.Quit", false, false);
   gui_reset = std::make_shared<pangolin::Var<bool>>("ui.Reset", false, false);
-  gui_raw_camera = std::make_shared<pangolin::Var<bool>>("ui.raw_camera", true, true);
+  gui_vslam_camera = std::make_shared<pangolin::Var<bool>>("ui.vslam_camera", true, true);
   gui_source_normals = std::make_shared<pangolin::Var<bool>>("ui.source_normals", false, true);
   gui_target_normals = std::make_shared<pangolin::Var<bool>>("ui.target_normals", false, true);
 
@@ -103,9 +103,9 @@ void PangolinViewer::execute()
   if (*gui_source_normals)
     drawNormals(aligned_cloud, system_ptr->getAlignedNormals(), {1.0f, 0.0f, 1.0f, 1.0f});
 
-  if (*gui_raw_camera) {
+  if (*gui_vslam_camera) {
     drawCamera(system_ptr->getOffsetCamera(), {1.0f, 0.0f, 1.0f, 1.0f});
-    drawTrajectory(system_ptr->getRawTrajectory(), false, {1.0f, 0.0f, 1.0f, 1.0f});
+    drawTrajectory(system_ptr->getOffsetTrajectory(), false, {1.0f, 0.0f, 1.0f, 1.0f});
   }
 
   drawTrajectory(system_ptr->getTrajectory(), true);
