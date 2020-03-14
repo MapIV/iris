@@ -7,7 +7,16 @@ class PangolinCloud
 {
 public:
   PangolinCloud(const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud)
-      : numPoints(static_cast<int>(cloud->size())), offset(4), stride(sizeof(pcl::PointXYZ))
+      : color(false), numPoints(static_cast<int>(cloud->size())), offset(4), stride(sizeof(pcl::PointXYZ))
+  {
+    glGenBuffers(1, &vbo);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    glBufferData(GL_ARRAY_BUFFER, cloud->points.size() * stride, cloud->points.data(), GL_STATIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+  }
+
+  PangolinCloud(const pcl::PointCloud<pcl::PointXYZRGBA>::Ptr& cloud)
+      : color(true), numPoints(static_cast<int>(cloud->size())), offset(4), stride(sizeof(pcl::PointXYZRGBA))
   {
     glGenBuffers(1, &vbo);
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
@@ -24,22 +33,26 @@ public:
   {
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
     glVertexPointer(3, GL_FLOAT, stride, 0);
-    // glColorPointer(3, GL_UNSIGNED_BYTE, stride, (void*)(sizeof(float) * offset));
+    if (color)
+      glColorPointer(4, GL_UNSIGNED_BYTE, stride, (void*)(sizeof(float) * offset));
 
     glEnableClientState(GL_VERTEX_ARRAY);
-    // glEnableClientState(GL_COLOR_ARRAY);
+    if (color)
+      glEnableClientState(GL_COLOR_ARRAY);
 
     glDrawArrays(GL_POINTS, 0, numPoints);
 
-    // glDisableClientState(GL_COLOR_ARRAY);
+    if (color)
+      glDisableClientState(GL_COLOR_ARRAY);
     glDisableClientState(GL_VERTEX_ARRAY);
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
   }
 
-  const int numPoints;
 
 private:
+  const bool color;
+  const int numPoints;
   const int offset;
   const int stride;
   GLuint vbo;

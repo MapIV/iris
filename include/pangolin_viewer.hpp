@@ -36,6 +36,7 @@ public:
   void drawString(const std::string& str, const Color& color) const;
   void drawTrajectory(const std::vector<Eigen::Vector3f>& trajectory, bool colorful, const Color& color = Color());
   void drawPointCloud(const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud, const Color& color) const;
+  void drawPointCloud(const pcl::PointCloud<pcl::PointXYZRGBA>::Ptr& cloud, const Color& color) const;
   void drawCamera(const Eigen::Matrix4f& cam_pose, const Color& color) const;
   void drawNormals(
       const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud,
@@ -59,6 +60,7 @@ private:
 
   pcl::PointCloud<pcl::PointXYZ>::Ptr target_cloud;
   pcl::PointCloud<pcl::Normal>::Ptr target_normals;
+  pcl::PointCloud<pcl::PointXYZRGBA>::Ptr colored_target_cloud;
 
   pangolin::OpenGlRenderState makeCamera(
       const Eigen::Vector3f& from = Eigen::Vector3f(-2, 0, 5),
@@ -66,6 +68,8 @@ private:
       const pangolin::AxisDirection up = pangolin::AxisX);
 
   void loop();
+
+  pcl::PointCloud<pcl::PointXYZRGBA>::Ptr colorizePointCloud(const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud);
 
   // GUI variables
   std::shared_ptr<pangolin::Var<bool>> gui_vslam_camera;

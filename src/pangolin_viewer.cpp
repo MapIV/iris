@@ -18,7 +18,6 @@ void PangolinViewer::swap()
 
 void PangolinViewer::init()
 {
-  std::cout << "Pangolin Initialized" << std::endl;
   s_cam = std::make_shared<pangolin::OpenGlRenderState>(makeCamera());
   handler = std::make_shared<pangolin::Handler3D>(pangolin::Handler3D(*s_cam));
 
@@ -47,6 +46,8 @@ void PangolinViewer::init()
 
   target_normals = pcl::PointCloud<pcl::Normal>::Ptr(new pcl::PointCloud<pcl::Normal>);
   *target_normals = *system_ptr->getTargetNormals();
+
+  colored_target_cloud = colorizePointCloud(target_cloud);
 
   // Eigen::Vector3d gain = system_ptr->getGain();
   // Eigen::Vector2d distance = system_ptr->getSearchDistance();
@@ -91,7 +92,8 @@ void PangolinViewer::execute()
   drawGridLine();
   drawString("VLLM", {1.0f, 1.0f, 0.0f, 3.0f});
 
-  drawPointCloud(target_cloud, {0.6f, 0.6f, 0.6f, 1.0f});
+  // drawPointCloud(target_cloud, {0.6f, 0.6f, 0.6f, 1.0f});
+  drawPointCloud(colored_target_cloud, {0.6f, 0.6f, 0.6f, 1.0f});
   if (*gui_target_normals)
     drawNormals(target_cloud, target_normals, {0.0f, 1.0f, 1.0f, 1.0f}, 50);
 
@@ -182,6 +184,15 @@ void PangolinViewer::drawTrajectory(const std::vector<Eigen::Vector3f>& trajecto
 void PangolinViewer::drawPointCloud(const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud, const Color& color) const
 {
   glColor3f(color.r, color.g, color.b);
+  glPointSize(color.size);
+
+  PangolinCloud pc(cloud);
+  pc.drawPoints();
+}
+
+void PangolinViewer::drawPointCloud(const pcl::PointCloud<pcl::PointXYZRGBA>::Ptr& cloud, const Color& color) const
+{
+  // glColor3f(color.r, color.g, color.b);
   glPointSize(color.size);
 
   PangolinCloud pc(cloud);
@@ -355,6 +366,26 @@ Eigen::Vector3f PangolinViewer::convertRGB(Eigen::Vector3f hsv)
   if (H < 300) return {(H - 240) / 60 * D + min, min, max};
   if (H < 360) return {max, min, (360 - H) / 60 * D + min};
   return {255, 255, 255};
+}
+
+pcl::PointCloud<pcl::PointXYZRGBA>::Ptr PangolinViewer::colorizePointCloud(const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud)
+{
+  pcl::PointCloud<pcl::PointXYZRGBA>::Ptr colored(new pcl::PointCloud<pcl::PointXYZRGBA>);
+  colored->reserve(cloud->size());
+
+  const uint8_t MAX = 150;
+  for (const pcl::PointXYZ& p : *cloud) {
+    uint8_t tmp = static_cast<uint8_t>(std::min(std::abs(20 * p.z), 150.0f));
+    pcl::PointXYZRGBA c;
+    c.r = c.g = MAX;
+    c.b = tmp;
+    c.a = static_cast<uint8_t>(255 - tmp);
+    c.x = p.x;
+    c.y = p.y;
+    c.z = p.z;
+    colored->push_back(c);
+  }
+  return colored;
 }
 
 }  // namespace vllm
