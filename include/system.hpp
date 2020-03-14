@@ -130,6 +130,8 @@ private:
 
   bool aligning_mode = false;
 
+  Eigen::Matrix4f lost_point = Eigen::Matrix4f::Zero();
+
   pcl::PointCloud<pcl::PointXYZ>::Ptr view_vllm_cloud;
   pcl::PointCloud<pcl::PointXYZ>::Ptr source_cloud;
   pcl::PointCloud<pcl::PointXYZ>::Ptr offset_cloud;
@@ -140,6 +142,7 @@ private:
   pcl::PointCloud<pcl::Normal>::Ptr offset_normals;
   pcl::PointCloud<pcl::Normal>::Ptr view_vllm_normals;
 
+  bool relocalizing = false;
   const int history = 5;
   std::list<Eigen::Matrix4f> camera_history;
   Eigen::Matrix4f camera_velocity;

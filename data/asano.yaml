@@ -55,13 +55,13 @@ VLLM.up_init:  !!opencv-matrix
     cols: 1
     dt: f
     data: [ 0,0,1]
-VLLM.s_init: 40.0
+VLLM.s_init: 2.5
 
 VLLM.pcd_file: "../../vllm-data/asano-filt.pcd"
 VLLM.video_file: "../../vllm-data/asano-5min.mp4"
 
 VLLM.voxel_grid_leaf: 0.100
-VLLM.normal_search_leaf: 0.30
+VLLM.normal_search_leaf: 0.25
 
 VLLM.gpd_size: 8
 VLLM.gpd_gain: 0.5

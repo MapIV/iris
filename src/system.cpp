@@ -58,6 +58,7 @@ System::System(int argc, char* argv[])
     camera_history.push_front(T_init);
 }
 
+bool least_one = false;
 
 int System::execute()
 {
@@ -84,7 +85,34 @@ int System::execute()
   std::cout << "state " << vslam_state << std::endl;
   aligning_mode = (vslam_state == 2);
 
+
   if (aligning_mode) {
+    least_one = true;
+
+    if (relocalizing) {
+      relocalizing = false;
+      int period = bridge.getPeriodFromInitialId();
+
+      std::cout << "====== period " << period << " ======" << std::endl;
+      std::cout << "camera_velocity\n"
+                << camera_velocity << std::endl;
+
+      Eigen::Matrix4f tmp = vllm_camera;
+      Eigen::Matrix4f inv = camera_velocity.inverse();
+      for (int i = 0; i < period; i++) {
+        tmp = inv * tmp;
+      }
+
+      Eigen::Vector3f dx = (tmp - vllm_camera).topRightCorner(3, 1);
+      std::cout << "dx " << dx.transpose() << std::endl;
+      float drift = std::max(dx.norm(), 0.01f);
+      std::cout << "drift " << drift << std::endl;
+
+      Eigen::Matrix3f sR = T_init.topLeftCorner(3, 3);
+      T_init.topLeftCorner(3, 3) = drift * sR;
+    }
+    camera_velocity.setZero();
+
     bridge.getLandmarksAndNormals(source_cloud, source_normals, recollection, accuracy);
 
     // update threshold to adjust the number of points
@@ -105,12 +133,13 @@ int System::execute()
       if (optimize(i))
         break;
     }
-    camera_velocity.setZero();
   }
   // Inertial model
   else {
     if (camera_velocity.isZero()) {
       camera_velocity = calcVelocity(camera_history);
+      std::cout << "calc camera_velocity\n"
+                << camera_velocity << std::endl;
     }
 
     offset_cloud->clear();
@@ -120,6 +149,11 @@ int System::execute()
     T_align.setIdentity();
     offset_camera = T_init;
     vllm_camera = T_init;
+
+    if (least_one) {
+      vllm_camera = vllm::getNormalizedPose(vllm_camera);
+      relocalizing = true;
+    }
   }
 
   std::cout << "T_init\n"

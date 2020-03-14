@@ -129,6 +129,12 @@ void BridgeOpenVSLAM::getLandmarks(
   return;
 }
 
+unsigned int BridgeOpenVSLAM::getPeriodFromInitialId()
+{
+  return SLAM_ptr->get_frame_publisher()->period_from_initial_id_;
+}
+
+
 void BridgeOpenVSLAM::getLandmarksAndNormals(
     pcl::PointCloud<pcl::PointXYZ>::Ptr& local_cloud,
     pcl::PointCloud<pcl::Normal>::Ptr& normals,

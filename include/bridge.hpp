@@ -24,6 +24,8 @@ public:
   bool execute();
   void requestReset();
 
+  unsigned int getPeriodFromInitialId();
+
   void getLandmarks(
       pcl::PointCloud<pcl::PointXYZ>::Ptr& local_cloud,
       pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud) const;
