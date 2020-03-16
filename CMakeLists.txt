@@ -117,6 +117,9 @@ target_include_directories(
 target_link_libraries(main PRIVATE ${PCL_LIBRARIES} ${OpenCV_LIBS} pangolin openvslam
                                    pthread)
 
+# add_executable(fitting example/fitting_se3.cpp)
+# target_link_libraries(fitting PRIVATE ${OpenCV_LIBS} ${G2O_LIBS})
+
 # add_executable(reg test_regularizer.cpp src/aligner.cpp src/util.cpp src/types_gicp.cpp)
 # target_link_libraries(reg PRIVATE ${PCL_LIBRARIES} ${G2O_LIBS})
 
