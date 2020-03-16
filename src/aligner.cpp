@@ -138,6 +138,15 @@ void Aligner::setEdge7DoFGICP(
     optimizer.addEdge(e);
   }
 
+  // add a Regularization Edge of Z
+  {
+    Edge_ZRegularizer* e = new Edge_ZRegularizer(altitude_gain);
+    e->setVertex(0, vp0);
+    e->information().setIdentity();
+    e->setMeasurement(camera_pos.topRightCorner(3, 1).cast<double>());
+    optimizer.addEdge(e);
+  }
+
   // add a const velocity Model Constraint Edge of Scale
   if (model_constraint) {
     Edge_Const_Velocity* e = new Edge_Const_Velocity(model_gain);

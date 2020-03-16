@@ -99,6 +99,7 @@ private:
   double scale_restriction_gain = 0;
   double pitch_restriction_gain = 0;
   double model_restriction_gain = 0;
+  double altitude_restriction_gain = 0;
 
   std::atomic<bool> reset_requested = false;
   unsigned int recollection = 50;

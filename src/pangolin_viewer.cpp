@@ -212,9 +212,10 @@ void PangolinViewer::drawGridLine() const
   glColor3f(0.3f, 0.3f, 0.3f);
 
   glBegin(GL_LINES);
+  constexpr float max = 50;
   constexpr float interval_ratio = 2.0f;  // if this is 2 , interval is 2m
-  constexpr float grid_min = -10.0f * interval_ratio;
-  constexpr float grid_max = 10.0f * interval_ratio;
+  constexpr float grid_min = -max * interval_ratio;
+  constexpr float grid_max = max * interval_ratio;
   for (float x = -50.f; x <= 50.f; x += 1.0f) {
     drawLine(x * interval_ratio, grid_min, 0, x * interval_ratio, grid_max, 0);
   }

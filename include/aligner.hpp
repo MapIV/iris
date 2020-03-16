@@ -37,11 +37,12 @@ public:
       const pcl::PointCloud<pcl::Normal>::Ptr& target_normals = nullptr,
       const pcl::PointCloud<pcl::Normal>::Ptr& source_normals = nullptr);
 
-  void setGain(double _scale, double _pitch, double _model)
+  void setGain(double _scale, double _pitch, double _model, double _altitude)
   {
     scale_gain = _scale;
     pitch_gain = _pitch;
     model_gain = _model;
+    altitude_gain = _altitude;
   }
 
 private:
@@ -49,6 +50,7 @@ private:
   double scale_gain = 1.0;
   double pitch_gain = 1.0;
   double model_gain = 1.0;
+  double altitude_gain = 1.0;
 
   Eigen::Matrix4f camera_pos, old_pos, older_pos;
 

@@ -52,6 +52,7 @@ struct Config {
     fs["VLLM.scale_gain"] >> scale_gain;
     fs["VLLM.pitch_gain"] >> pitch_gain;
     fs["VLLM.model_gain"] >> model_gain;
+    fs["VLLM.altitude_gain"] >> altitude_gain;
 
     fs["VLLM.distance_min"] >> distance_min;
     fs["VLLM.distance_max"] >> distance_max;
@@ -59,13 +60,11 @@ struct Config {
     fs["VLLM.converge_translation"] >> converge_translation;
     fs["VLLM.converge_rotation"] >> converge_rotation;
 
-    std::cout << "gpd_gain " << gpd_gain << std::endl;
-
     cv::Mat T = cv::Mat::eye(4, 4, CV_32FC1);
   }
 
   float distance_min, distance_max;
-  double scale_gain, pitch_gain, model_gain;
+  double scale_gain, pitch_gain, model_gain, altitude_gain;
   int frame_skip;
   int iteration;
   float gpd_gain;

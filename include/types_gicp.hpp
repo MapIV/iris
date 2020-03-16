@@ -146,4 +146,28 @@ public:
   }
   void computeError();
 };
+
+class Edge_ZRegularizer : public g2o::BaseUnaryEdge<1, Eigen::Vector3d, VertexSim3Expmap>
+{
+private:
+  double gain = 1.0;
+
+public:
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
+  Edge_ZRegularizer(double gain = 1.0) : gain(gain) {}
+  Edge_ZRegularizer(const Edge_ZRegularizer* e);
+
+  virtual bool read(std::istream&)
+  {
+    std::cerr << __PRETTY_FUNCTION__ << " not implemented yet" << std::endl;
+    return false;
+  }
+  virtual bool write(std::ostream&) const
+  {
+    std::cerr << __PRETTY_FUNCTION__ << " not implemented yet" << std::endl;
+    return false;
+  }
+  void computeError();
+};
+
 }  // namespace vllm

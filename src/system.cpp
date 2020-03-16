@@ -48,6 +48,8 @@ System::System(int argc, char* argv[])
   scale_restriction_gain = config.scale_gain;
   pitch_restriction_gain = config.pitch_gain;
   model_restriction_gain = config.model_gain;
+  altitude_restriction_gain = config.altitude_gain;
+
   search_distance_min = config.distance_min;
   search_distance_max = config.distance_max;
 
@@ -217,7 +219,7 @@ bool System::optimize(int iteration)
   // Align pointclouds
   vllm::Aligner aligner;
   aligner.setPrePosition(offset_camera, old_vllm_camera, older_vllm_camera);
-  aligner.setGain(scale_restriction_gain, pitch_restriction_gain, model_restriction_gain);
+  aligner.setGain(scale_restriction_gain, pitch_restriction_gain, model_restriction_gain, altitude_restriction_gain);
   T_align = aligner.estimate7DoF(T_align, *offset_cloud, *target_cloud, *correspondences, target_normals, offset_normals);
 
   // Integrate

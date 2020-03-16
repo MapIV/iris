@@ -184,4 +184,11 @@ void Edge_RollPitch_Regularizer::computeError()
   else
     _error(0) = gain * swing;
 }
+
+void Edge_ZRegularizer::computeError()
+{
+  const VertexSim3Expmap* vp0 = static_cast<const VertexSim3Expmap*>(_vertices[0]);
+  Eigen::Vector3d now = vp0->estimate().map(measurement());
+  _error(0) = gain * now.z();
+}
 }  // namespace vllm

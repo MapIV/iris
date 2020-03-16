@@ -63,9 +63,9 @@ private:
   pcl::PointCloud<pcl::PointXYZRGBA>::Ptr colored_target_cloud;
 
   pangolin::OpenGlRenderState makeCamera(
-      const Eigen::Vector3f& from = Eigen::Vector3f(-2, 0, 5),
+      const Eigen::Vector3f& from = Eigen::Vector3f(-10, 0, 10),
       const Eigen::Vector3f& to = Eigen::Vector3f(0, 0, 0),
-      const pangolin::AxisDirection up = pangolin::AxisX);
+      const pangolin::AxisDirection up = pangolin::AxisZ);
 
   void loop();
 
