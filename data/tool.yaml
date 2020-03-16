@@ -1,0 +1,23 @@
+%YAML:1.0
+
+Tool.max_box:  !!opencv-matrix
+    rows: 3
+    cols: 1
+    dt: f
+    data: [ 250.0, 400.0, 30.0]
+
+Tool.min_box:  !!opencv-matrix
+    rows: 3
+    cols: 1
+    dt: f
+    data: [ -30, -30, -30]
+
+Tool.normal:  !!opencv-matrix
+    rows: 3
+    cols: 1
+    dt: f
+    data: [ 0.03,0.05,1]
+
+Tool.pcd_file: "../../vllm-data/hongo.pcd"
+Tool.z_angle: 45 # deg
+Tool.leaf_size: 1.0

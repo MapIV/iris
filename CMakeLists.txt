@@ -117,6 +117,9 @@ target_include_directories(
 target_link_libraries(main PRIVATE ${PCL_LIBRARIES} ${OpenCV_LIBS} pangolin openvslam
                                    pthread)
 
+add_executable(tool example/tool.cpp)
+target_link_libraries(tool PUBLIC ${PCL_LIBRARIES} ${OpenCV_LIBS})
+
 # add_executable(fitting example/fitting_se3.cpp)
 # target_link_libraries(fitting PRIVATE ${OpenCV_LIBS} ${G2O_LIBS})
 
@@ -138,6 +141,3 @@ target_link_libraries(main PRIVATE ${PCL_LIBRARIES} ${OpenCV_LIBS} pangolin open
 
 # add_executable(lpd_simple example/lpd_simple.cpp)
 # target_link_libraries(lpd_simple PUBLIC ${PCL_LIBRARIES})
-
-add_executable(viewer example/simple_viewer.cpp)
-target_link_libraries(viewer PUBLIC ${PCL_LIBRARIES})
