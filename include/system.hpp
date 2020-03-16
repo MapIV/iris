@@ -45,13 +45,17 @@ public:
     std::lock_guard<std::mutex> lock(mtx);
     return view_offset_camera;
   }
-  pcXYZ::Ptr getAlignedCloud() const
+  std::pair<pcXYZ::Ptr, pcl::CorrespondencesPtr> getAlignedCloudAndCorrespondences() const
   {
     std::lock_guard<std::mutex> lock(mtx);
     pcXYZ::Ptr cloud(new pcXYZ);
+    pcl::CorrespondencesPtr cors(new pcl::Correspondences);
+
     pcl::copyPointCloud(*view_vllm_cloud, *cloud);
-    return cloud;
+    *cors = *correspondences_for_viewer;
+    return {cloud, cors};
   }
+
   pcNormal::Ptr getAlignedNormals() const
   {
     std::lock_guard<std::mutex> lock(mtx);
@@ -70,11 +74,6 @@ public:
     std::lock_guard<std::mutex> lock(mtx);
     std::vector<Eigen::Vector3f> trajectory = vllm_trajectory;
     return trajectory;
-  }
-  pcl::CorrespondencesPtr getCorrespondences() const
-  {
-    std::lock_guard<std::mutex> lock(mtx);
-    return correspondences_for_viewer;
   }
 
   void requestReset()

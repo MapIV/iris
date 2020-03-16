@@ -29,7 +29,7 @@ void transformPointCloud(pcl::PointCloud<pcl::PointXYZI>::Ptr& cloud)
 {
   // rotation
   Eigen::Matrix3f R;
-  R = Eigen::AngleAxisf(static_cast<float>(-30.0 / 180.0 * M_PI), Eigen::Vector3f(0, 0, 1));
+  R = Eigen::AngleAxisf(static_cast<float>(45.0 / 180.0 * M_PI), Eigen::Vector3f(0, 0, 1));
 
   // transration
   Eigen::Vector3f t;
@@ -74,13 +74,13 @@ int main(int argc, char** argv)
   }
 
   transformPointCloud(cloud);
-  cloud = cropPointCloud(cloud, Eigen::Vector3f(-5, -10, -3), Eigen::Vector3f(20, 10, 3));
+  cloud = cropPointCloud(cloud, Eigen::Vector3f(-10, -30, -100), Eigen::Vector3f(200, 100, 100));
 
-  // filtering
-  pcl::VoxelGrid<pcl::PointXYZI> filter;
-  filter.setInputCloud(cloud);
-  filter.setLeafSize(0.02, 0.02, 0.02);
-  filter.filter(*cloud);
+  // // filtering
+  // pcl::VoxelGrid<pcl::PointXYZI> filter;
+  // filter.setInputCloud(cloud);
+  // filter.setLeafSize(0.02, 0.02, 0.02);
+  // filter.filter(*cloud);
 
   // // intensity viewer
   // pcl::visualization::PCLVisualizer::Ptr viewer = pcl::visualization::PCLVisualizer::Ptr(new pcl::visualization::PCLVisualizer("viewer"));

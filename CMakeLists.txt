@@ -139,5 +139,5 @@ target_link_libraries(main PRIVATE ${PCL_LIBRARIES} ${OpenCV_LIBS} pangolin open
 # add_executable(lpd_simple example/lpd_simple.cpp)
 # target_link_libraries(lpd_simple PUBLIC ${PCL_LIBRARIES})
 
-# add_executable(viewer example/simple_viewer.cpp)
-# target_link_libraries(viewer PUBLIC ${PCL_LIBRARIES})
+add_executable(viewer example/simple_viewer.cpp)
+target_link_libraries(viewer PUBLIC ${PCL_LIBRARIES})

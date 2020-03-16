@@ -42,38 +42,38 @@ VLLM.t_init:  !!opencv-matrix
     rows: 3
     cols: 1
     dt: f
-    data: [ 10.0, -10.0, 0.0]
+    data: [ 10.0, 0.0, 0.0]
 # normal vector of camera
 VLLM.normal_init:  !!opencv-matrix
     rows: 3
     cols: 1
     dt: f
-    data: [ 1,-1,0]
+    data: [ 1,0.2,0]
 # up vector of camera
 VLLM.up_init:  !!opencv-matrix
     rows: 3
     cols: 1
     dt: f
     data: [ 0,0,1]
-VLLM.s_init: 10
+VLLM.s_init: 2
 
-VLLM.pcd_file: "../../vllm-data/hongo-filt.pcd"
+VLLM.pcd_file: "../../vllm-data/hongo-clip.pcd"
 VLLM.video_file: "../../vllm-data/hongo-clip.mp4"
 
-VLLM.voxel_grid_leaf: 0.500
-VLLM.normal_search_leaf: 1.0
+VLLM.voxel_grid_leaf: 0.200
+VLLM.normal_search_leaf: 0.6
 
 VLLM.gpd_size: 8
 VLLM.gpd_gain: 0.5
 VLLM.iteration: 5
-VLLM.frame_skip: 3
+VLLM.frame_skip: 2
 
-VLLM.scale_gain: 40.0
-VLLM.pitch_gain: 30.0
+VLLM.scale_gain: 30.0
+VLLM.pitch_gain: 40.0
 VLLM.model_gain: 10.0
 
 VLLM.distance_min: 0.5
-VLLM.distance_max: 1.0
+VLLM.distance_max: 3.0
 
 VLLM.converge_translation: 0.10
 VLLM.converge_rotation: 0.3

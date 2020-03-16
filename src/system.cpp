@@ -72,7 +72,11 @@ int System::execute()
   // Artifical restart
   if (reset_requested.load()) {
     reset_requested.store(false);
-    vslam_state = 3;
+    T_align = Eigen::Matrix4f::Identity();
+    vllm_camera = T_init;
+    vllm_camera = T_init;
+    old_vllm_camera = T_init;
+    older_vllm_camera = T_init;
   }
 
   // "3" means openvslam::tracking_state_t::Lost

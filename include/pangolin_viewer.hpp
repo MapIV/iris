@@ -75,6 +75,7 @@ private:
   std::shared_ptr<pangolin::Var<bool>> gui_vslam_camera;
   std::shared_ptr<pangolin::Var<bool>> gui_source_normals;
   std::shared_ptr<pangolin::Var<bool>> gui_target_normals;
+  std::shared_ptr<pangolin::Var<bool>> gui_correspondences;
   std::shared_ptr<pangolin::Var<double>> gui_scale_gain;
   std::shared_ptr<pangolin::Var<double>> gui_pitch_gain;
   std::shared_ptr<pangolin::Var<double>> gui_model_gain;

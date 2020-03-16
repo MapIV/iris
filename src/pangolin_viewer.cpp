@@ -40,6 +40,8 @@ void PangolinViewer::init()
   gui_vslam_camera = std::make_shared<pangolin::Var<bool>>("ui.vslam_camera", true, true);
   gui_source_normals = std::make_shared<pangolin::Var<bool>>("ui.source_normals", false, true);
   gui_target_normals = std::make_shared<pangolin::Var<bool>>("ui.target_normals", false, true);
+  gui_target_normals = std::make_shared<pangolin::Var<bool>>("ui.target_normals", false, true);
+  gui_correspondences = std::make_shared<pangolin::Var<bool>>("ui.correspondences", true, true);
 
   target_cloud = pcl::PointCloud<pcl::PointXYZ>::Ptr(new pcl::PointCloud<pcl::PointXYZ>);
   *target_cloud = *system_ptr->getTargetCloud();
@@ -92,14 +94,11 @@ void PangolinViewer::execute()
   drawGridLine();
   drawString("VLLM", {1.0f, 1.0f, 0.0f, 3.0f});
 
-  // drawPointCloud(target_cloud, {0.6f, 0.6f, 0.6f, 1.0f});
   drawPointCloud(colored_target_cloud, {0.6f, 0.6f, 0.6f, 1.0f});
   if (*gui_target_normals)
-    drawNormals(target_cloud, target_normals, {0.0f, 1.0f, 1.0f, 1.0f}, 50);
+    drawNormals(target_cloud, target_normals, {0.0f, 1.0f, 0.0f, 1.0f}, 30);
 
-  pcl::PointCloud<pcl::PointXYZ>::Ptr aligned_cloud = system_ptr->getAlignedCloud();
-  // drawCorrespondences(aligned_cloud, target_cloud,
-  //     system_ptr->getCorrespondences(), {0.0f, 0.0f, 1.0f, 2.0f});
+  auto [aligned_cloud, correspondences] = system_ptr->getAlignedCloudAndCorrespondences();
 
   drawPointCloud(aligned_cloud, {1.0f, 1.0f, 0.0f, 2.0f});
   if (*gui_source_normals)
@@ -109,6 +108,9 @@ void PangolinViewer::execute()
     drawCamera(system_ptr->getOffsetCamera(), {1.0f, 0.0f, 1.0f, 1.0f});
     drawTrajectory(system_ptr->getOffsetTrajectory(), false, {1.0f, 0.0f, 1.0f, 1.0f});
   }
+
+  if (*gui_correspondences)
+    drawCorrespondences(aligned_cloud, target_cloud, correspondences, {0.0f, 0.0f, 1.0f, 2.0f});
 
   drawTrajectory(system_ptr->getTrajectory(), true);
   drawCamera(system_ptr->getCamera(), {1.0f, 0.0f, 0.0f, 1.0f});
@@ -210,14 +212,14 @@ void PangolinViewer::drawGridLine() const
   glColor3f(0.3f, 0.3f, 0.3f);
 
   glBegin(GL_LINES);
-  constexpr float interval_ratio = 0.1f;
-  constexpr float grid_min = -100.0f * interval_ratio;
-  constexpr float grid_max = 100.0f * interval_ratio;
-  for (float x = -10.f; x <= 10.f; x += 1.0f) {
-    drawLine(x * 10.0f * interval_ratio, grid_min, 0, x * 10.0f * interval_ratio, grid_max, 0);
+  constexpr float interval_ratio = 2.0f;  // if this is 2 , interval is 2m
+  constexpr float grid_min = -10.0f * interval_ratio;
+  constexpr float grid_max = 10.0f * interval_ratio;
+  for (float x = -50.f; x <= 50.f; x += 1.0f) {
+    drawLine(x * interval_ratio, grid_min, 0, x * interval_ratio, grid_max, 0);
   }
-  for (float y = -10.f; y <= 10.f; y += 1.0f) {
-    drawLine(grid_min, y * 10.0f * interval_ratio, 0, grid_max, y * 10.0f * interval_ratio, 0);
+  for (float y = -50.f; y <= 50.f; y += 1.0f) {
+    drawLine(grid_min, y * interval_ratio, 0, grid_max, y * interval_ratio, 0);
   }
   glEnd();
   glPopMatrix();
@@ -265,9 +267,12 @@ void PangolinViewer::drawNormals(
   glColor4f(color.r, color.g, color.b, 0.4f);
   glLineWidth(color.size);
   for (size_t i = 0; i < cloud->size(); i += skip) {
+    if (i >= normals->size()) {
+      break;
+    }
     Eigen::Vector3f p = cloud->at(i).getArray3fMap();
     Eigen::Vector3f n = normals->at(i).getNormalVector3fMap();
-    n = 0.2f * n;  // 200mm
+    n = 0.5f * n;  // 500mm
     if (std::isfinite(n.x()))
       drawLine(p.x(), p.y(), p.z(), p.x() + n.x(), p.y() + n.y(), p.z() + n.z());
   }
@@ -284,14 +289,10 @@ void PangolinViewer::drawCorrespondences(
   glColor4f(color.r, color.g, color.b, 0.9f);
   glLineWidth(color.size);
   for (const pcl::Correspondence& c : *correspondences) {
-    if (source->size() <= c.index_query) {
-      std::cout << "debug " << source->size() << " " << c.index_query << std::endl;
+    if (c.index_query >= source->size() || c.index_match >= target->size()) {
       continue;
     }
-    if (target->size() <= c.index_match) {
-      std::cout << "DEBUG " << target->size() << " " << c.index_query << std::endl;
-      continue;
-    }
+
     pcl::PointXYZ p1 = source->at(c.index_query);
     pcl::PointXYZ p2 = target->at(c.index_match);
     drawLine(p1.x, p1.y, p1.z, p2.x, p2.y, p2.z);
