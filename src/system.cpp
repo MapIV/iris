@@ -38,10 +38,10 @@ System::System(int argc, char* argv[]) : source_cloud(new pcXYZ), source_normals
   estimator.setKSearch(10);
 
   T_init = config.T_init;
-  scale_restriction_gain = config.scale_gain;
-  pitch_restriction_gain = config.pitch_gain;
-  model_restriction_gain = config.model_gain;
-  altitude_restriction_gain = config.altitude_gain;
+  parameter.scale_gain = config.scale_gain;
+  parameter.smooth_gain = config.smooth_gain;
+  parameter.altitude_gain = config.altitude_gain;
+  parameter.latitude_gain = config.latitude_gain;
 
   search_distance_min = config.distance_min;
   search_distance_max = config.distance_max;
@@ -201,7 +201,7 @@ bool System::optimize(int iteration)
   // Align pointclouds
   vllm::Aligner aligner;
   aligner.setPrePosition(database.offset_camera, old_vllm_camera, older_vllm_camera);
-  aligner.setGain(scale_restriction_gain, pitch_restriction_gain, model_restriction_gain, altitude_restriction_gain);
+  aligner.setParameter(parameter);
   T_align = aligner.estimate7DoF(T_align, *database.offset_cloud, *target_cloud, *database.correspondences, target_normals, database.offset_normals);
 
   // Integrate

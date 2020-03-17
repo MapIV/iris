@@ -1,5 +1,6 @@
 #include "aligner.hpp"
 #include "types_gicp.hpp"
+#include "types_restriction.hpp"
 #include "util.hpp"
 
 #include <g2o/core/block_solver.h>
@@ -13,7 +14,6 @@
 
 namespace vllm
 {
-
 Eigen::Matrix4f Aligner::estimate7DoF(
     Eigen::Matrix4f& T,
     const pcl::PointCloud<pcl::PointXYZ>& source,
@@ -120,27 +120,27 @@ void Aligner::setEdge7DoFGICP(
     optimizer.addEdge(e);
   }
 
-  // add a Regularization Edge of Roll, Pitch
+  // Add a latitude edge
   {
-    Edge_RollPitch_Regularizer* e = new Edge_RollPitch_Regularizer(pitch_gain);
+    Edge_Latitude_Restriction* e = new Edge_Latitude_Restriction(param.latitude_gain);
     e->setVertex(0, vp0);
     e->information().setIdentity();
     e->setMeasurement(0.0);
     optimizer.addEdge(e);
   }
 
-  // add a Regularization Edge of Scale
+  // Add a scale edge
   {
-    Edge_Scale_Regularizer* e = new Edge_Scale_Regularizer(scale_gain);
+    Edge_Scale_Restriction* e = new Edge_Scale_Restriction(param.scale_gain);
     e->setVertex(0, vp0);
     e->information().setIdentity();
     e->setMeasurement(1.0);
     optimizer.addEdge(e);
   }
 
-  // add a Regularization Edge of Z
+  // Add an altitude edge
   {
-    Edge_ZRegularizer* e = new Edge_ZRegularizer(altitude_gain);
+    Edge_Altitude_Restriction* e = new Edge_Altitude_Restriction(param.altitude_gain);
     e->setVertex(0, vp0);
     e->information().setIdentity();
     e->setMeasurement(camera_pos.topRightCorner(3, 1).cast<double>());
@@ -148,16 +148,14 @@ void Aligner::setEdge7DoFGICP(
   }
 
   // add a const velocity Model Constraint Edge of Scale
-  if (model_constraint) {
-    Edge_Const_Velocity* e = new Edge_Const_Velocity(model_gain);
-    e->setVertex(0, vp0);
-    e->information().setIdentity();
-    VelocityModel model;
-    model.camera_pos = camera_pos.topRightCorner(3, 1).cast<double>();
-    model.old_pos = old_pos.topRightCorner(3, 1).cast<double>();
-    model.older_pos = older_pos.topRightCorner(3, 1).cast<double>();
-    e->setMeasurement(model);
-    optimizer.addEdge(e);
-  }
+  Edge_Smooth_Restriction* e = new Edge_Smooth_Restriction(param.smooth_gain);
+  e->setVertex(0, vp0);
+  e->information().setIdentity();
+  VelocityModel model;
+  model.camera_pos = camera_pos.topRightCorner(3, 1).cast<double>();
+  model.old_pos = old_pos.topRightCorner(3, 1).cast<double>();
+  model.older_pos = older_pos.topRightCorner(3, 1).cast<double>();
+  e->setMeasurement(model);
+  optimizer.addEdge(e);
 }
 }  // namespace vllm

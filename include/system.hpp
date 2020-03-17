@@ -1,11 +1,11 @@
 #pragma once
 #include "bridge.hpp"
 #include "config.hpp"
+#include "parameter.hpp"
 #include "type.hpp"
 #include "util.hpp"
 #include <atomic>
 #include <memory>
-#include <mutex>
 #include <pcl/registration/correspondence_estimation_backprojection.h>
 #include <pcl/registration/correspondence_rejection_distance.h>
 
@@ -25,12 +25,10 @@ public:
 
   const pcXYZ::Ptr& getTargetCloud() const
   {
-    std::lock_guard<std::mutex> lock(mtx);
     return target_cloud;
   }
   const pcNormal::Ptr& getTargetNormals() const
   {
-    std::lock_guard<std::mutex> lock(mtx);
     return target_normals;
   }
 
@@ -58,18 +56,13 @@ private:
   // ==== private member ====
   double search_distance_min = 0;
   double search_distance_max = 0;
+  Parameter parameter;
 
-  double scale_restriction_gain = 0;
-  double pitch_restriction_gain = 0;
-  double model_restriction_gain = 0;
-  double altitude_restriction_gain = 0;
   unsigned int recollection = 50;
 
   std::atomic<bool> reset_requested = false;
 
   Config config;
-
-  mutable std::mutex mtx;
 
   Eigen::Matrix4f T_init;
   Eigen::Matrix4f T_align = Eigen::Matrix4f::Identity();
