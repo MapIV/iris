@@ -68,7 +68,6 @@ Eigen::Matrix4f calcVelocity(const std::list<Eigen::Matrix4f>& poses)
   Eigen::Matrix4f Tn = getNormalizedPose(*std::prev(poses.end()));
 
   V = T0 * Tn.inverse();
-  auto tmp = V;
   Eigen::Matrix3f R = V.topLeftCorner(3, 3);
   Eigen::Vector3f t = V.topRightCorner(3, 1);
   Eigen::Matrix3f root_R = so3::exp(so3::log(R) / dt);

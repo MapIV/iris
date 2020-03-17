@@ -22,7 +22,7 @@ void PangolinViewer::init()
   handler = std::make_shared<pangolin::Handler3D>(pangolin::Handler3D(*s_cam));
 
   // setup Pangolin viewer
-  pangolin::CreateWindowAndBind("VLLM", 1024, 768);
+  pangolin::CreateWindowAndBind("VLLM", 1424, 968);
   glEnable(GL_DEPTH_TEST);
 
   // Ensure that blending is enabled for rendering text.
@@ -94,26 +94,26 @@ void PangolinViewer::execute()
   drawGridLine();
   drawString("VLLM", {1.0f, 1.0f, 0.0f, 3.0f});
 
+  system_ptr->popDatabase(database);
+
   drawPointCloud(colored_target_cloud, {0.6f, 0.6f, 0.6f, 1.0f});
   if (*gui_target_normals)
     drawNormals(target_cloud, target_normals, {0.0f, 1.0f, 0.0f, 1.0f}, 30);
 
-  auto [aligned_cloud, correspondences] = system_ptr->getAlignedCloudAndCorrespondences();
-
-  drawPointCloud(aligned_cloud, {1.0f, 1.0f, 0.0f, 2.0f});
+  drawPointCloud(database.vllm_cloud, {1.0f, 1.0f, 0.0f, 2.0f});
   if (*gui_source_normals)
-    drawNormals(aligned_cloud, system_ptr->getAlignedNormals(), {1.0f, 0.0f, 1.0f, 1.0f});
+    drawNormals(database.vllm_cloud, database.vllm_normals, {1.0f, 0.0f, 1.0f, 1.0f});
 
   if (*gui_vslam_camera) {
-    drawCamera(system_ptr->getOffsetCamera(), {1.0f, 0.0f, 1.0f, 1.0f});
-    drawTrajectory(system_ptr->getOffsetTrajectory(), false, {1.0f, 0.0f, 1.0f, 1.0f});
+    drawCamera(database.offset_camera, {1.0f, 0.0f, 1.0f, 1.0f});
+    drawTrajectory(database.offset_trajectory, false, {1.0f, 0.0f, 1.0f, 1.0f});
   }
 
   if (*gui_correspondences)
-    drawCorrespondences(aligned_cloud, target_cloud, correspondences, {0.0f, 0.0f, 1.0f, 2.0f});
+    drawCorrespondences(database.vllm_cloud, target_cloud, database.correspondences, {0.0f, 0.0f, 1.0f, 2.0f});
 
-  drawTrajectory(system_ptr->getTrajectory(), true);
-  drawCamera(system_ptr->getCamera(), {1.0f, 0.0f, 0.0f, 1.0f});
+  drawTrajectory(database.vllm_trajectory, true);
+  drawCamera(database.vllm_camera, {1.0f, 0.0f, 0.0f, 1.0f});
 
   // Eigen::Vector3d gain(*gui_scale_gain, *gui_pitch_gain, *gui_model_gain);
   // Eigen::Vector2d distance(*gui_distance_min, *gui_distance_max);
@@ -137,7 +137,7 @@ pangolin::OpenGlRenderState PangolinViewer::makeCamera(
 {
   return pangolin::OpenGlRenderState(
       pangolin::ProjectionMatrix(
-          640, 480, 420, 420, 320, 240, 0.2, 100),
+          640, 480, 420, 420, 320, 240, 0.2, 200),
       pangolin::ModelViewLookAt(
           from.x(), from.y(), from.z(), to.x(), to.y(), to.z(), up));
 }
@@ -268,9 +268,6 @@ void PangolinViewer::drawNormals(
   glColor4f(color.r, color.g, color.b, 0.4f);
   glLineWidth(color.size);
   for (size_t i = 0; i < cloud->size(); i += skip) {
-    if (i >= normals->size()) {
-      break;
-    }
     Eigen::Vector3f p = cloud->at(i).getArray3fMap();
     Eigen::Vector3f n = normals->at(i).getNormalVector3fMap();
     n = 0.5f * n;  // 500mm
@@ -290,10 +287,6 @@ void PangolinViewer::drawCorrespondences(
   glColor4f(color.r, color.g, color.b, 0.9f);
   glLineWidth(color.size);
   for (const pcl::Correspondence& c : *correspondences) {
-    if (c.index_query >= source->size() || c.index_match >= target->size()) {
-      continue;
-    }
-
     pcl::PointXYZ p1 = source->at(c.index_query);
     pcl::PointXYZ p2 = target->at(c.index_match);
     drawLine(p1.x, p1.y, p1.z, p2.x, p2.y, p2.z);

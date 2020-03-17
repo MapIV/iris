@@ -7,15 +7,7 @@
 
 namespace vllm
 {
-System::System(int argc, char* argv[])
-    : view_vllm_cloud(new pcl::PointCloud<pcl::PointXYZ>),
-      view_vllm_normals(new pcl::PointCloud<pcl::Normal>),
-      source_cloud(new pcl::PointCloud<pcl::PointXYZ>),
-      source_normals(new pcl::PointCloud<pcl::Normal>),
-      offset_cloud(new pcl::PointCloud<pcl::PointXYZ>),
-      offset_normals(new pcl::PointCloud<pcl::Normal>),
-      correspondences(new pcl::Correspondences),
-      correspondences_for_viewer(new pcl::Correspondences)
+System::System(int argc, char* argv[]) : source_cloud(new pcXYZ), source_normals(new pcNormal)
 {
   // analyze arugments
   popl::OptionParser op("Allowed options");
@@ -31,6 +23,7 @@ System::System(int argc, char* argv[])
     exit(EXIT_FAILURE);
   }
   config.init(config_file_path->value());
+
 
   // setup for target(LiDAR) map
   target_cloud = vllm::loadMapPointCloud(config.pcd_file, config.voxel_grid_leaf);
@@ -75,8 +68,7 @@ int System::execute()
   if (reset_requested.load()) {
     reset_requested.store(false);
     T_align = Eigen::Matrix4f::Identity();
-    vllm_camera = T_init;
-    vllm_camera = T_init;
+    database.vllm_camera = T_init;
     old_vllm_camera = T_init;
     older_vllm_camera = T_init;
   }
@@ -103,13 +95,13 @@ int System::execute()
       std::cout << "camera_velocity\n"
                 << camera_velocity << std::endl;
 
-      Eigen::Matrix4f tmp = vllm_camera;
+      Eigen::Matrix4f tmp = database.vllm_camera;
       Eigen::Matrix4f inv = camera_velocity.inverse();
       for (int i = 0; i < period; i++) {
         tmp = inv * tmp;
       }
 
-      Eigen::Vector3f dx = (tmp - vllm_camera).topRightCorner(3, 1);
+      Eigen::Vector3f dx = (tmp - database.vllm_camera).topRightCorner(3, 1);
       std::cout << "dx " << dx.transpose() << std::endl;
       float drift = std::max(dx.norm(), 0.01f);
       std::cout << "drift " << drift << std::endl;
@@ -130,9 +122,9 @@ int System::execute()
     Eigen::Matrix4f vslam_camera = bridge.getCameraPose().inverse().cast<float>();
 
     // Transform subtract the first pose offset
-    offset_camera = T_init * vslam_camera;
-    pcl::transformPointCloud(*source_cloud, *offset_cloud, T_init);
-    vllm::transformNormals(*source_normals, *offset_normals, T_init);
+    database.offset_camera = T_init * vslam_camera;
+    pcl::transformPointCloud(*source_cloud, *database.offset_cloud, T_init);
+    vllm::transformNormals(*source_normals, *database.offset_normals, T_init);
 
     // Main Optimization
     for (int i = 0; i < 5; i++) {
@@ -148,88 +140,78 @@ int System::execute()
                 << camera_velocity << std::endl;
     }
 
-    offset_cloud->clear();
-    offset_normals->clear();
+    database.offset_cloud->clear();
+    database.offset_normals->clear();
 
     T_init = camera_velocity * old_vllm_camera;
     T_align.setIdentity();
-    offset_camera = T_init;
-    vllm_camera = T_init;
+    database.offset_camera = T_init;
+    database.vllm_camera = T_init;
 
+    // Has initialization been successful at least one?
     if (least_one) {
-      vllm_camera = vllm::getNormalizedPose(vllm_camera);
+      database.vllm_camera = vllm::getNormalizedPose(database.vllm_camera);
       relocalizing = true;
     }
   }
 
   std::cout << "T_init\n"
             << T_init << std::endl;
-
-  std::cout << "now= " << vllm_camera.topRightCorner(3, 1).transpose() << std::endl;
-  //           << " pre=" << old_vllm_camera.topRightCorner(3, 1).transpose()
-  //           << " prepre=" << older_vllm_camera.topRightCorner(3, 1).transpose() << std::endl;
+  std::cout << "now= " << database.vllm_camera.topRightCorner(3, 1).transpose() << std::endl;
 
   // Copy data for viewer
-  {
-    std::lock_guard<std::mutex> lock(mtx);
+  database.offset_trajectory.push_back(database.offset_camera.block(0, 3, 3, 1));
+  database.vllm_trajectory.push_back(database.vllm_camera.block(0, 3, 3, 1));
+  // pcl::transformPointCloud(*database.offset_cloud, *database.vllm_cloud, T_align);
+  // vllm::transformNormals(*database.offset_normals, *database.vllm_normals, T_align);
+  publisher.push(database);
 
-    pcl::transformPointCloud(*offset_cloud, *view_vllm_cloud, T_align);
-    vllm::transformNormals(*offset_normals, *view_vllm_normals, T_align);
-
-    offset_trajectory.push_back(offset_camera.block(0, 3, 3, 1));
-    vllm_trajectory.push_back(vllm_camera.block(0, 3, 3, 1));
-    *correspondences_for_viewer = *correspondences;
-    view_vllm_camera = vllm_camera;
-    view_offset_camera = offset_camera;
-  }
-
-  // update old data
+  // Update old data
   older_vllm_camera = old_vllm_camera;
-  old_vllm_camera = vllm_camera;
+  old_vllm_camera = database.vllm_camera;
   camera_history.pop_back();
-  camera_history.push_front(vllm_camera);
+  camera_history.push_front(database.vllm_camera);
   return 0;
 }
 
 
 bool System::optimize(int iteration)
 {
-  // std::cout << "offset= " << offset_camera.topRightCorner(3, 1).transpose() << std::endl;
   std::cout << "itr= \033[32m" << iteration << "\033[m";
 
   // Integrate
-  pcl::PointCloud<pcl::PointXYZ>::Ptr tmp_cloud(new pcl::PointCloud<pcl::PointXYZ>);
-  pcl::PointCloud<pcl::Normal>::Ptr tmp_normals(new pcl::PointCloud<pcl::Normal>);
-  pcl::transformPointCloud(*offset_cloud, *tmp_cloud, T_align);
-  vllm::transformNormals(*offset_normals, *tmp_normals, T_align);
+  // pcl::PointCloud<pcl::PointXYZ>::Ptr tmp_cloud(new pcl::PointCloud<pcl::PointXYZ>);
+  // pcl::PointCloud<pcl::Normal>::Ptr tmp_normals(new pcl::PointCloud<pcl::Normal>);
+  pcl::transformPointCloud(*database.offset_cloud, *database.vllm_cloud, T_align);
+  vllm::transformNormals(*database.offset_normals, *database.vllm_normals, T_align);
 
   // Get all correspodences
-  estimator.setInputSource(tmp_cloud);
-  estimator.setSourceNormals(tmp_normals);
-  estimator.determineCorrespondences(*correspondences);
-  std::cout << " ,raw_correspondences= \033[32m" << correspondences->size() << "\033[m";
+  estimator.setInputSource(database.vllm_cloud);
+  estimator.setSourceNormals(database.vllm_normals);
+  estimator.determineCorrespondences(*database.correspondences);
+  std::cout << " ,raw_correspondences= \033[32m" << database.correspondences->size() << "\033[m";
 
   // Reject too far correspondences
-  distance_rejector.setInputCorrespondences(correspondences);
+  distance_rejector.setInputCorrespondences(database.correspondences);
   distance_rejector.setMaximumDistance(
       search_distance_max - (search_distance_max - search_distance_min) * static_cast<float>(iteration) / static_cast<float>(config.iteration));
-  distance_rejector.getCorrespondences(*correspondences);
-  std::cout << " ,refined_correspondecnes= \033[32m" << correspondences->size() << "\033[m" << std::endl;
+  distance_rejector.getCorrespondences(*database.correspondences);
+  std::cout << " ,refined_correspondecnes= \033[32m" << database.correspondences->size() << "\033[m" << std::endl;
 
   // Align pointclouds
   vllm::Aligner aligner;
-  aligner.setPrePosition(offset_camera, old_vllm_camera, older_vllm_camera);
+  aligner.setPrePosition(database.offset_camera, old_vllm_camera, older_vllm_camera);
   aligner.setGain(scale_restriction_gain, pitch_restriction_gain, model_restriction_gain, altitude_restriction_gain);
-  T_align = aligner.estimate7DoF(T_align, *offset_cloud, *target_cloud, *correspondences, target_normals, offset_normals);
+  T_align = aligner.estimate7DoF(T_align, *database.offset_cloud, *target_cloud, *database.correspondences, target_normals, database.offset_normals);
 
   // Integrate
-  Eigen::Matrix4f last_camera = vllm_camera;
-  vllm_camera = T_align * offset_camera;
+  Eigen::Matrix4f last_camera = database.vllm_camera;
+  database.vllm_camera = T_align * database.offset_camera;
 
   // Get Inovation
-  float scale = getScale(getNormalizedRotation(vllm_camera));
-  float update_transform = (last_camera - vllm_camera).topRightCorner(3, 1).norm();        // called "Euclid distance"
-  float update_rotation = (last_camera - vllm_camera).topLeftCorner(3, 3).norm() / scale;  // called "chordal distance"
+  float scale = getScale(getNormalizedRotation(database.vllm_camera));
+  float update_transform = (last_camera - database.vllm_camera).topRightCorner(3, 1).norm();        // called "Euclid distance"
+  float update_rotation = (last_camera - database.vllm_camera).topLeftCorner(3, 3).norm() / scale;  // called "chordal distance"
   std::cout << "update= \033[33m" << update_transform << " \033[m,\033[33m " << update_rotation << "\033[m" << std::endl;
 
   if (config.converge_translation > update_transform

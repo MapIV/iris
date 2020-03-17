@@ -3,6 +3,7 @@
 #include "global_point_distribution.hpp"
 #include "pangolin_cloud.hpp"
 #include "system.hpp"
+#include "type.hpp"
 #include <atomic>
 #include <pangolin/pangolin.h>
 #include <pcl/correspondence.h>
@@ -70,6 +71,7 @@ private:
   void loop();
 
   pcl::PointCloud<pcl::PointXYZRGBA>::Ptr colorizePointCloud(const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud);
+  Database database;
 
   // GUI variables
   std::shared_ptr<pangolin::Var<bool>> gui_vslam_camera;
