@@ -3,40 +3,20 @@
 #include "averager.hpp"
 #include <opencv2/core/eigen.hpp>
 #include <pcl/common/transforms.h>
-#include <popl.hpp>
 
 namespace vllm
 {
-System::System(int argc, char* argv[]) : source_cloud(new pcXYZ), source_normals(new pcNormal)
+System::System(Config& config, const map::Map& map) : config(config), map(map)
 {
-  // analyze arugments
-  popl::OptionParser op("Allowed options");
-  auto config_file_path = op.add<popl::Value<std::string>>("c", "config", "config file path");
-  try {
-    op.parse(argc, argv);
-  } catch (const std::exception& e) {
-    std::cerr << e.what() << std::endl;
-    exit(EXIT_FAILURE);
-  }
-  if (!config_file_path->is_set()) {
-    std::cerr << "invalid arguments" << std::endl;
-    exit(EXIT_FAILURE);
-  }
-  config.init(config_file_path->value());
-
-
-  // setup for target(LiDAR) map
-  target_cloud = vllm::loadMapPointCloud(config.pcd_file, config.voxel_grid_leaf);
-  target_normals = vllm::estimateNormals(target_cloud, config.normal_search_leaf);
-
   // setup for OpenVSLAM
-  bridge.setup(argc, argv, config.video_file, config.frame_skip);
+  bridge.setup(config);
 
   // setup correspondence estimator
-  estimator.setInputTarget(target_cloud);
-  estimator.setTargetNormals(target_normals);
+  estimator.setInputTarget(map.getTargetCloud());
+  estimator.setTargetNormals(map.getTargetNormals());
   estimator.setKSearch(10);
 
+  camera_velocity.setIdentity();
   T_init = config.T_init;
   parameter.scale_gain = config.scale_gain;
   parameter.smooth_gain = config.smooth_gain;
@@ -118,9 +98,12 @@ int System::execute()
     }
     camera_velocity.setZero();
 
+    // Get keypoints cloud with normals
+    pcXYZ::Ptr source_cloud(new pcXYZ);
+    pcNormal::Ptr source_normals(new pcNormal);
     bridge.getLandmarksAndNormals(source_cloud, source_normals, recollection, accuracy);
 
-    // update threshold to adjust the number of points
+    // Update threshold to adjust the number of points
     if (source_cloud->size() < 400 && accuracy > 0.01)
       accuracy -= 0.01;
     if (source_cloud->size() > 600 && accuracy < 0.99)
@@ -169,8 +152,6 @@ int System::execute()
   // Copy data for viewer
   database.offset_trajectory.push_back(database.offset_camera.block(0, 3, 3, 1));
   database.vllm_trajectory.push_back(database.vllm_camera.block(0, 3, 3, 1));
-  // pcl::transformPointCloud(*database.offset_cloud, *database.vllm_cloud, T_align);
-  // vllm::transformNormals(*database.offset_normals, *database.vllm_normals, T_align);
   publisher.push(database);
 
   // Update old data
@@ -187,8 +168,6 @@ bool System::optimize(int iteration)
   std::cout << "itr= \033[32m" << iteration << "\033[m";
 
   // Integrate
-  // pcl::PointCloud<pcl::PointXYZ>::Ptr tmp_cloud(new pcl::PointCloud<pcl::PointXYZ>);
-  // pcl::PointCloud<pcl::Normal>::Ptr tmp_normals(new pcl::PointCloud<pcl::Normal>);
   pcl::transformPointCloud(*database.offset_cloud, *database.vllm_cloud, T_align);
   vllm::transformNormals(*database.offset_normals, *database.vllm_normals, T_align);
 
@@ -209,7 +188,7 @@ bool System::optimize(int iteration)
   vllm::Aligner aligner;
   aligner.setPrePosition(database.offset_camera, old_vllm_camera, older_vllm_camera);
   aligner.setParameter(parameter);
-  T_align = aligner.estimate7DoF(T_align, *database.offset_cloud, *target_cloud, *database.correspondences, target_normals, database.offset_normals);
+  T_align = aligner.estimate7DoF(T_align, *database.offset_cloud, *map.getTargetCloud(), *database.correspondences, map.getTargetNormals(), database.offset_normals);
 
   // Integrate
   Eigen::Matrix4f last_camera = database.vllm_camera;

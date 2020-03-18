@@ -11,6 +11,11 @@ namespace vllm
 namespace map
 {
 struct Parameter {
+  Parameter(const std::string pcd_file, float leaf, float radius)
+      : pcd_file(pcd_file), voxel_grid_leaf(leaf), normal_search_radius(radius)
+  {
+  }
+
   std::string pcd_file;
   float voxel_grid_leaf;
   float normal_search_radius;

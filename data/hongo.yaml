@@ -59,6 +59,7 @@ VLLM.s_init: 1.5
 
 VLLM.pcd_file: "../../vllm-data/hongo-clip.pcd"
 VLLM.video_file: "../../vllm-data/hongo-clip.mp4"
+VLLM.vocab_file: "orb_vocab.dbow2"
 
 VLLM.voxel_grid_leaf: 0.200
 VLLM.normal_search_leaf: 0.6

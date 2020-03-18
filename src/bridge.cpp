@@ -20,56 +20,26 @@
 #include <glog/logging.h>
 #endif
 
-void BridgeOpenVSLAM::setup(int argc, char* argv[], const std::string& video_file_path, int _frame_skip)
+namespace vllm
+{
+
+void BridgeOpenVSLAM::setup(const Config& config)
 {
 #ifdef USE_STACK_TRACE_LOGGER
   google::InitGoogleLogging(argv[0]);
   google::InstallFailureSignalHandler();
 #endif
 
-  // create options
-  popl::OptionParser op("Allowed options");
-  auto help = op.add<popl::Switch>("h", "help", "produce help message");
-  auto vocab_file_path = op.add<popl::Value<std::string>>("v", "vocab", "vocabulary file path");
-  auto config_file_path = op.add<popl::Value<std::string>>("c", "config", "config file path");
-  auto auto_term = op.add<popl::Switch>("", "auto-term", "automatically terminate the viewer");
-  auto debug_mode = op.add<popl::Switch>("", "debug", "debug mode");
-
-  try {
-    op.parse(argc, argv);
-  } catch (const std::exception& e) {
-    std::cerr << e.what() << std::endl;
-    std::cerr << std::endl;
-    std::cerr << op << std::endl;
-    exit(EXIT_FAILURE);
-  }
-
-  frame_skip = _frame_skip;
-
-  // check validness of options
-  if (help->is_set()) {
-    std::cerr << op << std::endl;
-    exit(EXIT_FAILURE);
-  }
-  if (!vocab_file_path->is_set() || !config_file_path->is_set()) {
-    std::cerr << "invalid arguments" << std::endl;
-    std::cerr << std::endl;
-    std::cerr << op << std::endl;
-    exit(EXIT_FAILURE);
-  }
+  frame_skip = config.frame_skip;
 
   // setup logger
   spdlog::set_pattern("[%Y-%m-%d %H:%M:%S.%e] %^[%L] %v%$");
-  if (debug_mode->is_set()) {
-    spdlog::set_level(spdlog::level::debug);
-  } else {
-    spdlog::set_level(spdlog::level::info);
-  }
+  spdlog::set_level(spdlog::level::info);
 
   // load configuration
   std::shared_ptr<openvslam::config> cfg;
   try {
-    cfg = std::make_shared<openvslam::config>(config_file_path->value());
+    cfg = std::make_shared<openvslam::config>(config.self_path);
   } catch (const std::exception& e) {
     std::cerr << e.what() << std::endl;
     exit(EXIT_FAILURE);
@@ -81,10 +51,10 @@ void BridgeOpenVSLAM::setup(int argc, char* argv[], const std::string& video_fil
     exit(EXIT_FAILURE);
   }
 
-  video = cv::VideoCapture(video_file_path, cv::CAP_FFMPEG);
+  video = cv::VideoCapture(config.video_file, cv::CAP_FFMPEG);
 
   // build a SLAM system
-  SLAM_ptr = std::make_shared<openvslam::system>(cfg, vocab_file_path->value());
+  SLAM_ptr = std::make_shared<openvslam::system>(cfg, config.vocab_file);
   SLAM_ptr->startup();
   SLAM_ptr->disable_loop_detector();
 }
@@ -224,3 +194,5 @@ bool BridgeOpenVSLAM::execute()
   // return success
   return true;
 }
+
+}  // namespace vllm

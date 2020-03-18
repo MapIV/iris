@@ -1,9 +1,12 @@
 #pragma once
+#include <Eigen/Dense>
+#include <iostream>
 #include <opencv2/core/eigen.hpp>
 
 namespace vllm
 {
 struct Config {
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
   Config() {}
 
   Config(const std::string& yaml_file)
@@ -13,6 +16,8 @@ struct Config {
 
   void init(const std::string& yaml_file)
   {
+    self_path = yaml_file;
+
     cv::FileStorage fs(yaml_file, cv::FileStorage::READ);
     {
       cv::Mat trans, normal, up;
@@ -45,6 +50,7 @@ struct Config {
     fs["VLLM.voxel_grid_leaf"] >> voxel_grid_leaf;
     fs["VLLM.pcd_file"] >> pcd_file;
     fs["VLLM.video_file"] >> video_file;
+    fs["VLLM.vocab_file"] >> vocab_file;
     fs["VLLM.iteration"] >> iteration;
     fs["VLLM.frame_skip"] >> frame_skip;
     fs["VLLM.scale_gain"] >> scale_gain;
@@ -70,8 +76,10 @@ struct Config {
   float converge_translation;
   float converge_rotation;
 
+  std::string self_path;
   std::string pcd_file;
   std::string video_file;
+  std::string vocab_file;
   Eigen::Matrix4f T_init;
 };
 }  // namespace vllm

@@ -1,12 +1,34 @@
+#include "config.hpp"
 #include "map.hpp"
 #include "pangolin_viewer.hpp"
 #include "system.hpp"
 #include <chrono>
 #include <opencv2/opencv.hpp>
+#include <popl.hpp>
 
 int main(int argc, char* argv[])
 {
-  std::shared_ptr<vllm::System> system = std::make_shared<vllm::System>(argc, argv);
+  // analyze arugments
+  popl::OptionParser op("Allowed options");
+  auto config_file_path = op.add<popl::Value<std::string>>("c", "config", "config file path");
+  try {
+    op.parse(argc, argv);
+  } catch (const std::exception& e) {
+    std::cerr << e.what() << std::endl;
+    exit(EXIT_FAILURE);
+  }
+  if (!config_file_path->is_set()) {
+    std::cerr << "invalid arguments" << std::endl;
+    exit(EXIT_FAILURE);
+  }
+
+  vllm::Config config(config_file_path->value());
+
+  // Load lidar map
+  vllm::map::Parameter map_param(config.pcd_file, config.voxel_grid_leaf, config.normal_search_leaf);
+  vllm::map::Map map(map_param);
+
+  std::shared_ptr<vllm::System> system = std::make_shared<vllm::System>(config, map);
   vllm::PangolinViewer pangolin_viewer(system);
   pangolin_viewer.startLoop();
 

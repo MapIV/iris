@@ -18,7 +18,7 @@ using g2o::VertexSim3Expmap;
 class EdgeGICP
 {
 public:
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
   // point positions
   Vector3 pos0, pos1;
   // unit normals
@@ -46,7 +46,7 @@ public:
 class Edge_Sim3_GICP : public g2o::BaseUnaryEdge<3, EdgeGICP, VertexSim3Expmap>
 {
 public:
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
   Edge_Sim3_GICP(bool pl_pl = false) : plane2plane(pl_pl) {}
   Matrix3 cov0, cov1;
   bool plane2plane;
@@ -59,7 +59,7 @@ public:
 class Edge_SE3_GICP : public g2o::BaseUnaryEdge<3, EdgeGICP, VertexSE3>
 {
 public:
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
   Edge_SE3_GICP(bool pl_pl = false) : plane2plane(pl_pl) {}
   Matrix3 cov0, cov1;
   bool plane2plane;

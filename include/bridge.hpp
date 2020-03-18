@@ -1,10 +1,13 @@
 #pragma once
+#include "config.hpp"
 #include "openvslam/config.h"
 #include "openvslam/system.h"
 #include <opencv2/videoio.hpp>
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 
+namespace vllm
+{
 class BridgeOpenVSLAM
 {
 public:
@@ -20,7 +23,7 @@ public:
     SLAM_ptr->shutdown();
   }
 
-  void setup(int argc, char* argv[], const std::string& video_file_path, int frame_skip);
+  void setup(const Config& config);
   bool execute();
   void requestReset();
 
@@ -49,3 +52,4 @@ private:
   int frame_skip = 1;
   bool is_not_end = true;
 };
+}  // namespace vllm

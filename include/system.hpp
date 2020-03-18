@@ -1,6 +1,7 @@
 #pragma once
 #include "bridge.hpp"
 #include "config.hpp"
+#include "map.hpp"
 #include "parameter.hpp"
 #include "types.hpp"
 #include "util.hpp"
@@ -15,7 +16,7 @@ class System
 {
 public:
   // ===== for Main ====
-  System(int argc, char* argv[]);
+  System(Config& config, const map::Map& map);
   int execute();
   bool optimize(int iteration);
 
@@ -23,13 +24,13 @@ public:
   // ==== for GUI ====
   cv::Mat getFrame() const { return bridge.getFrame(); }
 
-  const pcXYZ::Ptr& getTargetCloud() const
+  const pcXYZ::Ptr getTargetCloud() const
   {
-    return target_cloud;
+    return map.getTargetCloud();
   }
-  const pcNormal::Ptr& getTargetNormals() const
+  const pcNormal::Ptr getTargetNormals() const
   {
-    return target_normals;
+    return map.getTargetNormals();
   }
 
   void requestReset()
@@ -73,8 +74,8 @@ private:
 
   std::atomic<bool> reset_requested = false;
 
-  Config config;
-
+  const Config config;
+  const map::Map map;
 
   Eigen::Matrix4f T_init;
   Eigen::Matrix4f T_align = Eigen::Matrix4f::Identity();
@@ -89,11 +90,6 @@ private:
   double accuracy = 0.5;
 
   bool aligning_mode = false;
-
-  pcXYZ::Ptr source_cloud;
-  pcXYZ ::Ptr target_cloud;
-  pcNormal::Ptr source_normals;
-  pcNormal ::Ptr target_normals;
 
   // database
   Database database;

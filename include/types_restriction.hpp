@@ -15,7 +15,7 @@ using g2o::VertexSim3Expmap;
 class VelocityModel
 {
 public:
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
   Eigen::Vector3d camera_pos, old_pos, older_pos;
 
@@ -33,7 +33,7 @@ private:
   double gain = 1.0;
 
 public:
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
   Edge_Scale_Restriction(double gain = 1.0) : gain(gain) {}
 
   virtual bool read(std::istream&) { return false; }
@@ -47,7 +47,7 @@ private:
   double gain = 1.0;
 
 public:
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
   Edge_Smooth_Restriction(double gain = 1.0) : gain(gain) {}
 
   virtual bool read(std::istream&) { return false; }
@@ -61,7 +61,7 @@ private:
   double gain = 1.0;
 
 public:
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
   Edge_Latitude_Restriction(double gain = 1.0) : gain(gain) {}
 
   virtual bool read(std::istream&) { return false; }
@@ -75,7 +75,7 @@ private:
   double gain = 1.0;
 
 public:
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
   Edge_Altitude_Restriction(double gain = 1.0) : gain(gain) {}
 
   virtual bool read(std::istream&) { return false; }
