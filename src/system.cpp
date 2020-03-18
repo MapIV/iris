@@ -42,6 +42,10 @@ System::System(int argc, char* argv[]) : source_cloud(new pcXYZ), source_normals
   parameter.smooth_gain = config.smooth_gain;
   parameter.altitude_gain = config.altitude_gain;
   parameter.latitude_gain = config.latitude_gain;
+  {
+    std::lock_guard<std::mutex> lock(parameter_mutex);
+    thread_safe_parameter = parameter;
+  }
 
   search_distance_min = config.distance_min;
   search_distance_max = config.distance_max;
@@ -78,6 +82,9 @@ int System::execute()
     std::cout << "\n\033[33m ##### Request Reset #####\n\033[m" << std::endl;
     bridge.requestReset();
   }
+
+  // Update alignment parameter
+  updateParameter();
 
 
   std::cout << "state " << vslam_state << std::endl;

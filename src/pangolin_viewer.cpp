@@ -51,12 +51,14 @@ void PangolinViewer::init()
 
   colored_target_cloud = colorizePointCloud(target_cloud);
 
-  // Eigen::Vector3d gain = system_ptr->getGain();
+  Parameter param = system_ptr->getParameter();
+  gui_scale_gain = std::make_shared<pangolin::Var<float>>("ui.scale_gain", param.scale_gain, 0.0f, 50.0f);
+  gui_smooth_gain = std::make_shared<pangolin::Var<float>>("ui.smooth_gain", param.smooth_gain, 0.0f, 50.0f);
+  gui_latitude_gain = std::make_shared<pangolin::Var<float>>("ui.latitude_gain", param.latitude_gain, 0.0f, 50.0f);
+  gui_altitude_gain = std::make_shared<pangolin::Var<float>>("ui.altitude_gain", param.altitude_gain, 0.0f, 50.0f);
+
   // Eigen::Vector2d distance = system_ptr->getSearchDistance();
   // unsigned int recollect = system_ptr->getRecollection();
-  // gui_scale_gain = std::make_shared<pangolin::Var<double>>("ui.scale_gain", gain(0), 0.0, 50.0);
-  // gui_pitch_gain = std::make_shared<pangolin::Var<double>>("ui.pitch_gain", gain(1), 0.0, 50.0);
-  // gui_model_gain = std::make_shared<pangolin::Var<double>>("ui.model_gain", gain(2), 0.0, 50.0);
   // gui_recollection = std::make_shared<pangolin::Var<unsigned int>>("ui.recollection", recollect, 0, 200);
   // gui_distance_min = std::make_shared<pangolin::Var<double>>("ui.distance_min", distance(0), 0.0, 1.0);
   // gui_distance_max = std::make_shared<pangolin::Var<double>>("ui.distance_max", distance(1), 0.0, 3.0);
@@ -115,9 +117,10 @@ void PangolinViewer::execute()
   drawTrajectory(database.vllm_trajectory, true);
   drawCamera(database.vllm_camera, {1.0f, 0.0f, 0.0f, 1.0f});
 
+  if (gui_scale_gain->GuiChanged() || gui_smooth_gain->GuiChanged() || gui_latitude_gain->GuiChanged() || gui_altitude_gain->GuiChanged())
+    system_ptr->setParameter({*gui_scale_gain, *gui_smooth_gain, *gui_latitude_gain, *gui_altitude_gain});
   // Eigen::Vector3d gain(*gui_scale_gain, *gui_pitch_gain, *gui_model_gain);
   // Eigen::Vector2d distance(*gui_distance_min, *gui_distance_max);
-  // system_ptr->setGain(gain);
   // system_ptr->setSearchDistance(distance);
   // system_ptr->setRecollection(*gui_recollection);
 
@@ -212,15 +215,16 @@ void PangolinViewer::drawGridLine() const
   glColor3f(0.3f, 0.3f, 0.3f);
 
   glBegin(GL_LINES);
-  constexpr float max = 50;
-  constexpr float interval_ratio = 2.0f;  // if this is 2 , interval is 2m
-  constexpr float grid_min = -max * interval_ratio;
-  constexpr float grid_max = max * interval_ratio;
-  for (float x = -50.f; x <= 50.f; x += 1.0f) {
-    drawLine(x * interval_ratio, grid_min, 0, x * interval_ratio, grid_max, 0);
+  constexpr float max = 100;
+  constexpr float interval = 2.0f;
+
+  constexpr float grid_min = -max * interval;
+  constexpr float grid_max = max * interval;
+  for (float x = -max; x <= max; x += interval) {
+    drawLine(x * interval, grid_min, 0, x * interval, grid_max, 0);
   }
-  for (float y = -50.f; y <= 50.f; y += 1.0f) {
-    drawLine(grid_min, y * interval_ratio, 0, grid_max, y * interval_ratio, 0);
+  for (float y = -max; y <= max; y += interval) {
+    drawLine(grid_min, y * interval, 0, grid_max, y * interval, 0);
   }
   glEnd();
   glPopMatrix();

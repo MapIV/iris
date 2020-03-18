@@ -2,7 +2,7 @@
 #include "bridge.hpp"
 #include "config.hpp"
 #include "parameter.hpp"
-#include "type.hpp"
+#include "types.hpp"
 #include "util.hpp"
 #include <atomic>
 #include <memory>
@@ -42,27 +42,39 @@ public:
     return publisher.pop(d);
   }
 
+  void updateParameter()
+  {
+    std::lock_guard<std::mutex> lock(parameter_mutex);
+    parameter = thread_safe_parameter;
+  }
+
+  Parameter getParameter() const
+  {
+    std::lock_guard<std::mutex> lock(parameter_mutex);
+    return parameter;
+  }
+  void setParameter(const Parameter& parameter_)
+  {
+    std::lock_guard<std::mutex> lock(parameter_mutex);
+    thread_safe_parameter = parameter_;
+  }
+
   // unsigned int getRecollection() const { return recollection; }
   // void setRecollection(unsigned int recollection_) { recollection = recollection_; }
-  // Eigen::Vector3d getGain() const { return {scale_restriction_gain, pitch_restriction_gain, model_restriction_gain}; }
-  // void setGain(const Eigen::Vector3d& gain)
-  // {
-  //   scale_restriction_gain = gain(0);
-  //   pitch_restriction_gain = gain(1);
-  //   model_restriction_gain = gain(2);
-  // }
 
 private:
   // ==== private member ====
-  double search_distance_min = 0;
-  double search_distance_max = 0;
-  Parameter parameter;
+  float search_distance_min = 1;
+  float search_distance_max = 10;
+  Parameter parameter, thread_safe_parameter;
+  mutable std::mutex parameter_mutex;
 
   unsigned int recollection = 50;
 
   std::atomic<bool> reset_requested = false;
 
   Config config;
+
 
   Eigen::Matrix4f T_init;
   Eigen::Matrix4f T_align = Eigen::Matrix4f::Identity();

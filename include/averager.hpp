@@ -62,7 +62,7 @@ Eigen::Matrix4f calcVelocity(const std::list<Eigen::Matrix4f>& poses)
 {
   Eigen::Matrix4f V = Eigen::Matrix4f::Identity();
 
-  const int dt = poses.size() - 2;
+  const int dt = static_cast<int>(poses.size()) - 2;
 
   Eigen::Matrix4f T0 = getNormalizedPose(*std::next(poses.begin()));
   Eigen::Matrix4f Tn = getNormalizedPose(*std::prev(poses.end()));

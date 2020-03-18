@@ -45,13 +45,11 @@ struct Config {
     fs["VLLM.voxel_grid_leaf"] >> voxel_grid_leaf;
     fs["VLLM.pcd_file"] >> pcd_file;
     fs["VLLM.video_file"] >> video_file;
-    fs["VLLM.gpd_size"] >> gpd_size;
-    fs["VLLM.gpd_gain"] >> gpd_gain;
     fs["VLLM.iteration"] >> iteration;
     fs["VLLM.frame_skip"] >> frame_skip;
     fs["VLLM.scale_gain"] >> scale_gain;
-    fs["VLLM.latitude_gain"] >> latitude_gain;
     fs["VLLM.smooth_gain"] >> smooth_gain;
+    fs["VLLM.latitude_gain"] >> latitude_gain;
     fs["VLLM.altitude_gain"] >> altitude_gain;
 
     fs["VLLM.distance_min"] >> distance_min;
@@ -64,11 +62,9 @@ struct Config {
   }
 
   float distance_min, distance_max;
-  double scale_gain, latitude_gain, smooth_gain, altitude_gain;
+  float scale_gain, latitude_gain, smooth_gain, altitude_gain;
   int frame_skip;
   int iteration;
-  float gpd_gain;
-  int gpd_size;
   float normal_search_leaf;
   float voxel_grid_leaf;
   float converge_translation;

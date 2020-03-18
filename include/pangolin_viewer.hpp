@@ -3,7 +3,7 @@
 #include "global_point_distribution.hpp"
 #include "pangolin_cloud.hpp"
 #include "system.hpp"
-#include "type.hpp"
+#include "types.hpp"
 #include <atomic>
 #include <pangolin/pangolin.h>
 #include <pcl/correspondence.h>
@@ -78,11 +78,14 @@ private:
   std::shared_ptr<pangolin::Var<bool>> gui_source_normals;
   std::shared_ptr<pangolin::Var<bool>> gui_target_normals;
   std::shared_ptr<pangolin::Var<bool>> gui_correspondences;
-  std::shared_ptr<pangolin::Var<double>> gui_scale_gain;
-  std::shared_ptr<pangolin::Var<double>> gui_pitch_gain;
-  std::shared_ptr<pangolin::Var<double>> gui_model_gain;
-  std::shared_ptr<pangolin::Var<double>> gui_distance_min;
-  std::shared_ptr<pangolin::Var<double>> gui_distance_max;
+
+  std::shared_ptr<pangolin::Var<float>> gui_scale_gain;
+  std::shared_ptr<pangolin::Var<float>> gui_smooth_gain;
+  std::shared_ptr<pangolin::Var<float>> gui_latitude_gain;
+  std::shared_ptr<pangolin::Var<float>> gui_altitude_gain;
+
+  std::shared_ptr<pangolin::Var<float>> gui_distance_min;
+  std::shared_ptr<pangolin::Var<float>> gui_distance_max;
   std::shared_ptr<pangolin::Var<unsigned int>> gui_recollection;
   std::shared_ptr<pangolin::Var<bool>> gui_quit;
   std::shared_ptr<pangolin::Var<bool>> gui_reset;
