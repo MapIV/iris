@@ -109,6 +109,7 @@ add_executable(
   src/pangolin_viewer.cpp
   src/util.cpp
   src/system.cpp
+  src/map.cpp
   src/types_gicp.cpp
   src/types_restriction.cpp)
 target_include_directories(

@@ -4,7 +4,7 @@ Tool.max_box:  !!opencv-matrix
     rows: 3
     cols: 1
     dt: f
-    data: [ 250.0, 400.0, 30.0]
+    data: [ 250.0, 300.0, 30.0]
 
 Tool.min_box:  !!opencv-matrix
     rows: 3

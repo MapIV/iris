@@ -1,6 +1,5 @@
 #pragma once
 #include "color.hpp"
-#include "global_point_distribution.hpp"
 #include "pangolin_cloud.hpp"
 #include "system.hpp"
 #include "types.hpp"

@@ -22,16 +22,17 @@ int main(int argc, char* argv[])
     exit(EXIT_FAILURE);
   }
 
+  // Initialize config
   vllm::Config config(config_file_path->value());
 
   // Load lidar map
   vllm::map::Parameter map_param(config.pcd_file, config.voxel_grid_leaf, config.normal_search_leaf);
   vllm::map::Map map(map_param);
 
+  // Initialize system & viewer
   std::shared_ptr<vllm::System> system = std::make_shared<vllm::System>(config, map);
   vllm::PangolinViewer pangolin_viewer(system);
   pangolin_viewer.startLoop();
-
   cv::namedWindow("VLLM", cv::WINDOW_AUTOSIZE);
 
   bool loop = true;

@@ -140,7 +140,7 @@ pangolin::OpenGlRenderState PangolinViewer::makeCamera(
 {
   return pangolin::OpenGlRenderState(
       pangolin::ProjectionMatrix(
-          640, 480, 420, 420, 320, 240, 0.2, 200),
+          640, 480, 420, 420, 320, 240, 0.2, 150),
       pangolin::ModelViewLookAt(
           from.x(), from.y(), from.z(), to.x(), to.y(), to.z(), up));
 }
