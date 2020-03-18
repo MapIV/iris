@@ -75,7 +75,7 @@ private:
   std::atomic<bool> reset_requested = false;
 
   const Config config;
-  const map::Map map;
+  map::Map map;
 
   Eigen::Matrix4f T_init;
   Eigen::Matrix4f T_align = Eigen::Matrix4f::Identity();

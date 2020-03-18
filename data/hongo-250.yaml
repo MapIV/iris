@@ -57,9 +57,10 @@ VLLM.up_init:  !!opencv-matrix
     data: [ 0,0,1]
 VLLM.s_init: 1.5
 
-VLLM.pcd_file: "../../vllm-data/hongo-clip.pcd"
-VLLM.video_file: "../../vllm-data/hongo-clip.mp4"
+VLLM.pcd_file: "../../vllm-data/hongo-250.pcd"
+VLLM.video_file: "../../vllm-data/hongo-250.mp4"
 VLLM.vocab_file: "orb_vocab.dbow2"
+
 
 VLLM.gpd_size: 8
 VLLM.gpd_gain: 0.5
@@ -77,7 +78,6 @@ VLLM.distance_max: 3.0
 VLLM.converge_translation: 0.10
 VLLM.converge_rotation: 0.3
 
-# Map Parameter
 Map.voxel_grid_leaf: 0.200
-Map.submap_grid_leaf: 30
+Map.submap_grid_leaf: 50
 Map.normal_search_leaf: 0.6

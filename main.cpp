@@ -26,7 +26,8 @@ int main(int argc, char* argv[])
   vllm::Config config(config_file_path->value());
 
   // Load lidar map
-  vllm::map::Parameter map_param(config.pcd_file, config.voxel_grid_leaf, config.normal_search_leaf);
+  vllm::map::Parameter map_param(
+      config.pcd_file, config.voxel_grid_leaf, config.normal_search_leaf, config.submap_grid_leaf);
   vllm::map::Map map(map_param);
 
   // Initialize system & viewer

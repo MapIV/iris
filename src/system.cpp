@@ -149,6 +149,10 @@ int System::execute()
             << T_init << std::endl;
   std::cout << "now= " << database.vllm_camera.topRightCorner(3, 1).transpose() << std::endl;
 
+  // Update local map
+  map.updateLocalMap(database.vllm_camera.topRightCorner(3, 1));
+
+
   // Copy data for viewer
   database.offset_trajectory.push_back(database.offset_camera.block(0, 3, 3, 1));
   database.vllm_trajectory.push_back(database.vllm_camera.block(0, 3, 3, 1));

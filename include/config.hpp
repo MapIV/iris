@@ -46,8 +46,10 @@ struct Config {
       std::cout << T << std::endl;
     }
 
-    fs["VLLM.normal_search_leaf"] >> normal_search_leaf;
-    fs["VLLM.voxel_grid_leaf"] >> voxel_grid_leaf;
+    fs["Map.normal_search_leaf"] >> normal_search_leaf;
+    fs["Map.voxel_grid_leaf"] >> voxel_grid_leaf;
+    fs["Map.submap_grid_leaf"] >> submap_grid_leaf;
+
     fs["VLLM.pcd_file"] >> pcd_file;
     fs["VLLM.video_file"] >> video_file;
     fs["VLLM.vocab_file"] >> vocab_file;
@@ -71,10 +73,13 @@ struct Config {
   float scale_gain, latitude_gain, smooth_gain, altitude_gain;
   int frame_skip;
   int iteration;
-  float normal_search_leaf;
-  float voxel_grid_leaf;
+
   float converge_translation;
   float converge_rotation;
+
+  float normal_search_leaf;
+  float voxel_grid_leaf;
+  float submap_grid_leaf;
 
   std::string self_path;
   std::string pcd_file;
