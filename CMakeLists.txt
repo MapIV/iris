@@ -24,7 +24,7 @@ message("Build Type:\n\t${CMAKE_BUILD_TYPE}")
 
 # == clear "CMAKE_CXX_FLAGS" ==
 set(CMAKE_CXX_FLAGS "")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pipe -fopenmp -Ofast")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pipe -fopenmp -Ofast -lstdc++fs")
 
 # == set warning flags ==
 set(CXX_WARNING_FLAGS
@@ -98,6 +98,7 @@ add_subdirectory(3rd/openvslam)
 
 # == header & source ==
 include_directories(${CMAKE_CURRENT_LIST_DIR}/include)
+include_directories(${CMAKE_CURRENT_LIST_DIR}/)
 
 # == main ==
 add_executable(
@@ -115,11 +116,10 @@ target_include_directories(
   PRIVATE ${PROJECT_SOURCE_DIR}/3rd/openvslam/src/
           ${PROJECT_SOURCE_DIR}/3rd/openvslam/3rd/popl/include
           ${PROJECT_SOURCE_DIR}/3rd/openvslam/3rd/spdlog/include)
-target_link_libraries(main PRIVATE ${PCL_LIBRARIES} ${OpenCV_LIBS} pangolin openvslam
-                                   pthread)
+target_link_libraries(main ${PCL_LIBRARIES} ${OpenCV_LIBS} pangolin openvslam)
 
-add_executable(tool example/tool.cpp)
-target_link_libraries(tool PUBLIC ${PCL_LIBRARIES} ${OpenCV_LIBS})
+# add_executable(tool example/tool.cpp)
+# target_link_libraries(tool PUBLIC ${PCL_LIBRARIES} ${OpenCV_LIBS})
 
 # add_executable(fitting example/fitting_se3.cpp)
 # target_link_libraries(fitting PRIVATE ${OpenCV_LIBS} ${G2O_LIBS})

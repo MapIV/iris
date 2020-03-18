@@ -1,3 +1,4 @@
+#include "map.hpp"
 #include "pangolin_viewer.hpp"
 #include "system.hpp"
 #include <chrono>
