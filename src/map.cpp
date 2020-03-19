@@ -9,7 +9,8 @@ namespace map
 Map::Map(const Parameter& parameter)
     : cache_file("vllm.cache"), parameter(parameter),
       local_target_cloud(new pcXYZ),
-      local_target_normals(new pcNormal)
+      local_target_normals(new pcNormal),
+      localmap_info(0)
 {
   bool recalculation_is_necessary = isRecalculationNecessary();
 
@@ -45,14 +46,20 @@ Map::Map(const Parameter& parameter)
   std::cout << "all_target_cloud_size " << all_target_cloud->size() << std::endl;
 
   // Calculate the number of submap and its size
+  std::cout << "It starts making submaps. This may take few seconds." << std::endl;
   const float L = parameter.submap_grid_leaf;
   pcl::PointXYZ minimum, maximum;
   pcl::getMinMax3D(*all_target_cloud, minimum, maximum);
   max_corner_point = maximum.getArray3fMap();
   min_corner_point = minimum.getArray3fMap();
+  std::cout << "max_corner " << max_corner_point.transpose() << std::endl;
+  std::cout << "min_corner " << min_corner_point.transpose() << std::endl;
 
-  grid_x_num = (maximum.x - minimum.x) / L + 1.0f;
-  grid_y_num = (maximum.y - minimum.y) / L + 1.0f;
+  grid_x_num = static_cast<int>((maximum.x - minimum.x) / L) + 1;
+  grid_y_num = static_cast<int>((maximum.y - minimum.y) / L) + 1;
+  if (grid_x_num < 3) grid_x_num = 3;
+  if (grid_y_num < 3) grid_y_num = 3;
+
   grid_box_unit << L, L, maximum.z - minimum.z;
 
   pcl::CropBox<pcl::PointXYZ> crop;
@@ -119,7 +126,7 @@ bool Map::isUpdateNecessary(const Eigen::Vector3f& pos)
   float dx = (pos - last_grid_center).cwiseAbs().maxCoeff();
   std::cout << "now" << pos.transpose() << "  last " << last_grid_center.transpose() << "  dx" << dx << std::endl;
   // The boundaries of the submap have overlaps in order not to vibrate
-  if (dx > 1.25f * parameter.submap_grid_leaf)
+  if (dx > 0.75 * parameter.submap_grid_leaf)
     return true;
 
   return false;
@@ -129,8 +136,7 @@ void Map::update(const Eigen::Vector3f& pos)
 {
   std::cout << "UPDATE SUBMAP" << std::endl;
 
-  // std::lock_guard lock(mtx);
-
+  std::lock_guard lock(mtx);
   Eigen::Vector3f dP = (pos - min_corner_point);
 
   const float L = parameter.submap_grid_leaf;
@@ -138,23 +144,18 @@ void Map::update(const Eigen::Vector3f& pos)
   int cy = static_cast<int>(dP.y() / L);
   std::cout << cx << " " << cy << std::endl;
   std::cout << "submap size " << submap_cloud.size() << std::endl;
+  localmap_info.store(cx * grid_y_num + cy);
 
   local_target_cloud->clear();
   local_target_normals->clear();
 
-  // until here
-  // cx \in [0, grid_x_num-1]
-  // cy \in [0, grid_y_num-1]
-  if (cx < 1) cx += 1;
-  if (cy < 1) cy += 1;
-  if (cx == grid_x_num - 1) cx -= 1;
-  if (cy == grid_y_num - 1) cy -= 1;
-  // from here
-  // cx \in [1, grid_x_num-2]
-  // cy \in [1, grid_y_num-2]
-
   for (int i = -1; i < 2; i++) {
     for (int j = -1; j < 2; j++) {
+      if (i + cx < 0) continue;
+      if (j + cy < 0) continue;
+      if (i + cx == grid_x_num) continue;
+      if (j + cy == grid_y_num) continue;
+
       int tmp = (j + cy) + grid_y_num * (i + cx);
       std::cout << "tmp " << tmp << " " << i << "," << j << std::endl;
       *local_target_cloud += submap_cloud.at(tmp);

@@ -16,7 +16,7 @@ class System
 {
 public:
   // ===== for Main ====
-  System(Config& config, const map::Map& map);
+  System(Config& config, const std::shared_ptr<map::Map>& map);
   int execute();
   bool optimize(int iteration);
 
@@ -24,13 +24,9 @@ public:
   // ==== for GUI ====
   cv::Mat getFrame() const { return bridge.getFrame(); }
 
-  const pcXYZ::Ptr getTargetCloud() const
+  const std::shared_ptr<map::Map> getMap() const
   {
-    return map.getTargetCloud();
-  }
-  const pcNormal::Ptr getTargetNormals() const
-  {
-    return map.getTargetNormals();
+    return map;
   }
 
   void requestReset()
@@ -75,7 +71,7 @@ private:
   std::atomic<bool> reset_requested = false;
 
   const Config config;
-  map::Map map;
+  std::shared_ptr<map::Map> map;
 
   Eigen::Matrix4f T_init;
   Eigen::Matrix4f T_align = Eigen::Matrix4f::Identity();

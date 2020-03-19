@@ -28,7 +28,7 @@ int main(int argc, char* argv[])
   // Load lidar map
   vllm::map::Parameter map_param(
       config.pcd_file, config.voxel_grid_leaf, config.normal_search_leaf, config.submap_grid_leaf);
-  vllm::map::Map map(map_param);
+  std::shared_ptr<vllm::map::Map> map = std::make_shared<vllm::map::Map>(map_param);
 
   // Initialize system & viewer
   std::shared_ptr<vllm::System> system = std::make_shared<vllm::System>(config, map);

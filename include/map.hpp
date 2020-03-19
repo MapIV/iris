@@ -1,6 +1,7 @@
 #pragma once
 #include "types.hpp"
 #include "util.hpp"
+#include <atomic>
 #include <fstream>
 #include <mutex>
 #include <pcl/filters/crop_box.h>
@@ -41,19 +42,28 @@ class Map
 {
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-  Map(const Parameter& parameter);
+  explicit Map(const Parameter& parameter);
 
   // If the map updates then return true.
   bool updateLocalMap(const Eigen::Vector3f& pos);
 
-  const pcXYZ::Ptr getTargetCloud() const { return local_target_cloud; }
-  const pcNormal::Ptr getTargetNormals() const { return local_target_normals; }
+  // TODO: This function may have conflicts
+  const pcXYZ::Ptr getTargetCloud() const
+  {
+    std::lock_guard lock(mtx);
+    return local_target_cloud;
+  }
+  // TODO: This function may have conflicts
+  const pcNormal::Ptr getTargetNormals() const
+  {
+    std::lock_guard lock(mtx);
+    return local_target_normals;
+  }
 
   // This informs viewer of whether local map updated or not
-  int getSubmapInfo() const
+  int getLocalmapInfo() const
   {
-    // TODO:
-    return 0;
+    return localmap_info.load();
   }
 
 private:
@@ -76,10 +86,10 @@ private:
 
   Eigen::Vector3f last_grid_center;
 
+  mutable std::mutex mtx;
+  std::atomic<int> localmap_info;
   int grid_x_num;
   int grid_y_num;
-
-  // mutable std::mutex mtx;
 
   Eigen::Vector3f min_corner_point;
   Eigen::Vector3f max_corner_point;

@@ -6,14 +6,14 @@
 
 namespace vllm
 {
-System::System(Config& config, const map::Map& map) : config(config), map(map)
+System::System(Config& config, const std::shared_ptr<map::Map>& map) : config(config), map(map)
 {
   // setup for OpenVSLAM
   bridge.setup(config);
 
   // setup correspondence estimator
-  estimator.setInputTarget(map.getTargetCloud());
-  estimator.setTargetNormals(map.getTargetNormals());
+  estimator.setInputTarget(map->getTargetCloud());
+  estimator.setTargetNormals(map->getTargetNormals());
   estimator.setKSearch(10);
 
   camera_velocity.setIdentity();
@@ -145,12 +145,18 @@ int System::execute()
     }
   }
 
-  std::cout << "T_init\n"
-            << T_init << std::endl;
-  std::cout << "now= " << database.vllm_camera.topRightCorner(3, 1).transpose() << std::endl;
+  // std::cout << "T_init\n"
+  //           << T_init << std::endl;
+  // std::cout << "now= " << database.vllm_camera.topRightCorner(3, 1).transpose() << std::endl;
 
   // Update local map
-  map.updateLocalMap(database.vllm_camera.topRightCorner(3, 1));
+  bool localmap_is_updated = map->updateLocalMap(database.vllm_camera.topRightCorner(3, 1));
+  if (localmap_is_updated) {
+    // Reinitialize KDtree
+    std::cout << "Reinitialize KDTree" << std::endl;
+    estimator.setInputTarget(map->getTargetCloud());
+    estimator.setTargetNormals(map->getTargetNormals());
+  }
 
 
   // Copy data for viewer
@@ -192,7 +198,7 @@ bool System::optimize(int iteration)
   vllm::Aligner aligner;
   aligner.setPrePosition(database.offset_camera, old_vllm_camera, older_vllm_camera);
   aligner.setParameter(parameter);
-  T_align = aligner.estimate7DoF(T_align, *database.offset_cloud, *map.getTargetCloud(), *database.correspondences, map.getTargetNormals(), database.offset_normals);
+  T_align = aligner.estimate7DoF(T_align, *database.offset_cloud, *map->getTargetCloud(), *database.correspondences, map->getTargetNormals(), database.offset_normals);
 
   // Integrate
   Eigen::Matrix4f last_camera = database.vllm_camera;

@@ -43,11 +43,12 @@ void PangolinViewer::init()
   gui_target_normals = std::make_shared<pangolin::Var<bool>>("ui.target_normals", false, true);
   gui_correspondences = std::make_shared<pangolin::Var<bool>>("ui.correspondences", true, true);
 
+  // Initialize local map
   target_cloud = pcl::PointCloud<pcl::PointXYZ>::Ptr(new pcl::PointCloud<pcl::PointXYZ>);
-  *target_cloud = *system_ptr->getTargetCloud();
-
   target_normals = pcl::PointCloud<pcl::Normal>::Ptr(new pcl::PointCloud<pcl::Normal>);
-  *target_normals = *system_ptr->getTargetNormals();
+  localmap_info = system_ptr->getMap()->getLocalmapInfo();
+  *target_cloud = *system_ptr->getMap()->getTargetCloud();
+  *target_normals = *system_ptr->getMap()->getTargetNormals();
 
   colored_target_cloud = colorizePointCloud(target_cloud);
 
@@ -98,7 +99,14 @@ void PangolinViewer::execute()
 
   system_ptr->popDatabase(database);
 
-  drawPointCloud(colored_target_cloud, {0.6f, 0.6f, 0.6f, 1.0f});
+  int localmap_new_info = system_ptr->getMap()->getLocalmapInfo();
+  if (localmap_new_info != localmap_info) {
+    localmap_info = localmap_new_info;
+    *target_cloud = *system_ptr->getMap()->getTargetCloud();
+    *target_normals = *system_ptr->getMap()->getTargetNormals();
+  }
+
+  drawPointCloud(target_cloud, {0.6f, 0.6f, 0.6f, 1.0f});
   if (*gui_target_normals)
     drawNormals(target_cloud, target_normals, {0.0f, 1.0f, 0.0f, 1.0f}, 30);
 
@@ -140,7 +148,7 @@ pangolin::OpenGlRenderState PangolinViewer::makeCamera(
 {
   return pangolin::OpenGlRenderState(
       pangolin::ProjectionMatrix(
-          640, 480, 420, 420, 320, 240, 0.2, 150),
+          640, 480, 420, 420, 320, 240, 0.2, 200),
       pangolin::ModelViewLookAt(
           from.x(), from.y(), from.z(), to.x(), to.y(), to.z(), up));
 }
