@@ -61,9 +61,6 @@ VLLM.pcd_file: "../../vllm-data/moriyama.pcd"
 VLLM.video_file: "../../vllm-data/moriyama-clip.mp4"
 VLLM.vocab_file: "orb_vocab.dbow2"
 
-VLLM.voxel_grid_leaf: 0.20
-VLLM.normal_search_leaf: 1.00
-
 VLLM.gpd_size: 20
 VLLM.gpd_gain: 0.2
 VLLM.iteration: 10
@@ -79,3 +76,8 @@ VLLM.distance_max: 3.0
 
 VLLM.converge_translation: 0.03
 VLLM.converge_rotation: 0.03
+
+# Map Parameter
+Map.voxel_grid_leaf: 0.20
+Map.submap_grid_leaf: 50
+Map.normal_search_leaf: 1.00

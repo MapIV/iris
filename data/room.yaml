@@ -61,9 +61,6 @@ VLLM.pcd_file: "../../vllm-data/room.pcd"
 VLLM.video_file: "../../vllm-data/room.mp4"
 VLLM.vocab_file: "orb_vocab.dbow2"
 
-VLLM.voxel_grid_leaf: 0.05
-VLLM.normal_search_leaf: 0.20
-
 VLLM.gpd_size: 5
 VLLM.gpd_gain: 0.2
 VLLM.iteration: 10
@@ -79,3 +76,8 @@ VLLM.distance_max: 0.5
 
 VLLM.converge_translation: 0.03
 VLLM.converge_rotation: 0.03
+
+# Map Parameter
+Map.voxel_grid_leaf: 0.05
+Map.submap_grid_leaf: 50
+Map.normal_search_leaf: 0.20
