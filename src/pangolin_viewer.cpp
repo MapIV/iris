@@ -105,6 +105,7 @@ void PangolinViewer::execute()
     *target_cloud = *system_ptr->getMap()->getTargetCloud();
     *target_normals = *system_ptr->getMap()->getTargetNormals();
     colored_target_cloud = colorizePointCloud(target_cloud);
+    return;
   }
 
   drawPointCloud(colored_target_cloud, {0.6f, 0.6f, 0.6f, 1.0f});
@@ -120,14 +121,17 @@ void PangolinViewer::execute()
     drawTrajectory(database.offset_trajectory, false, {1.0f, 0.0f, 1.0f, 1.0f});
   }
 
-  if (*gui_correspondences)
-    drawCorrespondences(database.vllm_cloud, target_cloud, database.correspondences, {0.0f, 0.0f, 1.0f, 2.0f});
+  if (*gui_correspondences) {
+    if (database.localmap_info == localmap_info)
+      drawCorrespondences(database.vllm_cloud, target_cloud, database.correspondences, {0.0f, 0.0f, 1.0f, 2.0f});
+  }
 
   drawTrajectory(database.vllm_trajectory, true);
   drawCamera(database.vllm_camera, {1.0f, 0.0f, 0.0f, 1.0f});
 
   if (gui_scale_gain->GuiChanged() || gui_smooth_gain->GuiChanged() || gui_latitude_gain->GuiChanged() || gui_altitude_gain->GuiChanged())
     system_ptr->setParameter({*gui_scale_gain, *gui_smooth_gain, *gui_latitude_gain, *gui_altitude_gain});
+
   // Eigen::Vector2d distance(*gui_distance_min, *gui_distance_max);
   // system_ptr->setSearchDistance(distance);
   // system_ptr->setRecollection(*gui_recollection);

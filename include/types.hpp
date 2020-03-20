@@ -1,4 +1,5 @@
 #pragma once
+#include "info.hpp"
 #include <mutex>
 #include <pcl/correspondence.h>
 #include <pcl/point_cloud.h>
@@ -8,6 +9,7 @@ namespace vllm
 {
 using pcXYZ = pcl::PointCloud<pcl::PointXYZ>;
 using pcNormal = pcl::PointCloud<pcl::Normal>;
+
 
 struct Database {
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
@@ -20,6 +22,7 @@ struct Database {
   std::vector<Eigen::Vector3f> offset_trajectory;
   std::vector<Eigen::Vector3f> vllm_trajectory;
   pcl::CorrespondencesPtr correspondences;
+  vllm::map::Info localmap_info;
 
   Database() : offset_cloud(new pcXYZ),
                vllm_cloud(new pcXYZ),
@@ -44,6 +47,7 @@ struct Database {
     this->offset_trajectory = other.offset_trajectory;
     this->vllm_trajectory = other.vllm_trajectory;
     *this->correspondences = *other.correspondences;
+    this->localmap_info = other.localmap_info;
 
     return *this;
   }
