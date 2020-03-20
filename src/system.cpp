@@ -150,7 +150,7 @@ int System::execute()
   // std::cout << "now= " << database.vllm_camera.topRightCorner(3, 1).transpose() << std::endl;
 
   // Update local map
-  bool localmap_is_updated = map->updateLocalMap(database.vllm_camera.topRightCorner(3, 1));
+  bool localmap_is_updated = map->informCurrentPose(database.vllm_camera);
   if (localmap_is_updated) {
     // Reinitialize KDtree
     std::cout << "Reinitialize KDTree" << std::endl;
@@ -171,7 +171,6 @@ int System::execute()
   camera_history.push_front(database.vllm_camera);
   return 0;
 }
-
 
 bool System::optimize(int iteration)
 {

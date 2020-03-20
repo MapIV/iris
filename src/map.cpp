@@ -1,16 +1,17 @@
 #include "map.hpp"
+#include "util.hpp"
 #include <pcl/common/common.h>
 #include <pcl/point_cloud.h>
 
 namespace vllm
 {
+
 namespace map
 {
 Map::Map(const Parameter& parameter)
     : cache_file("vllm.cache"), parameter(parameter),
       local_target_cloud(new pcXYZ),
-      local_target_normals(new pcNormal),
-      localmap_info(0)
+      local_target_normals(new pcNormal)
 {
   bool recalculation_is_necessary = isRecalculationNecessary();
 
@@ -93,18 +94,18 @@ Map::Map(const Parameter& parameter)
   }
 
   // Construct local map
-  update(Eigen::Vector3f::Zero());
+  updateLocalmap(Eigen::Matrix4f::Identity());
 }
 
-bool Map::isRecalculationNecessary()
+bool Map::isRecalculationNecessary() const
 {
   std::ifstream ifs(cache_file);
-  // If cahce information doesn't exist, recalculate
+  // If cahce data doesn't exist, recalculate
   if (!ifs)
     return true;
   std::string data;
 
-  // If cahce information doesn't match with parameter, recalculate
+  // If cahce data doesn't match with parameter, recalculate
   std::getline(ifs, data);
   if (data != parameter.toString())
     return true;
@@ -112,61 +113,123 @@ bool Map::isRecalculationNecessary()
   return false;
 }
 
-bool Map::updateLocalMap(const Eigen::Vector3f& pos)
+bool Map::informCurrentPose(const Eigen::Matrix4f& T)
 {
-  if (!isUpdateNecessary(pos))
+  bool is_necessary = isUpdateNecessary(T);
+  if (!is_necessary)
     return false;
 
-  update(pos);
+  updateLocalmap(T);
   return true;
 }
 
-bool Map::isUpdateNecessary(const Eigen::Vector3f& pos)
+bool Map::isUpdateNecessary(const Eigen::Matrix4f& T) const
 {
-  float dx = (pos - last_grid_center).cwiseAbs().maxCoeff();
-  std::cout << "now" << pos.transpose() << "  last " << last_grid_center.transpose() << "  dx" << dx << std::endl;
-  // The boundaries of the submap have overlaps in order not to vibrate
-  if (dx > 0.75 * parameter.submap_grid_leaf)
-    return true;
+  // NOTE: The boundaries of the submap have overlaps in order not to vibrate
 
+  // (1) Condition about the location
+  float distance = (T.topRightCorner(2, 1) - localmap_anchor.xy()).cwiseAbs().maxCoeff();
+  std::cout << "distance-condition: " << distance
+            << " self " << T.topRightCorner(2, 1).transpose()
+            << " anchor" << localmap_anchor.xy().transpose() << std::endl;
+  if (distance > 0.75 * parameter.submap_grid_leaf) {
+    return true;
+  }
+
+  // TODO:
+  // // (2) Condition about the location
+  // float yaw = yawFromPose(T);
+  // std::cout << "angle-condition: " << yaw << " " << localmap_anchor.theta << std::endl;
+  // if (subtractAngles(yaw, localmap_anchor.theta) > 60.f / 180.f * 3.14f) {
+  //   return true;
+  // }
+
+  // Then, it need not to update the localmap
   return false;
 }
 
-void Map::update(const Eigen::Vector3f& pos)
+void Map::updateLocalmap(const Eigen::Matrix4f& T)
 {
-  std::cout << "UPDATE SUBMAP" << std::endl;
+  std::cout << "###############" << std::endl;
+  std::cout << "Update Localmap" << std::endl;
+  std::cout << "###############" << std::endl;
 
-  std::lock_guard lock(mtx);
-  Eigen::Vector3f dP = (pos - min_corner_point);
-
+  Eigen::Vector3f dP = (T.topRightCorner(3, 1) - min_corner_point);
   const float L = parameter.submap_grid_leaf;
   int cx = static_cast<int>(dP.x() / L);
   int cy = static_cast<int>(dP.y() / L);
-  std::cout << cx << " " << cy << std::endl;
-  std::cout << "submap size " << submap_cloud.size() << std::endl;
-  localmap_info.store(cx * grid_y_num + cy);
+  std::cout << "cx " << cx << " cy " << cy << std::endl;
 
-  local_target_cloud->clear();
-  local_target_normals->clear();
+  // TODO:
+  // int pattern = static_cast<int>(yawFromPose(T) / (3.14f / 4.0f));
+  int pattern = 0;
+  int x_min, y_min;
+  switch (pattern) {
+  case 0:
+  case 7:
+    x_min = cx;
+    y_min = cy - 1;
+    break;
+  case 1:
+  case 2:
+    x_min = cx - 1;
+    y_min = cy;
+    break;
+  case 3:
+  case 4:
+    x_min = cx - 2;
+    y_min = cy - 1;
+    break;
+  case 5:
+  case 6:
+  default:
+    x_min = cx - 1;
+    y_min = cy - 2;
+    break;
+  }
+  std::cout << "pattern " << pattern << " " << x_min << " " << y_min << std::endl;
 
-  for (int i = -1; i < 2; i++) {
-    for (int j = -1; j < 2; j++) {
-      if (i + cx < 0) continue;
-      if (j + cy < 0) continue;
-      if (i + cx == grid_x_num) continue;
-      if (j + cy == grid_y_num) continue;
+  // Critical section from here
+  {
+    std::lock_guard lock(localmap_mtx);
+    local_target_cloud->clear();
+    local_target_normals->clear();
 
-      int tmp = (j + cy) + grid_y_num * (i + cx);
-      std::cout << "tmp " << tmp << " " << i << "," << j << std::endl;
-      *local_target_cloud += submap_cloud.at(tmp);
-      *local_target_normals += submap_normals.at(tmp);
+    for (int i = 0; i < 3; i++) {
+      if (i + x_min < 0) continue;
+      if (i + x_min == grid_x_num) continue;
+
+      for (int j = 0; j < 3; j++) {
+        if (j + y_min < 0) continue;
+        if (j + y_min == grid_y_num) continue;
+
+        int tmp = (j + y_min) + grid_y_num * (i + x_min);
+        *local_target_cloud += submap_cloud.at(tmp);
+        *local_target_normals += submap_normals.at(tmp);
+      }
     }
   }
+  {
+    std::lock_guard lock(anchor_mtx);
+    localmap_anchor.x = min_corner_point.x() + (cx + 0.5f) * L,
+    localmap_anchor.y = min_corner_point.y() + (cy + 0.5f) * L,
+    localmap_anchor.theta = 0;
+  }
+  std::cout << "new-anchor " << localmap_anchor.x << " "
+            << localmap_anchor.y << " "
+            << localmap_anchor.theta << " ,min "
+            << min_corner_point.transpose() << " L=" << L << std::endl;
+  // Critical section until here
+}
 
-  std::cout << "local_target_cloud_size " << local_target_cloud->size() << std::endl;
-
-  // update last center
-  last_grid_center << min_corner_point.x() + (cx + 0.5f) * L, min_corner_point.y() + (cy + 0.5f) * L, 0;
+float Map::yawFromPose(const Eigen::Matrix4f& T) const
+{
+  Eigen::Matrix3f R = getNormalizedRotation(T);
+  Eigen::Vector3f direction = R * Eigen::Vector3f::UnitX();
+  float theta = std::atan2(direction.y(), direction.x());  // [-pi,pi]
+  if (theta < 0)
+    return theta + 6.28f;
+  return theta;
 }
 
 }  // namespace map

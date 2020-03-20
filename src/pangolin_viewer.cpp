@@ -99,7 +99,7 @@ void PangolinViewer::execute()
 
   system_ptr->popDatabase(database);
 
-  int localmap_new_info = system_ptr->getMap()->getLocalmapInfo();
+  map::Anchor localmap_new_info = system_ptr->getMap()->getLocalmapInfo();
   if (localmap_new_info != localmap_info) {
     localmap_info = localmap_new_info;
     *target_cloud = *system_ptr->getMap()->getTargetCloud();
@@ -127,7 +127,6 @@ void PangolinViewer::execute()
 
   if (gui_scale_gain->GuiChanged() || gui_smooth_gain->GuiChanged() || gui_latitude_gain->GuiChanged() || gui_altitude_gain->GuiChanged())
     system_ptr->setParameter({*gui_scale_gain, *gui_smooth_gain, *gui_latitude_gain, *gui_altitude_gain});
-  // Eigen::Vector3d gain(*gui_scale_gain, *gui_pitch_gain, *gui_model_gain);
   // Eigen::Vector2d distance(*gui_distance_min, *gui_distance_max);
   // system_ptr->setSearchDistance(distance);
   // system_ptr->setRecollection(*gui_recollection);
