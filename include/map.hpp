@@ -36,14 +36,14 @@ struct Parameter {
   }
 };
 
-struct Anchor {
+struct Info {
   float x;
   float y;
   float theta;
   static constexpr float epsilon = 1e-6f;
 
-  Anchor() {}
-  Anchor(float x, float y, float theta) : x(x), y(y), theta(theta) {}
+  Info() {}
+  Info(float x, float y, float theta) : x(x), y(y), theta(theta) {}
 
   Eigen::Vector2f xy() const { return Eigen::Vector2f(x, y); }
 
@@ -51,7 +51,7 @@ struct Anchor {
   {
     return std::to_string(x) + " " + std::to_string(y) + " " + std::to_string(theta);
   }
-  bool isEqual(const Anchor& a, const Anchor& b) const
+  bool isEqual(const Info& a, const Info& b) const
   {
     if (std::fabs(a.x - b.x) > epsilon)
       return false;
@@ -62,11 +62,11 @@ struct Anchor {
     return true;
   }
 
-  bool operator==(const Anchor& other) const
+  bool operator==(const Info& other) const
   {
     return isEqual(*this, other);
   }
-  bool operator!=(const Anchor& other) const
+  bool operator!=(const Info& other) const
   {
     return !isEqual(*this, other);
   }
@@ -82,10 +82,10 @@ public:
   bool informCurrentPose(const Eigen::Matrix4f& T);
 
   // This informs viewer of whether local map updated or not
-  Anchor getLocalmapInfo() const
+  Info getLocalmapInfo() const
   {
-    std::lock_guard lock(anchor_mtx);
-    return localmap_anchor;
+    std::lock_guard lock(info_mtx);
+    return localmap_info;
   }
 
   // TODO: This function may have conflicts
@@ -122,10 +122,10 @@ private:
 
   // [x,y,theta]
   Eigen::Vector3f last_grid_center;
-  Anchor localmap_anchor;
+  Info localmap_info;
 
   mutable std::mutex localmap_mtx;
-  mutable std::mutex anchor_mtx;
+  mutable std::mutex info_mtx;
 
 
   int grid_x_num;

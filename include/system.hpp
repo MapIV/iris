@@ -72,6 +72,7 @@ private:
 
   const Config config;
   std::shared_ptr<map::Map> map;
+  map::Info localmap_info;
 
   Eigen::Matrix4f T_init;
   Eigen::Matrix4f T_align = Eigen::Matrix4f::Identity();

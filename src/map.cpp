@@ -128,18 +128,18 @@ bool Map::isUpdateNecessary(const Eigen::Matrix4f& T) const
   // NOTE: The boundaries of the submap have overlaps in order not to vibrate
 
   // (1) Condition about the location
-  float distance = (T.topRightCorner(2, 1) - localmap_anchor.xy()).cwiseAbs().maxCoeff();
+  float distance = (T.topRightCorner(2, 1) - localmap_info.xy()).cwiseAbs().maxCoeff();
   std::cout << "distance-condition: " << distance
             << " self " << T.topRightCorner(2, 1).transpose()
-            << " anchor" << localmap_anchor.xy().transpose() << std::endl;
+            << " info" << localmap_info.xy().transpose() << std::endl;
   if (distance > 0.75 * parameter.submap_grid_leaf) {
     return true;
   }
 
   // (2) Condition about the location
   float yaw = yawFromPose(T);
-  std::cout << "angle-condition: " << yaw << " " << localmap_anchor.theta << std::endl;
-  if (subtractAngles(yaw, localmap_anchor.theta) > 60.f / 180.f * 3.14f) {
+  std::cout << "angle-condition: " << yaw << " " << localmap_info.theta << std::endl;
+  if (subtractAngles(yaw, localmap_info.theta) > 60.f / 180.f * 3.14f) {
     return true;
   }
 
@@ -163,32 +163,32 @@ void Map::updateLocalmap(const Eigen::Matrix4f& T)
   int pattern = static_cast<int>(yawFromPose(T) / (3.14f / 4.0f));
   // int pattern = 0;
   int x_min, y_min;
-  float new_anchor_theta;
+  float new_info_theta;
   switch (pattern) {
   case 0:
   case 7:
     x_min = cx;
     y_min = cy - 1;
-    new_anchor_theta = 0;
+    new_info_theta = 0;
     break;
   case 1:
   case 2:
     x_min = cx - 1;
     y_min = cy;
-    new_anchor_theta = 3.1415f * 0.5f;
+    new_info_theta = 3.1415f * 0.5f;
     break;
   case 3:
   case 4:
     x_min = cx - 2;
     y_min = cy - 1;
-    new_anchor_theta = 3.1415f;
+    new_info_theta = 3.1415f;
     break;
   case 5:
   case 6:
   default:
     x_min = cx - 1;
     y_min = cy - 2;
-    new_anchor_theta = 3.1415f * 1.5f;
+    new_info_theta = 3.1415f * 1.5f;
     break;
   }
   std::cout << "pattern " << pattern << " " << x_min << " " << y_min << std::endl;
@@ -214,15 +214,17 @@ void Map::updateLocalmap(const Eigen::Matrix4f& T)
     }
   }
   {
-    std::lock_guard lock(anchor_mtx);
-    localmap_anchor.x = min_corner_point.x() + (cx + 0.5f) * L,
-    localmap_anchor.y = min_corner_point.y() + (cy + 0.5f) * L,
-    localmap_anchor.theta = new_anchor_theta;
+    std::lock_guard lock(info_mtx);
+    localmap_info.x = min_corner_point.x() + (cx + 0.5f) * L,
+    localmap_info.y = min_corner_point.y() + (cy + 0.5f) * L,
+    localmap_info.theta = new_info_theta;
   }
-  std::cout << "new-anchor " << localmap_anchor.x << " "
-            << localmap_anchor.y << " "
-            << localmap_anchor.theta << " ,min "
-            << min_corner_point.transpose() << " L=" << L << std::endl;
+  std::cout << "new-info"
+            << localmap_info.x << " "
+            << localmap_info.y << " "
+            << localmap_info.theta << " ,min "
+            << min_corner_point.transpose() << " L="
+            << L << std::endl;
   // Critical section until here
 }
 

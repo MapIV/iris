@@ -99,14 +99,15 @@ void PangolinViewer::execute()
 
   system_ptr->popDatabase(database);
 
-  map::Anchor localmap_new_info = system_ptr->getMap()->getLocalmapInfo();
-  if (localmap_new_info != localmap_info) {
-    localmap_info = localmap_new_info;
+  map::Info new_localmap_info = system_ptr->getMap()->getLocalmapInfo();
+  if (new_localmap_info != localmap_info) {
+    localmap_info = new_localmap_info;
     *target_cloud = *system_ptr->getMap()->getTargetCloud();
     *target_normals = *system_ptr->getMap()->getTargetNormals();
+    colored_target_cloud = colorizePointCloud(target_cloud);
   }
 
-  drawPointCloud(target_cloud, {0.6f, 0.6f, 0.6f, 1.0f});
+  drawPointCloud(colored_target_cloud, {0.6f, 0.6f, 0.6f, 1.0f});
   if (*gui_target_normals)
     drawNormals(target_cloud, target_normals, {0.0f, 1.0f, 0.0f, 1.0f}, 30);
 
@@ -299,7 +300,7 @@ void PangolinViewer::drawCorrespondences(
   glLineWidth(color.size);
   for (const pcl::Correspondence& c : *correspondences) {
     // TODO: sometime incorrect correspondences may come
-    if (c.index_query >= source->size() || c.index_match >= target->size())
+    if (static_cast<size_t>(c.index_query) >= source->size() || static_cast<size_t>(c.index_match) >= target->size())
       break;
     pcl::PointXYZ p1 = source->at(c.index_query);
     pcl::PointXYZ p2 = target->at(c.index_match);

@@ -12,6 +12,7 @@ System::System(Config& config, const std::shared_ptr<map::Map>& map) : config(co
   bridge.setup(config);
 
   // setup correspondence estimator
+  localmap_info = map->getLocalmapInfo();
   estimator.setInputTarget(map->getTargetCloud());
   estimator.setTargetNormals(map->getTargetNormals());
   estimator.setKSearch(10);
@@ -150,10 +151,11 @@ int System::execute()
   // std::cout << "now= " << database.vllm_camera.topRightCorner(3, 1).transpose() << std::endl;
 
   // Update local map
-  bool localmap_is_updated = map->informCurrentPose(database.vllm_camera);
-  if (localmap_is_updated) {
+  map->informCurrentPose(database.vllm_camera);
+  map::Info new_localmap_info = map->getLocalmapInfo();
+  if (localmap_info != new_localmap_info) {
     // Reinitialize KDtree
-    std::cout << "Reinitialize KDTree" << std::endl;
+    localmap_info = new_localmap_info;
     estimator.setInputTarget(map->getTargetCloud());
     estimator.setTargetNormals(map->getTargetNormals());
   }

@@ -72,7 +72,7 @@ private:
   pcl::PointCloud<pcl::PointXYZRGBA>::Ptr colorizePointCloud(const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud);
   Database database;
 
-  map::Anchor localmap_info;
+  map::Info localmap_info;
 
   // GUI variables
   std::shared_ptr<pangolin::Var<bool>> gui_vslam_camera;
