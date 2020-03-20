@@ -298,6 +298,9 @@ void PangolinViewer::drawCorrespondences(
   glColor4f(color.r, color.g, color.b, 0.9f);
   glLineWidth(color.size);
   for (const pcl::Correspondence& c : *correspondences) {
+    // TODO: sometime incorrect correspondences may come
+    if (c.index_query >= source->size() || c.index_match >= target->size())
+      break;
     pcl::PointXYZ p1 = source->at(c.index_query);
     pcl::PointXYZ p2 = target->at(c.index_match);
     drawLine(p1.x, p1.y, p1.z, p2.x, p2.y, p2.z);

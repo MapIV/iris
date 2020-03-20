@@ -36,7 +36,7 @@ struct Config {
       n.normalize();
       u.normalize();
       R.row(2) = n;
-      R.row(1) = (n.dot(u) * n - u).normalized();
+      R.row(1) = (n.dot(u) * n - u).normalized();  // Gram–Schmidt orthonormalization
       R.row(0) = R.row(1).cross(R.row(2));
 
       Eigen::Matrix4f T = Eigen::Matrix4f::Identity();

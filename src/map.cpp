@@ -136,13 +136,12 @@ bool Map::isUpdateNecessary(const Eigen::Matrix4f& T) const
     return true;
   }
 
-  // TODO:
-  // // (2) Condition about the location
-  // float yaw = yawFromPose(T);
-  // std::cout << "angle-condition: " << yaw << " " << localmap_anchor.theta << std::endl;
-  // if (subtractAngles(yaw, localmap_anchor.theta) > 60.f / 180.f * 3.14f) {
-  //   return true;
-  // }
+  // (2) Condition about the location
+  float yaw = yawFromPose(T);
+  std::cout << "angle-condition: " << yaw << " " << localmap_anchor.theta << std::endl;
+  if (subtractAngles(yaw, localmap_anchor.theta) > 60.f / 180.f * 3.14f) {
+    return true;
+  }
 
   // Then, it need not to update the localmap
   return false;
@@ -161,30 +160,35 @@ void Map::updateLocalmap(const Eigen::Matrix4f& T)
   std::cout << "cx " << cx << " cy " << cy << std::endl;
 
   // TODO:
-  // int pattern = static_cast<int>(yawFromPose(T) / (3.14f / 4.0f));
-  int pattern = 0;
+  int pattern = static_cast<int>(yawFromPose(T) / (3.14f / 4.0f));
+  // int pattern = 0;
   int x_min, y_min;
+  float new_anchor_theta;
   switch (pattern) {
   case 0:
   case 7:
     x_min = cx;
     y_min = cy - 1;
+    new_anchor_theta = 0;
     break;
   case 1:
   case 2:
     x_min = cx - 1;
     y_min = cy;
+    new_anchor_theta = 3.1415f * 0.5f;
     break;
   case 3:
   case 4:
     x_min = cx - 2;
     y_min = cy - 1;
+    new_anchor_theta = 3.1415f;
     break;
   case 5:
   case 6:
   default:
     x_min = cx - 1;
     y_min = cy - 2;
+    new_anchor_theta = 3.1415f * 1.5f;
     break;
   }
   std::cout << "pattern " << pattern << " " << x_min << " " << y_min << std::endl;
@@ -213,7 +217,7 @@ void Map::updateLocalmap(const Eigen::Matrix4f& T)
     std::lock_guard lock(anchor_mtx);
     localmap_anchor.x = min_corner_point.x() + (cx + 0.5f) * L,
     localmap_anchor.y = min_corner_point.y() + (cy + 0.5f) * L,
-    localmap_anchor.theta = 0;
+    localmap_anchor.theta = new_anchor_theta;
   }
   std::cout << "new-anchor " << localmap_anchor.x << " "
             << localmap_anchor.y << " "
@@ -225,7 +229,19 @@ void Map::updateLocalmap(const Eigen::Matrix4f& T)
 float Map::yawFromPose(const Eigen::Matrix4f& T) const
 {
   Eigen::Matrix3f R = getNormalizedRotation(T);
-  Eigen::Vector3f direction = R * Eigen::Vector3f::UnitX();
+
+  // When the optical axis of the camera is pointing to the X-axis
+  // and the upper side of the camera is pointing to the Z-axis,
+  // the rotation matrix is as follows,
+  Eigen::Matrix3f camera_rotate;
+  camera_rotate << 0, 0, 1,
+      -1, 0, 0,
+      0, -1, 0;
+
+  // Therefore, multiply the inverse rotation matrix of it.
+  // To extract the rotation on the XY-plane, we calculate how a unit vector is moved by a remained rotation.
+  Eigen::Vector3f direction = (R * camera_rotate.transpose()) * Eigen::Vector3f::UnitX();
+
   float theta = std::atan2(direction.y(), direction.x());  // [-pi,pi]
   if (theta < 0)
     return theta + 6.28f;
