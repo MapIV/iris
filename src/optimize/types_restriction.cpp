@@ -1,6 +1,8 @@
-#include "alignment/types_restriction.hpp"
+#include "optimize/types_restriction.hpp"
 
 namespace vllm
+{
+namespace optimize
 {
 void Edge_Scale_Restriction::computeError()
 {
@@ -49,4 +51,6 @@ void Edge_Altitude_Restriction::computeError()
   Eigen::Vector3d now = vp0->estimate().map(measurement());
   _error(0) = gain * now.z();
 }
+
+}  // namespace optimize
 }  // namespace vllm

@@ -1,5 +1,5 @@
 #pragma once
-#include "system.hpp"
+#include "system/system.hpp"
 #include "viewer/color.hpp"
 #include "viewer/pangolin_cloud.hpp"
 #include <atomic>

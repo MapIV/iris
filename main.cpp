@@ -1,6 +1,6 @@
 #include "core/config.hpp"
 #include "map/map.hpp"
-#include "system.hpp"
+#include "system/system.hpp"
 #include "viewer/pangolin_viewer.hpp"
 #include <chrono>
 #include <opencv2/opencv.hpp>

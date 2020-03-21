@@ -1,6 +1,6 @@
-#include "system.hpp"
-#include "alignment/aligner.hpp"
-#include "alignment/averager.hpp"
+#include "system/system.hpp"
+#include "optimize/aligner.hpp"
+#include "optimize/averager.hpp"
 #include <opencv2/core/eigen.hpp>
 #include <pcl/common/transforms.h>
 
@@ -126,7 +126,7 @@ int System::execute()
   // Inertial model
   else {
     if (camera_velocity.isZero()) {
-      camera_velocity = calcVelocity(camera_history);
+      camera_velocity = optimize::calcVelocity(camera_history);
       std::cout << "calc camera_velocity\n"
                 << camera_velocity << std::endl;
     }
@@ -197,7 +197,7 @@ bool System::optimize(int iteration)
   std::cout << " ,refined_correspondecnes= \033[32m" << database.correspondences->size() << "\033[m" << std::endl;
 
   // Align pointclouds
-  vllm::Aligner aligner;
+  optimize::Aligner aligner;
   aligner.setPrePosition(database.offset_camera, old_vllm_camera, older_vllm_camera);
   aligner.setParameter(parameter);
   T_align = aligner.estimate7DoF(T_align, *database.offset_cloud, *map->getTargetCloud(), *database.correspondences, map->getTargetNormals(), database.offset_normals);

@@ -1,11 +1,13 @@
 #pragma once
-#include "alignment/parameter.hpp"
+#include "optimize/parameter.hpp"
 #include <g2o/core/sparse_optimizer.h>
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 #include <pcl/registration/correspondence_types.h>
 
 namespace vllm
+{
+namespace optimize
 {
 class Aligner
 {
@@ -50,4 +52,5 @@ private:
       const pcl::PointCloud<pcl::Normal>::Ptr& target_normals,
       const pcl::PointCloud<pcl::Normal>::Ptr& source_normals);
 };
+}  // namespace optimize
 }  // namespace vllm

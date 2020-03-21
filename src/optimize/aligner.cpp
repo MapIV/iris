@@ -1,8 +1,8 @@
-#include "alignment/aligner.hpp"
-#include "alignment/types_gicp.hpp"
-#include "alignment/types_restriction.hpp"
 #include "core/util.hpp"
 
+#include "optimize/aligner.hpp"
+#include "optimize/types_gicp.hpp"
+#include "optimize/types_restriction.hpp"
 #include <g2o/core/block_solver.h>
 #include <g2o/core/optimization_algorithm_levenberg.h>
 #include <g2o/core/robust_kernel_impl.h>
@@ -13,6 +13,8 @@
 #include <g2o/types/sim3/types_seven_dof_expmap.h>
 
 namespace vllm
+{
+namespace optimize
 {
 Eigen::Matrix4f Aligner::estimate7DoF(
     Eigen::Matrix4f& T,
@@ -81,7 +83,7 @@ void Aligner::setEdge7DoFGICP(
 
   for (const pcl::Correspondence& cor : correspondances) {
     // new edge with correct cohort for caching
-    vllm::Edge_Sim3_GICP* e = new vllm::Edge_Sim3_GICP(true);
+    Edge_Sim3_GICP* e = new Edge_Sim3_GICP(true);
     e->setVertex(0, vp0);  // set viewpoint
 
     // calculate the relative 3D position of the point
@@ -89,7 +91,7 @@ void Aligner::setEdge7DoFGICP(
     pt0 = target.at(cor.index_match).getArray3fMap();
     pt1 = source.at(cor.index_query).getArray3fMap();
 
-    vllm::EdgeGICP meas;
+    EdgeGICP meas;
     meas.pos0 = pt0.cast<double>();
     meas.pos1 = pt1.cast<double>();
 
@@ -158,4 +160,5 @@ void Aligner::setEdge7DoFGICP(
   e->setMeasurement(model);
   optimizer.addEdge(e);
 }
+}  // namespace optimize
 }  // namespace vllm

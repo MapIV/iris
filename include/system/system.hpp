@@ -1,13 +1,13 @@
 #pragma once
-#include "alignment/parameter.hpp"
 #include "core/bridge.hpp"
 #include "core/config.hpp"
 #include "core/types.hpp"
 #include "core/util.hpp"
-#include "database.hpp"
 #include "map/map.hpp"
 #include "map/parameter.hpp"
-#include "publisher.hpp"
+#include "optimize/parameter.hpp"
+#include "system/database.hpp"
+#include "system/publisher.hpp"
 #include <atomic>
 #include <memory>
 #include <pcl/registration/correspondence_estimation_backprojection.h>
@@ -47,12 +47,12 @@ public:
     parameter = thread_safe_parameter;
   }
 
-  Parameter getParameter() const
+  optimize::Parameter getParameter() const
   {
     std::lock_guard<std::mutex> lock(parameter_mutex);
     return parameter;
   }
-  void setParameter(const Parameter& parameter_)
+  void setParameter(const optimize::Parameter& parameter_)
   {
     std::lock_guard<std::mutex> lock(parameter_mutex);
     thread_safe_parameter = parameter_;
@@ -67,7 +67,7 @@ private:
   // ==== private member ====
   float search_distance_min = 1;
   float search_distance_max = 10;
-  Parameter parameter, thread_safe_parameter;
+  optimize::Parameter parameter, thread_safe_parameter;
   mutable std::mutex parameter_mutex;
 
   unsigned int recollection = 50;

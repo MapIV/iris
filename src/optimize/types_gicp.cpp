@@ -1,6 +1,8 @@
-#include "alignment/types_gicp.hpp"
+#include "optimize/types_gicp.hpp"
 
 namespace vllm
+{
+namespace optimize
 {
 EdgeGICP::EdgeGICP()
 {
@@ -131,4 +133,5 @@ void Edge_SE3_GICP::computeError()
   information() = (cov0 + R * cov1 * R.transpose()).inverse();
 }
 
+}  // namespace optimize
 }  // namespace vllm

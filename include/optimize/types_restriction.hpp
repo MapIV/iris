@@ -9,6 +9,8 @@
 
 namespace vllm
 {
+namespace optimize
+{
 using g2o::VertexSE3;
 using g2o::VertexSim3Expmap;
 
@@ -83,4 +85,5 @@ public:
   void computeError();
 };
 
+}  // namespace optimize
 }  // namespace vllm

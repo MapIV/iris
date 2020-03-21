@@ -52,7 +52,7 @@ void PangolinViewer::init()
 
   colored_target_cloud = colorizePointCloud(target_cloud);
 
-  Parameter param = system_ptr->getParameter();
+  optimize::Parameter param = system_ptr->getParameter();
   gui_scale_gain = std::make_shared<pangolin::Var<float>>("ui.scale_gain", param.scale_gain, 0.0f, 50.0f);
   gui_smooth_gain = std::make_shared<pangolin::Var<float>>("ui.smooth_gain", param.smooth_gain, 0.0f, 50.0f);
   gui_latitude_gain = std::make_shared<pangolin::Var<float>>("ui.latitude_gain", param.latitude_gain, 0.0f, 50.0f);

@@ -9,11 +9,12 @@
 
 namespace vllm
 {
+namespace optimize
+{
 using g2o::Matrix3;
 using g2o::Vector3;
 using g2o::VertexSE3;
 using g2o::VertexSim3Expmap;
-
 
 class EdgeGICP
 {
@@ -68,4 +69,5 @@ public:
   virtual bool write(std::ostream&) const;
   void computeError();
 };
+}  // namespace optimize
 }  // namespace vllm
