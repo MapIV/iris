@@ -98,20 +98,10 @@ add_subdirectory(3rd/openvslam)
 
 # == header & source ==
 include_directories(${CMAKE_CURRENT_LIST_DIR}/include)
-include_directories(${CMAKE_CURRENT_LIST_DIR}/)
+file(GLOB SOURCES src/**/*.cpp)
 
 # == main ==
-add_executable(
-  main
-  main.cpp
-  src/bridge.cpp
-  src/aligner.cpp
-  src/pangolin_viewer.cpp
-  src/util.cpp
-  src/system.cpp
-  src/map.cpp
-  src/types_gicp.cpp
-  src/types_restriction.cpp)
+add_executable(main main.cpp ${SOURCES})
 target_include_directories(
   main SYSTEM
   PRIVATE ${PROJECT_SOURCE_DIR}/3rd/openvslam/src/

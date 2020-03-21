@@ -1,5 +1,5 @@
 #pragma once
-#include "parameter.hpp"
+#include "alignment/parameter.hpp"
 #include <g2o/core/sparse_optimizer.h>
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>

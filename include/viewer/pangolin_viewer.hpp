@@ -1,8 +1,7 @@
 #pragma once
-#include "color.hpp"
-#include "pangolin_cloud.hpp"
 #include "system.hpp"
-#include "types.hpp"
+#include "viewer/color.hpp"
+#include "viewer/pangolin_cloud.hpp"
 #include <atomic>
 #include <pangolin/pangolin.h>
 #include <pcl/correspondence.h>

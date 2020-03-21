@@ -1,5 +1,5 @@
-#include "map.hpp"
-#include "util.hpp"
+#include "map/map.hpp"
+#include "core/util.hpp"
 #include <pcl/common/common.h>
 #include <pcl/point_cloud.h>
 
@@ -53,8 +53,6 @@ Map::Map(const Parameter& parameter)
   pcl::getMinMax3D(*all_target_cloud, minimum, maximum);
   max_corner_point = maximum.getArray3fMap();
   min_corner_point = minimum.getArray3fMap();
-  std::cout << "max_corner " << max_corner_point.transpose() << std::endl;
-  std::cout << "min_corner " << min_corner_point.transpose() << std::endl;
 
   grid_x_num = static_cast<int>((maximum.x - minimum.x) / L) + 1;
   grid_y_num = static_cast<int>((maximum.y - minimum.y) / L) + 1;
@@ -88,8 +86,8 @@ Map::Map(const Parameter& parameter)
       pcl::IndicesPtr indice_ptr = crop.getIndices();
       pcl::copyPointCloud(*all_target_normals, *indice_ptr, cropped_normals);
 
-      submap_cloud.push_back(cropped_cloud);
-      submap_normals.push_back(cropped_normals);
+      submap_cloud.push_back(std::move(cropped_cloud));
+      submap_normals.push_back(std::move(cropped_normals));
     }
   }
 

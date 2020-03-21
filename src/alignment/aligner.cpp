@@ -1,7 +1,7 @@
-#include "aligner.hpp"
-#include "types_gicp.hpp"
-#include "types_restriction.hpp"
-#include "util.hpp"
+#include "alignment/aligner.hpp"
+#include "alignment/types_gicp.hpp"
+#include "alignment/types_restriction.hpp"
+#include "core/util.hpp"
 
 #include <g2o/core/block_solver.h>
 #include <g2o/core/optimization_algorithm_levenberg.h>

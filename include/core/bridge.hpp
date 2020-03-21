@@ -1,5 +1,5 @@
 #pragma once
-#include "config.hpp"
+#include "core/config.hpp"
 #include "openvslam/config.h"
 #include "openvslam/system.h"
 #include <opencv2/videoio.hpp>

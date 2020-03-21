@@ -1,5 +1,5 @@
 #pragma once
-#include "util.hpp"
+#include "core/util.hpp"
 #include <Eigen/Dense>
 
 namespace vllm

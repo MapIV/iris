@@ -1,10 +1,13 @@
 #pragma once
-#include "bridge.hpp"
-#include "config.hpp"
-#include "map.hpp"
-#include "parameter.hpp"
-#include "types.hpp"
-#include "util.hpp"
+#include "alignment/parameter.hpp"
+#include "core/bridge.hpp"
+#include "core/config.hpp"
+#include "core/types.hpp"
+#include "core/util.hpp"
+#include "database.hpp"
+#include "map/map.hpp"
+#include "map/parameter.hpp"
+#include "publisher.hpp"
 #include <atomic>
 #include <memory>
 #include <pcl/registration/correspondence_estimation_backprojection.h>
@@ -18,7 +21,6 @@ public:
   // ===== for Main ====
   System(Config& config, const std::shared_ptr<map::Map>& map);
   int execute();
-  bool optimize(int iteration);
 
 public:
   // ==== for GUI ====
@@ -60,6 +62,8 @@ public:
   // void setRecollection(unsigned int recollection_) { recollection = recollection_; }
 
 private:
+  bool optimize(int iteration);
+
   // ==== private member ====
   float search_distance_min = 1;
   float search_distance_max = 10;

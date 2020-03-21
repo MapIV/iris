@@ -1,4 +1,4 @@
-#include "types_gicp.hpp"
+#include "alignment/types_gicp.hpp"
 
 namespace vllm
 {

@@ -1,6 +1,6 @@
 #include "system.hpp"
-#include "aligner.hpp"
-#include "averager.hpp"
+#include "alignment/aligner.hpp"
+#include "alignment/averager.hpp"
 #include <opencv2/core/eigen.hpp>
 #include <pcl/common/transforms.h>
 

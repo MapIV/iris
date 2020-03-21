@@ -1,7 +1,4 @@
-#include "bridge.hpp"
-#ifdef USE_PANGOLIN_VIEWER
-#include "pangolin_viewer/viewer.h"
-#endif
+#include "core/bridge.hpp"
 #include "openvslam/data/landmark.h"
 #include "openvslam/publish/frame_publisher.h"
 #include "openvslam/publish/map_publisher.h"

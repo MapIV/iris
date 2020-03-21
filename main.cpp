@@ -1,7 +1,7 @@
-#include "config.hpp"
-#include "map.hpp"
-#include "pangolin_viewer.hpp"
+#include "core/config.hpp"
+#include "map/map.hpp"
 #include "system.hpp"
+#include "viewer/pangolin_viewer.hpp"
 #include <chrono>
 #include <opencv2/opencv.hpp>
 #include <popl.hpp>
@@ -25,7 +25,7 @@ int main(int argc, char* argv[])
   // Initialize config
   vllm::Config config(config_file_path->value());
 
-  // Load lidar map
+  // Load LiDAR map
   vllm::map::Parameter map_param(
       config.pcd_file, config.voxel_grid_leaf, config.normal_search_leaf, config.submap_grid_leaf);
   std::shared_ptr<vllm::map::Map> map = std::make_shared<vllm::map::Map>(map_param);
