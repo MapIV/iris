@@ -30,11 +30,14 @@ int main(int argc, char* argv[])
       config.pcd_file, config.voxel_grid_leaf, config.normal_search_leaf, config.submap_grid_leaf);
   std::shared_ptr<vllm::map::Map> map = std::make_shared<vllm::map::Map>(map_param);
 
-  // Initialize system & viewer
+  // Initialize system
   std::shared_ptr<vllm::System> system = std::make_shared<vllm::System>(config, map);
-  vllm::PangolinViewer pangolin_viewer(system);
+
+  // Initialize viewer
+  vllm::viewer::PangolinViewer pangolin_viewer(system);
   pangolin_viewer.startLoop();
   cv::namedWindow("VLLM", cv::WINDOW_AUTOSIZE);
+
 
   bool loop = true;
   std::chrono::system_clock::time_point m_start;

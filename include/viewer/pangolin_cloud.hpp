@@ -3,6 +3,10 @@
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 
+namespace vllm
+{
+namespace viewer
+{
 class PangolinCloud
 {
 public:
@@ -57,3 +61,5 @@ private:
   const int stride;
   GLuint vbo;
 };
+}  // namespace viewer
+}  // namespace vllm

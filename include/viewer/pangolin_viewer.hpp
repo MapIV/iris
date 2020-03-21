@@ -9,6 +9,8 @@
 
 namespace vllm
 {
+namespace viewer
+{
 class PangolinViewer
 {
 public:
@@ -22,15 +24,24 @@ public:
   // initialize
   void init();
 
-  // beggining and finishing
+  // beggining and finishing for drawing
   void clear();
   void swap();
 
+  // beggining and finishing for loop
   void execute();
   void startLoop();
   void quitLoop();
 
+private:
+  void loop();
+
   // draw functions
+  void drawFrustum(const float w) const;
+  void drawRectangular(const float x, const float y, const float z) const;
+  void drawLine(
+      const float x1, const float y1, const float z1,
+      const float x2, const float y2, const float z2) const;
   void drawGridLine() const;
   void drawString(const std::string& str, const Color& color) const;
   void drawTrajectory(const std::vector<Eigen::Vector3f>& trajectory, bool colorful, const Color& color = Color());
@@ -48,7 +59,14 @@ public:
       const pcl::CorrespondencesPtr& correspondences,
       const Color& color) const;
 
-private:
+  pangolin::OpenGlRenderState makeCamera(
+      const Eigen::Vector3f& from = Eigen::Vector3f(-10, 0, 10),
+      const Eigen::Vector3f& to = Eigen::Vector3f(0, 0, 0),
+      const pangolin::AxisDirection up = pangolin::AxisZ);
+
+  pcl::PointCloud<pcl::PointXYZRGBA>::Ptr colorizePointCloud(const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud);
+
+  // private member
   std::shared_ptr<System> system_ptr = nullptr;
   std::shared_ptr<pangolin::OpenGlRenderState> s_cam;
   std::shared_ptr<pangolin::Handler3D> handler;
@@ -61,14 +79,6 @@ private:
   pcl::PointCloud<pcl::Normal>::Ptr target_normals;
   pcl::PointCloud<pcl::PointXYZRGBA>::Ptr colored_target_cloud;
 
-  pangolin::OpenGlRenderState makeCamera(
-      const Eigen::Vector3f& from = Eigen::Vector3f(-10, 0, 10),
-      const Eigen::Vector3f& to = Eigen::Vector3f(0, 0, 0),
-      const pangolin::AxisDirection up = pangolin::AxisZ);
-
-  void loop();
-
-  pcl::PointCloud<pcl::PointXYZRGBA>::Ptr colorizePointCloud(const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud);
   Database database;
 
   map::Info localmap_info;
@@ -89,14 +99,7 @@ private:
   std::shared_ptr<pangolin::Var<unsigned int>> gui_recollection;
   std::shared_ptr<pangolin::Var<bool>> gui_quit;
   std::shared_ptr<pangolin::Var<bool>> gui_reset;
-
-  void drawFrustum(const float w) const;
-  void drawRectangular(const float x, const float y, const float z) const;
-  void drawLine(
-      const float x1, const float y1, const float z1,
-      const float x2, const float y2, const float z2) const;
-
-  // h[0,360],s[0,1],v[0,1]
-  Eigen::Vector3f convertRGB(Eigen::Vector3f hsv);
 };
+
+}  // namespace viewer
 }  // namespace vllm

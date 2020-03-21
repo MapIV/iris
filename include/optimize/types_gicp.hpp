@@ -13,7 +13,6 @@ namespace optimize
 {
 using g2o::Matrix3;
 using g2o::Vector3;
-using g2o::VertexSE3;
 using g2o::VertexSim3Expmap;
 
 class EdgeGICP
@@ -52,21 +51,8 @@ public:
   Matrix3 cov0, cov1;
   bool plane2plane;
 
-  virtual bool read(std::istream&);
-  virtual bool write(std::ostream&) const;
-  void computeError();
-};
-
-class Edge_SE3_GICP : public g2o::BaseUnaryEdge<3, EdgeGICP, VertexSE3>
-{
-public:
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-  Edge_SE3_GICP(bool pl_pl = false) : plane2plane(pl_pl) {}
-  Matrix3 cov0, cov1;
-  bool plane2plane;
-
-  virtual bool read(std::istream&);
-  virtual bool write(std::ostream&) const;
+  virtual bool read(std::istream&) { return false; }
+  virtual bool write(std::ostream&) const { return false; }
   void computeError();
 };
 }  // namespace optimize

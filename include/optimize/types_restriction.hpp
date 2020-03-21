@@ -11,7 +11,6 @@ namespace vllm
 {
 namespace optimize
 {
-using g2o::VertexSE3;
 using g2o::VertexSim3Expmap;
 
 class VelocityModel
@@ -57,7 +56,7 @@ public:
   void computeError();
 };
 
-class Edge_Latitude_Restriction : public g2o::BaseUnaryEdge<1, double, VertexSE3>
+class Edge_Latitude_Restriction : public g2o::BaseUnaryEdge<1, double, VertexSim3Expmap>
 {
 private:
   double gain = 1.0;

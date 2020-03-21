@@ -34,8 +34,8 @@ void Edge_Smooth_Restriction::computeError()
 
 void Edge_Latitude_Restriction::computeError()
 {
-  const VertexSE3* vp0 = static_cast<const VertexSE3*>(_vertices[0]);
-  Eigen::Matrix3d R = vp0->estimate().rotation();
+  const VertexSim3Expmap* vp0 = static_cast<const VertexSim3Expmap*>(_vertices[0]);
+  Eigen::Matrix3d R = vp0->estimate().rotation().toRotationMatrix();
   Eigen::Vector3d ez(0, 0, 1);
 
   double swing = (ez - R * ez).norm();

@@ -2,6 +2,8 @@
 
 namespace vllm
 {
+namespace viewer
+{
 PangolinViewer::PangolinViewer(const std::shared_ptr<System>& system_ptr)
     : system_ptr(system_ptr), loop_flag(true) {}
 
@@ -303,7 +305,6 @@ void PangolinViewer::drawCorrespondences(
   glColor4f(color.r, color.g, color.b, 0.9f);
   glLineWidth(color.size);
   for (const pcl::Correspondence& c : *correspondences) {
-    // TODO: sometime incorrect correspondences may come
     if (static_cast<size_t>(c.index_query) >= source->size() || static_cast<size_t>(c.index_match) >= target->size())
       break;
     pcl::PointXYZ p1 = source->at(c.index_query);
@@ -367,21 +368,6 @@ void PangolinViewer::drawFrustum(const float w) const
   drawLine(-w, -h, z, w, -h, z);
 }
 
-Eigen::Vector3f PangolinViewer::convertRGB(Eigen::Vector3f hsv)
-{
-  const float max = hsv(2);
-  const float min = max * (1 - hsv(1));
-  const float H = hsv(0);
-  const float D = max - min;
-  if (H < 60) return {max, H / 60 * D + min, min};
-  if (H < 120) return {(120 - H) / 60 * D + min, max, min};
-  if (H < 180) return {min, max, (H - 120) / 60 * D + min};
-  if (H < 240) return {min, (240 - H) / 60 * D + min, max};
-  if (H < 300) return {(H - 240) / 60 * D + min, min, max};
-  if (H < 360) return {max, min, (360 - H) / 60 * D + min};
-  return {255, 255, 255};
-}
-
 pcl::PointCloud<pcl::PointXYZRGBA>::Ptr PangolinViewer::colorizePointCloud(const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud)
 {
   pcl::PointCloud<pcl::PointXYZRGBA>::Ptr colored(new pcl::PointCloud<pcl::PointXYZRGBA>);
@@ -402,4 +388,5 @@ pcl::PointCloud<pcl::PointXYZRGBA>::Ptr PangolinViewer::colorizePointCloud(const
   return colored;
 }
 
+}  // namespace viewer
 }  // namespace vllm

@@ -75,53 +75,12 @@ Matrix3 EdgeGICP::cov1(number_t e)
   return R1.transpose() * cov * R1;
 }
 
-
-bool Edge_Sim3_GICP::read(std::istream&)
-{
-  std::cerr << __PRETTY_FUNCTION__ << " not implemented yet" << std::endl;
-  return false;
-}
-bool Edge_Sim3_GICP::write(std::ostream&) const
-{
-  std::cerr << __PRETTY_FUNCTION__ << " not implemented yet" << std::endl;
-  return false;
-}
-
 void Edge_Sim3_GICP::computeError()
 {
   // from <ViewPoint> to <Point>
   const VertexSim3Expmap* vp0 = static_cast<const VertexSim3Expmap*>(_vertices[0]);
   // get vp1 point into vp0 frame could be more efficient if we computed this transform just once
   Vector3 p1 = vp0->estimate().map(measurement().pos1);
-  // Euclidean distance
-  _error = p1 - measurement().pos0;
-
-  if (!plane2plane)
-    return;
-
-  // NOTE: re-define the information matrix for Plane2Plane ICP
-  const Matrix3 R = vp0->estimate().rotation().matrix();
-  information() = (cov0 + R * cov1 * R.transpose()).inverse();
-}
-
-bool Edge_SE3_GICP::read(std::istream&)
-{
-  std::cerr << __PRETTY_FUNCTION__ << " not implemented yet" << std::endl;
-  return false;
-}
-
-bool Edge_SE3_GICP::write(std::ostream&) const
-{
-  std::cerr << __PRETTY_FUNCTION__ << " not implemented yet" << std::endl;
-  return false;
-}
-
-void Edge_SE3_GICP::computeError()
-{
-  // from <ViewPoint> to <Point>
-  const VertexSE3* vp0 = static_cast<const VertexSE3*>(_vertices[0]);
-  // get vp1 point into vp0 frame could be more efficient if we computed this transform just once
-  Vector3 p1 = vp0->estimate() * (measurement().pos1);
   // Euclidean distance
   _error = p1 - measurement().pos0;
 

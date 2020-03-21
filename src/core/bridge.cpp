@@ -20,6 +20,17 @@
 namespace vllm
 {
 
+BridgeOpenVSLAM::~BridgeOpenVSLAM()
+{
+  // wait until the loop BA is finished
+  while (SLAM_ptr->loop_BA_is_running()) {
+    std::this_thread::sleep_for(std::chrono::microseconds(5000));
+  }
+
+  // shutdown the SLAM process
+  SLAM_ptr->shutdown();
+}
+
 void BridgeOpenVSLAM::setup(const Config& config)
 {
 #ifdef USE_STACK_TRACE_LOGGER
