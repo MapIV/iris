@@ -8,16 +8,17 @@
 namespace vllm
 {
 struct Publication {
+  Publication() : cloud(new pcXYZ), normals(new pcNormal), correspondences(new pcl::Correspondences) {}
+
   Eigen::Matrix4f vllm_camera;
   Eigen::Matrix4f offset_camera;
   std::vector<Eigen::Vector3f> vllm_trajectory;
   std::vector<Eigen::Vector3f> offset_trajectory;
-  pcl::CorrespondencesPtr correspondences;
   map::Info localmap_info;
 
   pcXYZ::Ptr cloud;
   pcNormal::Ptr normals;
-  Publication() : cloud(new pcXYZ), normals(new pcNormal), correspondences(new pcl::Correspondences) {}
+  pcl::CorrespondencesPtr correspondences;
 };
 
 // thread safe publisher
@@ -47,15 +48,17 @@ public:
     tmp.offset_camera = offset_camera;
     tmp.vllm_trajectory = vllm_trajectory;
     tmp.offset_trajectory = offset_trajectory;
-    *tmp.correspondences = *corre;
     tmp.localmap_info = localmap_info;
+
+    *tmp.correspondences = *corre;
     pcl::transformPointCloud(*offset.cloud, *tmp.cloud, T_align);
     vllm::transformNormals(*offset.normals, *tmp.normals, T_align);
 
-    flag[id] = true;
-
-    std::lock_guard lock(mtx);
-    id = (id + 1) % 2;
+    {
+      std::lock_guard lock(mtx);
+      flag[id] = true;
+      id = (id + 1) % 2;
+    }
   }
 
   bool pop(Publication& p)

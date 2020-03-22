@@ -9,11 +9,11 @@ namespace optimize
 {
 Outcome Optimizer::optimize(
     const std::shared_ptr<map::Map>& map_ptr,
-    const KeypointsWithNormal& keypoints,  // offset
+    const KeypointsWithNormal& offset_keypoints,
     const Eigen::Matrix4f& offset_camera,
     crrspEstimator& estimator,
-    const Eigen::Matrix4f& T_initial_align
-    /*, const std::list<Eigen::Matrix4f>& vllm_histroty*/)
+    const Eigen::Matrix4f& T_initial_align,
+    const std::list<Eigen::Matrix4f>& vllm_histroty)
 {
   pcXYZ::Ptr tmp_cloud(new pcXYZ);
   pcNormal::Ptr tmp_normals(new pcNormal);
@@ -25,8 +25,8 @@ Outcome Optimizer::optimize(
     std::cout << "itration= \033[32m" << itr << "\033[m";
 
     // Initial transform
-    pcl::transformPointCloud(*keypoints.cloud, *tmp_cloud, T_initial_align);
-    vllm::transformNormals(*keypoints.normals, *tmp_normals, T_initial_align);
+    pcl::transformPointCloud(*offset_keypoints.cloud, *tmp_cloud, T_initial_align);
+    vllm::transformNormals(*offset_keypoints.normals, *tmp_normals, T_initial_align);
 
     // Get all correspodences
     estimator.setInputSource(tmp_cloud);
@@ -34,22 +34,25 @@ Outcome Optimizer::optimize(
     estimator.determineCorrespondences(*correspondences);
     std::cout << " ,raw_correspondences= \033[32m" << correspondences->size() << "\033[m";
 
-    // // Reject too far correspondences
-    // float distance = config.distance_max - (config.distance_max - config.distance_min) * static_cast<float>(itr) / static_cast<float>(config.iteration);
-    // distance_rejector.setInputCorrespondences(correspondences);
-    // distance_rejector.setMaximumDistance(distance);
-    // distance_rejector.getCorrespondences(*correspondences);
-    // std::cout << " ,refined_correspondecnes= \033[32m" << correspondences->size() << "\033[m" << std::endl;
+    // for (int i = 0; i < 50; i++) {
+    //   std::cout << " " << correspondences->at(i).distance;
+    // }
+
+    // Reject too far correspondences
+    float distance = config.distance_max - (config.distance_max - config.distance_min) * static_cast<float>(itr) / static_cast<float>(config.iteration);
+    distance_rejector.setInputCorrespondences(correspondences);
+    distance_rejector.setMaximumDistance(distance);
+    distance_rejector.getCorrespondences(*correspondences);
+    std::cout << " ,refined_correspondecnes= \033[32m" << correspondences->size() << "\033[m" << std::endl;
 
     Eigen::Matrix4f vllm_camera = T_align * offset_camera;
     Eigen::Matrix4f last_camera = vllm_camera;
 
     // Align pointclouds
-    std::cout << "Gain: sclae= " << config.gain.scale << " latitude= " << config.gain.latitude << std::endl;
     optimize::Aligner aligner(config.gain.scale, config.gain.latitude, config.gain.altitude, 0);
     // TODO:
     // aligner.setPrePosition(offset_camera, old_vllm_camera, older_vllm_camera);
-    T_align = aligner.estimate7DoF(T_align, *keypoints.cloud, *map_ptr->getTargetCloud(), *correspondences, map_ptr->getTargetNormals(), keypoints.normals);
+    T_align = aligner.estimate7DoF(T_align, *offset_keypoints.cloud, *map_ptr->getTargetCloud(), *correspondences, map_ptr->getTargetNormals(), offset_keypoints.normals);
 
     // Integrate
     vllm_camera = T_align * offset_camera;

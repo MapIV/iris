@@ -21,7 +21,9 @@ System::System(Config& config, const std::shared_ptr<map::Map>& map)
 
   camera_velocity.setIdentity();
   T_init = config.T_init;
+  T_align.setIdentity();
 
+  //  for optimizer module
   optimize::Gain gain;
   gain.scale = config.scale_gain;
   gain.smooth = config.smooth_gain;
@@ -35,12 +37,8 @@ System::System(Config& config, const std::shared_ptr<map::Map>& map)
   optimize_config.threshold_rotation = config.converge_rotation;
   optimize_config.threshold_translation = config.converge_translation;
 
-
-  old_vllm_camera = T_init;
-  older_vllm_camera = T_init;
-
   for (int i = 0; i < history; i++)
-    camera_history.push_front(T_init);
+    vllm_history.push_front(T_init);
 }
 
 bool least_one = false;
@@ -55,13 +53,13 @@ int System::execute()
   int vslam_state = static_cast<int>(bridge.getState());
   Eigen::Matrix4f vslam_camera = Eigen::Matrix4f::Identity();
 
+  // TODO:
   // Artifical restart
-  if (reset_requested.load()) {
-    reset_requested.store(false);
-    T_align = Eigen::Matrix4f::Identity();
-    old_vllm_camera = T_init;
-    older_vllm_camera = T_init;
-  }
+  // if (reset_requested.load()) {
+  //   reset_requested.store(false);
+  //   T_align = Eigen::Matrix4f::Identity();
+  //   old_vllm_camera = T_init;
+  // }
 
   // "3" means openvslam::tracking_state_t::Lost
   if (vslam_state == 3) {
@@ -69,15 +67,16 @@ int System::execute()
     bridge.requestReset();
   }
 
-  // TODO:
-  // Update alignment parameter
-  // updateParameter();
-
   std::cout << "vslam state " << vslam_state << std::endl;
   aligning_mode = (vslam_state == 2);
 
   KeypointsWithNormal raw_keypoints;
   KeypointsWithNormal offset_keypoints;
+
+  // std::cout << "T_align\n"
+  //           << T_align << std::endl;
+  // std::cout << "T_init\n"
+  //           << T_init << std::endl;
 
   if (aligning_mode) {
     least_one = true;
@@ -120,28 +119,29 @@ int System::execute()
     pcl::transformPointCloud(*raw_keypoints.cloud, *offset_keypoints.cloud, T_init);
     vllm::transformNormals(*raw_keypoints.normals, *offset_keypoints.normals, T_init);
 
-    // std::cout << "T_init\n"
-    //           << T_init << std::endl;
-    // std::cout << "T_align\n"
-    //           << T_align << std::endl;
+    // Update prameter of optimize
+    updateOptimizeGain();
 
+    // =======================
     // == Main Optimization ==
     optimizer.setConfig(optimize_config);
-    optimize::Outcome outcome
-        = optimizer.optimize(map, offset_keypoints, T_init * vslam_camera, estimator, T_align);
-    *correspondences = *outcome.correspondences;
+    optimize::Outcome outcome = optimizer.optimize(map, offset_keypoints, T_init * vslam_camera, estimator, T_align, vllm_history);
+
+    correspondences = outcome.correspondences;
     T_align = outcome.T_align;
-    // == Main Optimization ==
+    // =======================
 
   }
+  // =======================
   // Inertial model
   else {
     if (camera_velocity.isZero()) {
-      camera_velocity = optimize::calcVelocity(camera_history);
+      camera_velocity = optimize::calcVelocity(vllm_history);
       std::cout << "calc camera_velocity\n"
                 << camera_velocity << std::endl;
     }
 
+    Eigen::Matrix4f old_vllm_camera = *vllm_history.begin();
     T_init = camera_velocity * old_vllm_camera;
     T_align.setIdentity();
 
@@ -150,13 +150,10 @@ int System::execute()
       relocalizing = true;
     }
   }
+  // =======================
 
   Eigen::Matrix4f offset_camera = T_init * vslam_camera;
   Eigen::Matrix4f vllm_camera = T_align * offset_camera;
-
-  // std::cout << "T_init\n"
-  //           << T_init << std::endl;
-  // std::cout << "now= " << database.vllm_camera.topRightCorner(3, 1).transpose() << std::endl;
 
   // Update local map
   map->informCurrentPose(vllm_camera);
@@ -169,19 +166,16 @@ int System::execute()
     estimator.setTargetNormals(map->getTargetNormals());
   }
 
+  // Update history
+  vllm_history.pop_back();
+  vllm_history.push_front(vllm_camera);
+
   // Pubush for the viewer
   vllm_trajectory.push_back(vllm_camera.topRightCorner(3, 1));
   offset_trajectory.push_back(offset_camera.topRightCorner(3, 1));
   publisher.push(
       T_align, vllm_camera, offset_camera,
       offset_keypoints, vllm_trajectory, offset_trajectory, correspondences, localmap_info);
-
-  // Update old data
-  older_vllm_camera = old_vllm_camera;
-  old_vllm_camera = vllm_camera;
-  camera_history.pop_back();
-  camera_history.push_front(vllm_camera);
-
 
   return 0;
 }

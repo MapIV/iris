@@ -54,7 +54,7 @@ void PangolinViewer::init()
 
   colored_target_cloud = colorizePointCloud(target_cloud);
 
-  optimize::Gain optimize_gain;  //= system_ptr->getParameter();
+  optimize::Gain optimize_gain = system_ptr->getOptimizeGain();
   gui_scale_gain = std::make_shared<pangolin::Var<float>>("ui.scale_gain", optimize_gain.scale, 0.0f, 50.0f);
   gui_smooth_gain = std::make_shared<pangolin::Var<float>>("ui.smooth_gain", optimize_gain.smooth, 0.0f, 50.0f);
   gui_latitude_gain = std::make_shared<pangolin::Var<float>>("ui.latitude_gain", optimize_gain.latitude, 0.0f, 50.0f);
@@ -131,8 +131,8 @@ void PangolinViewer::execute()
   drawCamera(publication.vllm_camera, {1.0f, 0.0f, 0.0f, 1.0f});
   drawTrajectory(publication.vllm_trajectory, true);
 
-  // if (gui_scale_gain->GuiChanged() || gui_smooth_gain->GuiChanged() || gui_latitude_gain->GuiChanged() || gui_altitude_gain->GuiChanged())
-  //   system_ptr->setParameter({*gui_scale_gain, *gui_smooth_gain, *gui_latitude_gain, *gui_altitude_gain});
+  if (gui_scale_gain->GuiChanged() || gui_smooth_gain->GuiChanged() || gui_latitude_gain->GuiChanged() || gui_altitude_gain->GuiChanged())
+    system_ptr->setOptimizeGain({*gui_scale_gain, *gui_smooth_gain, *gui_latitude_gain, *gui_altitude_gain});
 
   // Eigen::Vector2d distance(*gui_distance_min, *gui_distance_max);
   // system_ptr->setSearchDistance(distance);

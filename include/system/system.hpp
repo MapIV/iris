@@ -39,22 +39,21 @@ public:
     return publisher.pop(d);
   }
 
-  // void updateParameter()
-  // {
-  //   std::lock_guard<std::mutex> lock(parameter_mutex);
-  //   parameter = thread_safe_parameter;
-  // }
-
-  // optimize::Gain getParameter() const
-  // {
-  //   std::lock_guard<std::mutex> lock(parameter_mutex);
-  //   return parameter;
-  // }
-  // void setParameter(const optimize::Parameter& parameter_)
-  // {
-  //   std::lock_guard<std::mutex> lock(parameter_mutex);
-  //   thread_safe_parameter = parameter_;
-  // }
+  void updateOptimizeGain()
+  {
+    std::lock_guard<std::mutex> lock(optimize_gain_mutex);
+    optimize_gain = thread_safe_optimize_gain;
+  }
+  optimize::Gain getOptimizeGain() const
+  {
+    std::lock_guard<std::mutex> lock(optimize_gain_mutex);
+    return optimize_gain;
+  }
+  void setOptimizeGain(const optimize::Gain& gain_)
+  {
+    std::lock_guard<std::mutex> lock(optimize_gain_mutex);
+    thread_safe_optimize_gain = gain_;
+  }
 
   // unsigned int getRecollection() const { return recollection; }
   // void setRecollection(unsigned int recollection_) { recollection = recollection_; }
@@ -63,8 +62,8 @@ private:
   bool optimize(int iteration);
 
   // ==== private member ====
-  // optimize::Gain optimize_gain, thread_safe_optimize_gain;
-  // mutable std::mutex optimize_gain_mutex;
+  optimize::Gain optimize_gain, thread_safe_optimize_gain;
+  mutable std::mutex optimize_gain_mutex;
 
 
   unsigned int recollection = 50;
@@ -77,13 +76,8 @@ private:
   Eigen::Matrix4f T_init;
   Eigen::Matrix4f T_align = Eigen::Matrix4f::Identity();
 
-  Eigen::Matrix4f old_vllm_camera = Eigen::Matrix4f::Identity();    // t-1
-  Eigen::Matrix4f older_vllm_camera = Eigen::Matrix4f::Identity();  // t-2
-
-  // TODO: integrate
   std::vector<Eigen::Vector3f> vllm_trajectory;
   std::vector<Eigen::Vector3f> offset_trajectory;
-  std::list<Eigen::Matrix4f> camera_history;
 
   pcl::CorrespondencesPtr correspondences;
 
@@ -101,8 +95,9 @@ private:
 
   // for relozalization
   bool relocalizing = false;
-  const int history = 5;
   Eigen::Matrix4f camera_velocity;
+  const int history = 5;
+  std::list<Eigen::Matrix4f> vllm_history;
 };
 
 }  // namespace vllm
