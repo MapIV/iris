@@ -124,7 +124,7 @@ void Aligner::setEdge7DoFGICP(
 
   // Add a latitude edge
   {
-    Edge_Latitude_Restriction* e = new Edge_Latitude_Restriction(param.latitude_gain);
+    Edge_Latitude_Restriction* e = new Edge_Latitude_Restriction(latitude_gain);
     e->setVertex(0, vp0);
     e->information().setIdentity();
     e->setMeasurement(0.0);
@@ -133,7 +133,7 @@ void Aligner::setEdge7DoFGICP(
 
   // Add a scale edge
   {
-    Edge_Scale_Restriction* e = new Edge_Scale_Restriction(param.scale_gain);
+    Edge_Scale_Restriction* e = new Edge_Scale_Restriction(scale_gain);
     e->setVertex(0, vp0);
     e->information().setIdentity();
     e->setMeasurement(1.0);
@@ -142,7 +142,7 @@ void Aligner::setEdge7DoFGICP(
 
   // Add an altitude edge
   {
-    Edge_Altitude_Restriction* e = new Edge_Altitude_Restriction(param.altitude_gain);
+    Edge_Altitude_Restriction* e = new Edge_Altitude_Restriction(altitude_gain);
     e->setVertex(0, vp0);
     e->information().setIdentity();
     e->setMeasurement(camera_pos.topRightCorner(3, 1).cast<double>());
@@ -150,7 +150,7 @@ void Aligner::setEdge7DoFGICP(
   }
 
   // add a const velocity Model Constraint Edge of Scale
-  Edge_Smooth_Restriction* e = new Edge_Smooth_Restriction(param.smooth_gain);
+  Edge_Smooth_Restriction* e = new Edge_Smooth_Restriction(smooth_gain);
   e->setVertex(0, vp0);
   e->information().setIdentity();
   VelocityModel model;

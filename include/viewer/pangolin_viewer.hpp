@@ -79,7 +79,7 @@ private:
   pcl::PointCloud<pcl::Normal>::Ptr target_normals;
   pcl::PointCloud<pcl::PointXYZRGBA>::Ptr colored_target_cloud;
 
-  Database database;
+  Publication publication;
 
   map::Info localmap_info;
 

@@ -54,11 +54,11 @@ void PangolinViewer::init()
 
   colored_target_cloud = colorizePointCloud(target_cloud);
 
-  optimize::Parameter param = system_ptr->getParameter();
-  gui_scale_gain = std::make_shared<pangolin::Var<float>>("ui.scale_gain", param.scale_gain, 0.0f, 50.0f);
-  gui_smooth_gain = std::make_shared<pangolin::Var<float>>("ui.smooth_gain", param.smooth_gain, 0.0f, 50.0f);
-  gui_latitude_gain = std::make_shared<pangolin::Var<float>>("ui.latitude_gain", param.latitude_gain, 0.0f, 50.0f);
-  gui_altitude_gain = std::make_shared<pangolin::Var<float>>("ui.altitude_gain", param.altitude_gain, 0.0f, 50.0f);
+  optimize::Gain optimize_gain;  //= system_ptr->getParameter();
+  gui_scale_gain = std::make_shared<pangolin::Var<float>>("ui.scale_gain", optimize_gain.scale, 0.0f, 50.0f);
+  gui_smooth_gain = std::make_shared<pangolin::Var<float>>("ui.smooth_gain", optimize_gain.smooth, 0.0f, 50.0f);
+  gui_latitude_gain = std::make_shared<pangolin::Var<float>>("ui.latitude_gain", optimize_gain.latitude, 0.0f, 50.0f);
+  gui_altitude_gain = std::make_shared<pangolin::Var<float>>("ui.altitude_gain", optimize_gain.altitude, 0.0f, 50.0f);
 
   // Eigen::Vector2d distance = system_ptr->getSearchDistance();
   // unsigned int recollect = system_ptr->getRecollection();
@@ -99,7 +99,7 @@ void PangolinViewer::execute()
   drawGridLine();
   drawString("VLLM", {1.0f, 1.0f, 0.0f, 3.0f});
 
-  system_ptr->popDatabase(database);
+  system_ptr->popPublication(publication);
 
   map::Info new_localmap_info = system_ptr->getMap()->getLocalmapInfo();
   if (new_localmap_info != localmap_info) {
@@ -114,25 +114,25 @@ void PangolinViewer::execute()
   if (*gui_target_normals)
     drawNormals(target_cloud, target_normals, {0.0f, 1.0f, 0.0f, 1.0f}, 30);
 
-  drawPointCloud(database.vllm_cloud, {1.0f, 1.0f, 0.0f, 2.0f});
+  drawPointCloud(publication.cloud, {1.0f, 1.0f, 0.0f, 2.0f});
   if (*gui_source_normals)
-    drawNormals(database.vllm_cloud, database.vllm_normals, {1.0f, 0.0f, 1.0f, 1.0f});
+    drawNormals(publication.cloud, publication.normals, {1.0f, 0.0f, 1.0f, 1.0f});
 
   if (*gui_vslam_camera) {
-    drawCamera(database.offset_camera, {1.0f, 0.0f, 1.0f, 1.0f});
-    drawTrajectory(database.offset_trajectory, false, {1.0f, 0.0f, 1.0f, 1.0f});
+    drawCamera(publication.offset_camera, {1.0f, 0.0f, 1.0f, 1.0f});
+    // drawTrajectory(publication.offset_cameras, false, {1.0f, 0.0f, 1.0f, 1.0f});
   }
 
   if (*gui_correspondences) {
-    if (database.localmap_info == localmap_info)
-      drawCorrespondences(database.vllm_cloud, target_cloud, database.correspondences, {0.0f, 0.0f, 1.0f, 2.0f});
+    if (publication.localmap_info == localmap_info)
+      drawCorrespondences(publication.cloud, target_cloud, publication.correspondences, {0.0f, 0.0f, 1.0f, 2.0f});
   }
 
-  drawTrajectory(database.vllm_trajectory, true);
-  drawCamera(database.vllm_camera, {1.0f, 0.0f, 0.0f, 1.0f});
+  drawCamera(publication.vllm_camera, {1.0f, 0.0f, 0.0f, 1.0f});
+  // drawTrajectory(publication.vllm_cameras, true);
 
-  if (gui_scale_gain->GuiChanged() || gui_smooth_gain->GuiChanged() || gui_latitude_gain->GuiChanged() || gui_altitude_gain->GuiChanged())
-    system_ptr->setParameter({*gui_scale_gain, *gui_smooth_gain, *gui_latitude_gain, *gui_altitude_gain});
+  // if (gui_scale_gain->GuiChanged() || gui_smooth_gain->GuiChanged() || gui_latitude_gain->GuiChanged() || gui_altitude_gain->GuiChanged())
+  //   system_ptr->setParameter({*gui_scale_gain, *gui_smooth_gain, *gui_latitude_gain, *gui_altitude_gain});
 
   // Eigen::Vector2d distance(*gui_distance_min, *gui_distance_max);
   // system_ptr->setSearchDistance(distance);
