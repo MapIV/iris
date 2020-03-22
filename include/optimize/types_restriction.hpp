@@ -31,10 +31,9 @@ public:
 class Edge_Scale_Restriction : public g2o::BaseUnaryEdge<1, double, VertexSim3Expmap>
 {
 private:
-  double gain = 1.0;
+  double gain;
 
 public:
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
   Edge_Scale_Restriction(double gain = 1.0) : gain(gain) {}
 
   virtual bool read(std::istream&) { return false; }
@@ -45,10 +44,9 @@ public:
 class Edge_Smooth_Restriction : public g2o::BaseUnaryEdge<3, VelocityModel, VertexSim3Expmap>
 {
 private:
-  double gain = 1.0;
+  double gain;
 
 public:
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
   Edge_Smooth_Restriction(double gain = 1.0) : gain(gain) {}
 
   virtual bool read(std::istream&) { return false; }
@@ -59,10 +57,9 @@ public:
 class Edge_Latitude_Restriction : public g2o::BaseUnaryEdge<1, double, VertexSim3Expmap>
 {
 private:
-  double gain = 1.0;
+  double gain;
 
 public:
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
   Edge_Latitude_Restriction(double gain = 1.0) : gain(gain) {}
 
   virtual bool read(std::istream&) { return false; }
@@ -73,10 +70,9 @@ public:
 class Edge_Altitude_Restriction : public g2o::BaseUnaryEdge<1, Eigen::Vector3d, VertexSim3Expmap>
 {
 private:
-  double gain = 1.0;
+  double gain;
 
 public:
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
   Edge_Altitude_Restriction(double gain = 1.0) : gain(gain) {}
 
   virtual bool read(std::istream&) { return false; }

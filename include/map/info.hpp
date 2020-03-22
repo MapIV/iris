@@ -6,6 +6,8 @@ namespace vllm
 namespace map
 {
 struct Info {
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
   float x;
   float y;
   float theta;

@@ -11,6 +11,7 @@ namespace optimize
 class Aligner
 {
 public:
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
   Aligner(float scale_gain, float latitude_gain, float altitude_gain, float smooth_gain)
       : scale_gain(scale_gain),
         latitude_gain(latitude_gain),

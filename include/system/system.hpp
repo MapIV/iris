@@ -13,6 +13,14 @@
 
 namespace vllm
 {
+
+enum State {
+  Inittializing = 0,
+  Tracking = 1,
+  Lost = 2,
+  Relocalizing = 3,
+};
+
 class System
 {
 public:
@@ -65,6 +73,8 @@ private:
   optimize::Gain optimize_gain, thread_safe_optimize_gain;
   mutable std::mutex optimize_gain_mutex;
 
+  State state;
+
 
   unsigned int recollection = 50;
 
@@ -88,14 +98,12 @@ private:
   BridgeOpenVSLAM bridge;
   double accuracy = 0.5;
 
-  bool aligning_mode = false;
   map::Info localmap_info;
 
   Publisher publisher;
 
   // for relozalization
-  bool relocalizing = false;
-  Eigen::Matrix4f camera_velocity;
+  Eigen::Matrix4f vllm_velocity;
   const int history = 5;
   std::list<Eigen::Matrix4f> vllm_history;
 };
