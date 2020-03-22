@@ -120,7 +120,7 @@ void PangolinViewer::execute()
 
   if (*gui_vslam_camera) {
     drawCamera(publication.offset_camera, {1.0f, 0.0f, 1.0f, 1.0f});
-    // drawTrajectory(publication.offset_cameras, false, {1.0f, 0.0f, 1.0f, 1.0f});
+    drawTrajectory(publication.offset_trajectory, false, {1.0f, 0.0f, 1.0f, 1.0f});
   }
 
   if (*gui_correspondences) {
@@ -129,7 +129,7 @@ void PangolinViewer::execute()
   }
 
   drawCamera(publication.vllm_camera, {1.0f, 0.0f, 0.0f, 1.0f});
-  // drawTrajectory(publication.vllm_cameras, true);
+  drawTrajectory(publication.vllm_trajectory, true);
 
   // if (gui_scale_gain->GuiChanged() || gui_smooth_gain->GuiChanged() || gui_latitude_gain->GuiChanged() || gui_altitude_gain->GuiChanged())
   //   system_ptr->setParameter({*gui_scale_gain, *gui_smooth_gain, *gui_latitude_gain, *gui_altitude_gain});

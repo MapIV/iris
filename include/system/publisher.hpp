@@ -10,14 +10,14 @@ namespace vllm
 struct Publication {
   Eigen::Matrix4f vllm_camera;
   Eigen::Matrix4f offset_camera;
-  std::vector<Eigen::Matrix4f> vllm_cameras;
-  std::vector<Eigen::Matrix4f> offset_cameras;
+  std::vector<Eigen::Vector3f> vllm_trajectory;
+  std::vector<Eigen::Vector3f> offset_trajectory;
   pcl::CorrespondencesPtr correspondences;
   map::Info localmap_info;
 
   pcXYZ::Ptr cloud;
   pcNormal::Ptr normals;
-  Publication() : cloud(new pcXYZ), normals(new pcNormal) {}
+  Publication() : cloud(new pcXYZ), normals(new pcNormal), correspondences(new pcl::Correspondences) {}
 };
 
 // thread safe publisher
@@ -36,18 +36,18 @@ public:
       const Eigen::Matrix4f& vllm_camera,
       const Eigen::Matrix4f& offset_camera,
       const KeypointsWithNormal& offset,
-      const std::vector<Eigen::Matrix4f>& vllm_cameras,
-      const std::vector<Eigen::Matrix4f>& offset_cameras,
+      const std::vector<Eigen::Vector3f>& vllm_trajectory,
+      const std::vector<Eigen::Vector3f>& offset_trajectory,
       const pcl::CorrespondencesPtr& corre,
       const map::Info& localmap_info)
   {
     Publication& tmp = publication[id];
 
     tmp.vllm_camera = vllm_camera;
-    tmp.vllm_cameras = vllm_cameras;
     tmp.offset_camera = offset_camera;
-    tmp.offset_cameras = offset_cameras;
-    tmp.correspondences = corre;
+    tmp.vllm_trajectory = vllm_trajectory;
+    tmp.offset_trajectory = offset_trajectory;
+    *tmp.correspondences = *corre;
     tmp.localmap_info = localmap_info;
     pcl::transformPointCloud(*offset.cloud, *tmp.cloud, T_align);
     vllm::transformNormals(*offset.normals, *tmp.normals, T_align);

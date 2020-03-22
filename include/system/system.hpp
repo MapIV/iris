@@ -81,8 +81,8 @@ private:
   Eigen::Matrix4f older_vllm_camera = Eigen::Matrix4f::Identity();  // t-2
 
   // TODO: integrate
-  std::vector<Eigen::Matrix4f> vllm_cameras;
-  std::vector<Eigen::Matrix4f> offset_cameras;
+  std::vector<Eigen::Vector3f> vllm_trajectory;
+  std::vector<Eigen::Vector3f> offset_trajectory;
   std::list<Eigen::Matrix4f> camera_history;
 
   pcl::CorrespondencesPtr correspondences;

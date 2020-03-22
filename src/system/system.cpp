@@ -76,8 +76,8 @@ int System::execute()
   std::cout << "vslam state " << vslam_state << std::endl;
   aligning_mode = (vslam_state == 2);
 
-  KeypointsWithNormal keypoints;
-  KeypointsWithNormal offset;
+  KeypointsWithNormal raw_keypoints;
+  KeypointsWithNormal offset_keypoints;
 
   if (aligning_mode) {
     least_one = true;
@@ -107,24 +107,29 @@ int System::execute()
     camera_velocity.setZero();
 
     // Get keypoints cloud with normals
-    bridge.getLandmarksAndNormals(keypoints.cloud, keypoints.normals, recollection, accuracy);
+    bridge.getLandmarksAndNormals(raw_keypoints.cloud, raw_keypoints.normals, recollection, accuracy);
 
     // Update threshold to adjust the number of points
-    if (keypoints.cloud->size() < 400 && accuracy > 0.01) accuracy -= 0.01;
-    if (keypoints.cloud->size() > 600 && accuracy < 0.99) accuracy += 0.01;
+    if (raw_keypoints.cloud->size() < 400 && accuracy > 0.01) accuracy -= 0.01;
+    if (raw_keypoints.cloud->size() > 600 && accuracy < 0.99) accuracy += 0.01;
 
     // Get valid camera pose in vSLAM world
     vslam_camera = bridge.getCameraPose().inverse().cast<float>();
 
     // Transform subtract the first pose offset
-    pcl::transformPointCloud(*keypoints.cloud, *offset.cloud, T_init);
-    vllm::transformNormals(*keypoints.normals, *offset.normals, T_init);
+    pcl::transformPointCloud(*raw_keypoints.cloud, *offset_keypoints.cloud, T_init);
+    vllm::transformNormals(*raw_keypoints.normals, *offset_keypoints.normals, T_init);
+
+    // std::cout << "T_init\n"
+    //           << T_init << std::endl;
+    // std::cout << "T_align\n"
+    //           << T_align << std::endl;
 
     // == Main Optimization ==
     optimizer.setConfig(optimize_config);
     optimize::Outcome outcome
-        = optimizer.optimize(map, offset, T_init * vslam_camera, estimator, T_align);
-    correspondences = outcome.correspondences;  // TODO: shallow copy?
+        = optimizer.optimize(map, offset_keypoints, T_init * vslam_camera, estimator, T_align);
+    *correspondences = *outcome.correspondences;
     T_align = outcome.T_align;
     // == Main Optimization ==
 
@@ -146,7 +151,8 @@ int System::execute()
     }
   }
 
-  Eigen::Matrix4f vllm_camera = T_align * T_init * vslam_camera;
+  Eigen::Matrix4f offset_camera = T_init * vslam_camera;
+  Eigen::Matrix4f vllm_camera = T_align * offset_camera;
 
   // std::cout << "T_init\n"
   //           << T_init << std::endl;
@@ -164,12 +170,11 @@ int System::execute()
   }
 
   // Pubush for the viewer
-  vllm_cameras.push_back(vllm_camera);
-  offset_cameras.push_back(T_init * vslam_camera);
+  vllm_trajectory.push_back(vllm_camera.topRightCorner(3, 1));
+  offset_trajectory.push_back(offset_camera.topRightCorner(3, 1));
   publisher.push(
-      T_align, vllm_camera,
-      T_init * vslam_camera,
-      offset, vllm_cameras, offset_cameras, correspondences, localmap_info);
+      T_align, vllm_camera, offset_camera,
+      offset_keypoints, vllm_trajectory, offset_trajectory, correspondences, localmap_info);
 
   // Update old data
   older_vllm_camera = old_vllm_camera;
