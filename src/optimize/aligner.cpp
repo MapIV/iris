@@ -122,25 +122,17 @@ void Aligner::setEdge7DoFGICP(
     optimizer.addEdge(e);
   }
 
-  // // Add a latitude edge
-  // {
-  //   Edge_Latitude_Restriction* e = new Edge_Latitude_Restriction(latitude_gain);
-  //   e->setVertex(0, vp0);
-  //   e->information().setIdentity();
-  //   e->setMeasurement(0.0);
-  //   optimizer.addEdge(e);
-  // }
 
-  // // Add a scale edge
-  // {
-  //   Edge_Scale_Restriction* e = new Edge_Scale_Restriction(scale_gain);
-  //   e->setVertex(0, vp0);
-  //   e->information().setIdentity();
-  //   e->setMeasurement(1.0);
-  //   optimizer.addEdge(e);
-  // }
+  // Add a scale edge
+  {
+    Edge_Scale_Restriction* e = new Edge_Scale_Restriction(scale_gain);
+    e->setVertex(0, vp0);
+    e->information().setIdentity();
+    e->setMeasurement(1.0);
+    optimizer.addEdge(e);
+  }
 
-  // // Add an altitude edge
+  // Add an altitude edge
   // {
   //   Edge_Altitude_Restriction* e = new Edge_Altitude_Restriction(altitude_gain);
   //   e->setVertex(0, vp0);
@@ -148,6 +140,15 @@ void Aligner::setEdge7DoFGICP(
   //   e->setMeasurement(camera_pos.topRightCorner(3, 1).cast<double>());
   //   optimizer.addEdge(e);
   // }
+
+  // Add a latitude edge
+  {
+    Edge_Latitude_Restriction* e = new Edge_Latitude_Restriction(latitude_gain);
+    e->setVertex(0, vp0);
+    e->information().setIdentity();
+    e->setMeasurement(0.0);
+    optimizer.addEdge(e);
+  }
 
   // TODO:
   // add a const velocity Model Constraint Edge of Scale

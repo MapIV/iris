@@ -1,4 +1,5 @@
 #pragma once
+#include <Eigen/Dense>
 #include <Eigen/Geometry>
 #include <g2o/core/base_binary_edge.h>
 #include <g2o/core/base_unary_edge.h>
@@ -41,13 +42,13 @@ public:
   void computeError();
 };
 
-class Edge_Smooth_Restriction : public g2o::BaseUnaryEdge<3, VelocityModel, VertexSim3Expmap>
+class Edge_Altitude_Restriction : public g2o::BaseUnaryEdge<1, Eigen::Vector3d, VertexSim3Expmap>
 {
 private:
   double gain;
 
 public:
-  Edge_Smooth_Restriction(double gain = 1.0) : gain(gain) {}
+  Edge_Altitude_Restriction(double gain = 1.0) : gain(gain) {}
 
   virtual bool read(std::istream&) { return false; }
   virtual bool write(std::ostream&) const { return false; }
@@ -67,18 +68,19 @@ public:
   void computeError();
 };
 
-class Edge_Altitude_Restriction : public g2o::BaseUnaryEdge<1, Eigen::Vector3d, VertexSim3Expmap>
+class Edge_Smooth_Restriction : public g2o::BaseUnaryEdge<3, VelocityModel, VertexSim3Expmap>
 {
 private:
   double gain;
 
 public:
-  Edge_Altitude_Restriction(double gain = 1.0) : gain(gain) {}
+  Edge_Smooth_Restriction(double gain = 1.0) : gain(gain) {}
 
   virtual bool read(std::istream&) { return false; }
   virtual bool write(std::ostream&) const { return false; }
   void computeError();
 };
+
 
 }  // namespace optimize
 }  // namespace vllm

@@ -24,9 +24,9 @@ public:
 
   void setPrePosition(const Eigen::Matrix4f& camera_pos_, const Eigen::Matrix4f& old_pos_, const Eigen::Matrix4f& older_pos_)
   {
-    camera_pos = camera_pos_;
-    old_pos = old_pos_;
-    older_pos = older_pos_;
+    // camera_pos = camera_pos_;
+    // old_pos = old_pos_;
+    // older_pos = older_pos_;
   }
 
   Eigen::Matrix4f estimate7DoF(
@@ -43,7 +43,7 @@ private:
   float altitude_gain = 0;
   float smooth_gain = 0;
 
-  Eigen::Matrix4f camera_pos, old_pos, older_pos;
+  // Eigen::Matrix4f camera_pos, old_pos, older_pos;
 
   void setVertexSim3(g2o::SparseOptimizer& optimizer, Eigen::Matrix4f& T);
   void setVertexSE3(g2o::SparseOptimizer& optimizer, Eigen::Matrix4f& T);
