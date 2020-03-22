@@ -8,29 +8,29 @@ namespace vllm
 class Publisher
 {
 private:
-  Database pub[2];
+  Database database[2];
   std::mutex mtx;
   int id = 0;
   bool flag[2] = {false, false};
 
 public:
-  void push(const Database& p)
+  void push(const Database& d)
   {
-    pub[id] = p;
+    database[id] = d;
     flag[id] = true;
 
     std::lock_guard lock(mtx);
     id = (id + 1) % 2;
   }
 
-  bool pop(Database& p)
+  bool pop(Database& d)
   {
     std::lock_guard lock(mtx);
     if (flag[(id + 1) % 2] == false) {
       return false;
     }
 
-    p = pub[(id + 1) % 2];
+    d = database[(id + 1) % 2];
     flag[(id + 1) % 2] = false;
     return true;
   }

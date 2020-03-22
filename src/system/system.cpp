@@ -67,8 +67,7 @@ int System::execute()
   // Update alignment parameter
   updateParameter();
 
-
-  std::cout << "state " << vslam_state << std::endl;
+  std::cout << "vslam state " << vslam_state << std::endl;
   aligning_mode = (vslam_state == 2);
 
 
@@ -174,6 +173,14 @@ int System::execute()
   camera_history.push_front(database.vllm_camera);
   return 0;
 }
+
+// iteration
+// database(offset_*, vllm_*, vllm_camera )
+// 直前のT_align
+// estimator
+// distance_rejector
+// search_distance_max,min
+// converge_condition
 
 bool System::optimize(int iteration)
 {

@@ -23,17 +23,16 @@ Eigen::Vector3f calcAverageTransform(const Eigen::Matrix3f& R, const Eigen::Vect
 
 Eigen::Matrix4f calcVelocity(const std::list<Eigen::Matrix4f>& poses)
 {
-  Eigen::Matrix4f V = Eigen::Matrix4f::Identity();
-
+  Eigen::Matrix4f T0 = getNormalizedPose(*std::next(poses.begin()));  // The latest pose seems to be not reliable
+  Eigen::Matrix4f Tn = getNormalizedPose(*std::prev(poses.end()));
   const int dt = static_cast<int>(poses.size()) - 2;
 
-  Eigen::Matrix4f T0 = getNormalizedPose(*std::next(poses.begin()));
-  Eigen::Matrix4f Tn = getNormalizedPose(*std::prev(poses.end()));
-
-  V = T0 * Tn.inverse();
-  Eigen::Matrix3f R = V.topLeftCorner(3, 3);
-  Eigen::Vector3f t = V.topRightCorner(3, 1);
+  Eigen::Matrix4f tmp = T0 * Tn.inverse();
+  Eigen::Matrix3f R = tmp.topLeftCorner(3, 3);
+  Eigen::Vector3f t = tmp.topRightCorner(3, 1);
   Eigen::Matrix3f root_R = so3::exp(so3::log(R) / dt);
+
+  Eigen::Matrix4f V = Eigen::Matrix4f::Identity();
   V.topLeftCorner(3, 3) = root_R;
   V.topRightCorner(3, 1) = calcAverageTransform(root_R, t, dt);
   return V;
