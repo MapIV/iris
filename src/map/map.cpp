@@ -160,25 +160,31 @@ void Map::updateLocalmap(const Eigen::Matrix4f& T)
   // TODO:
   int pattern = static_cast<int>(yawFromPose(T) / (3.14f / 4.0f));
   // int pattern = 0;
-  int x_min, y_min;
+  int x_min, y_min, dx, dy;
   float new_info_theta;
   switch (pattern) {
   case 0:
   case 7:
-    x_min = cx;
+    x_min = cx - 1;
     y_min = cy - 1;
+    dx = 4;
+    dy = 3;
     new_info_theta = 0;
     break;
   case 1:
   case 2:
     x_min = cx - 1;
-    y_min = cy;
+    y_min = cy - 1;
+    dx = 3;
+    dy = 4;
     new_info_theta = 3.1415f * 0.5f;
     break;
   case 3:
   case 4:
     x_min = cx - 2;
     y_min = cy - 1;
+    dx = 4;
+    dy = 3;
     new_info_theta = 3.1415f;
     break;
   case 5:
@@ -186,6 +192,8 @@ void Map::updateLocalmap(const Eigen::Matrix4f& T)
   default:
     x_min = cx - 1;
     y_min = cy - 2;
+    dx = 3;
+    dy = 4;
     new_info_theta = 3.1415f * 1.5f;
     break;
   }
@@ -197,11 +205,11 @@ void Map::updateLocalmap(const Eigen::Matrix4f& T)
     local_target_cloud->clear();
     local_target_normals->clear();
 
-    for (int i = 0; i < 3; i++) {
+    for (int i = 0; i < dx; i++) {
       if (i + x_min < 0) continue;
       if (i + x_min == grid_x_num) continue;
 
-      for (int j = 0; j < 3; j++) {
+      for (int j = 0; j < dy; j++) {
         if (j + y_min < 0) continue;
         if (j + y_min == grid_y_num) continue;
 

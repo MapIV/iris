@@ -132,12 +132,18 @@ void Aligner::setEdgeRestriction(
 {
   g2o::VertexSim3Expmap* vp0 = dynamic_cast<g2o::VertexSim3Expmap*>(optimizer.vertices().find(0)->second);
 
+  const unsigned int DT = 2;
+  auto itr1 = std::next(history.begin(), DT);
+  auto itr2 = std::next(itr1, DT);
+
   // Add a scale edge
   {
     Edge_Scale_Restriction* e = new Edge_Scale_Restriction(scale_gain);
     e->setVertex(0, vp0);
     e->information().setIdentity();
-    e->setMeasurement(1.0);
+    Eigen::Vector2f scales;
+    scales << getScaleFromPose(*itr1), getScaleFromPose(*itr2);
+    e->setMeasurement(scales.cast<double>());
     optimizer.addEdge(e);
   }
 
@@ -167,9 +173,6 @@ void Aligner::setEdgeRestriction(
     VelocityModel model;
     model.camera_pos = offset_camera.topRightCorner(3, 1).cast<double>();
 
-    const unsigned int DT = 3;
-    auto itr1 = std::next(history.begin(), DT);
-    auto itr2 = std::next(itr1, DT);
     model.old_pos = itr1->topRightCorner(3, 1).cast<double>();
     model.older_pos = itr2->topRightCorner(3, 1).cast<double>();
     e->setMeasurement(model);

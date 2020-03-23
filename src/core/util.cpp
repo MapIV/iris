@@ -43,6 +43,10 @@ float getScale(const Eigen::Matrix3f& R)
 {
   return static_cast<float>(std::sqrt((R.transpose() * R).trace() / 3.0));
 }
+float getScaleFromPose(const Eigen::Matrix4f& T)
+{
+  return getScale(T.topLeftCorner(3, 3));
+}
 
 // Not compatible with Scaling
 Eigen::Matrix4f icpWithPurePCL(const pcXYZ::Ptr& cloud_query, const pcXYZ::Ptr& cloud_reference)

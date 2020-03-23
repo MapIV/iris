@@ -16,6 +16,7 @@ pcl::CorrespondencesPtr getCorrespondencesWithNormal(const pcXYZ::Ptr& source_lo
 
 // get scale factor from rotation matrix
 float getScale(const Eigen::Matrix3f& R);
+float getScaleFromPose(const Eigen::Matrix4f& T);
 
 // Not compatible with Scaling
 Eigen::Matrix4f icpWithPurePCL(const pcXYZ::Ptr& cloud_query, const pcXYZ::Ptr& cloud_reference);

@@ -9,12 +9,13 @@ void Edge_Scale_Restriction::computeError()
   const VertexSim3Expmap* vp0 = static_cast<const VertexSim3Expmap*>(_vertices[0]);
   double scale = vp0->estimate().scale();
 
-  if (scale < 0.6)
-    _error(0) = 1e4;
-  else if (scale > 1.5)
-    _error(0) = 1e4;
+  Eigen::Vector2d scales = measurement();
+
+  double ds = scale - scales(0);
+  if (ds < 0.01)
+    _error(0) = 10 * ds + gain * (scale - 2 * scales(0) + scales(1));
   else
-    _error(0) = gain * (scale - 1.0);
+    _error(0) = gain * (scale - 2 * scales(0) + scales(1));
 }
 
 void Edge_Altitude_Restriction::computeError()

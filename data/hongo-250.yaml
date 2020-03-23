@@ -65,7 +65,7 @@ VLLM.iteration: 5
 VLLM.frame_skip: 2
 VLLM.recollection: 60
 
-VLLM.scale_gain: 30.0
+VLLM.scale_gain: 0.5
 VLLM.smooth_gain: 0.5
 VLLM.latitude_gain: 10.0
 VLLM.altitude_gain: 2.0
@@ -76,6 +76,6 @@ VLLM.distance_max: 5.0
 VLLM.converge_translation: 0.05
 VLLM.converge_rotation: 0.01
 
-Map.voxel_grid_leaf: 0.300
-Map.submap_grid_leaf: 60
-Map.normal_search_leaf: 0.6
+Map.voxel_grid_leaf: 0.400
+Map.submap_grid_leaf: 50
+Map.normal_search_leaf: 0.8
