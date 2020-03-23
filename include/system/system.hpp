@@ -50,12 +50,12 @@ public:
   void updateOptimizeGain()
   {
     std::lock_guard<std::mutex> lock(optimize_gain_mutex);
-    optimize_gain = thread_safe_optimize_gain;
+    optimize_config.gain = thread_safe_optimize_gain;
   }
   optimize::Gain getOptimizeGain() const
   {
     std::lock_guard<std::mutex> lock(optimize_gain_mutex);
-    return optimize_gain;
+    return thread_safe_optimize_gain;
   }
   void setOptimizeGain(const optimize::Gain& gain_)
   {
@@ -70,7 +70,9 @@ private:
   bool optimize(int iteration);
 
   // ==== private member ====
-  optimize::Gain optimize_gain, thread_safe_optimize_gain;
+  optimize::Gain thread_safe_optimize_gain;
+  optimize::Config optimize_config;
+  optimize::Optimizer optimizer;
   mutable std::mutex optimize_gain_mutex;
 
   State state;
@@ -91,8 +93,6 @@ private:
 
   pcl::CorrespondencesPtr correspondences;
 
-  optimize::Config optimize_config;
-  optimize::Optimizer optimizer;
   crrspEstimator estimator;
 
   BridgeOpenVSLAM bridge;

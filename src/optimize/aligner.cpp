@@ -18,11 +18,13 @@ namespace optimize
 {
 Eigen::Matrix4f Aligner::estimate7DoF(
     Eigen::Matrix4f& T,
-    const pcl::PointCloud<pcl::PointXYZ>& source,
-    const pcl::PointCloud<pcl::PointXYZ>& target,
-    const pcl::Correspondences& correspondances,
-    const pcl::PointCloud<pcl::Normal>::Ptr& target_normals,
-    const pcl::PointCloud<pcl::Normal>::Ptr& source_normals)
+    const pcl::PointCloud<pcl::PointXYZ>::Ptr& source,
+    const pcl::PointCloud<pcl::PointXYZ>::Ptr& target,
+    const pcl::CorrespondencesPtr& correspondances,
+    const Eigen::Matrix4f& offset_camera,
+    const std::list<Eigen::Matrix4f>& history,
+    const pcl::PointCloud<pcl::Normal>::Ptr& source_normals,
+    const pcl::PointCloud<pcl::Normal>::Ptr& target_normals)
 {
   g2o::SparseOptimizer optimizer;
   g2o::OptimizationAlgorithmLevenberg* solver = new g2o::OptimizationAlgorithmLevenberg(
@@ -31,6 +33,7 @@ Eigen::Matrix4f Aligner::estimate7DoF(
 
   setVertexSim3(optimizer, T);
   setEdge7DoFGICP(optimizer, source, target, correspondances, target_normals, source_normals);
+  setEdgeRestriction(optimizer, offset_camera, history);
 
   // execute
   optimizer.setVerbose(false);
@@ -71,9 +74,9 @@ void Aligner::setVertexSim3(g2o::SparseOptimizer& optimizer, Eigen::Matrix4f& T)
 
 void Aligner::setEdge7DoFGICP(
     g2o::SparseOptimizer& optimizer,
-    const pcl::PointCloud<pcl::PointXYZ>& source,
-    const pcl::PointCloud<pcl::PointXYZ>& target,
-    const pcl::Correspondences& correspondances,
+    const pcl::PointCloud<pcl::PointXYZ>::Ptr& source,
+    const pcl::PointCloud<pcl::PointXYZ>::Ptr& target,
+    const pcl::CorrespondencesPtr& correspondances,
     const pcl::PointCloud<pcl::Normal>::Ptr& target_normals,
     const pcl::PointCloud<pcl::Normal>::Ptr& source_normals)
 {
@@ -81,15 +84,15 @@ void Aligner::setEdge7DoFGICP(
   g2o::VertexSim3Expmap* vp0 = dynamic_cast<g2o::VertexSim3Expmap*>(optimizer.vertices().find(0)->second);
   const Eigen::Matrix3d R = vp0->estimate().rotation().matrix();
 
-  for (const pcl::Correspondence& cor : correspondances) {
+  for (const pcl::Correspondence& cor : *correspondances) {
     // new edge with correct cohort for caching
     Edge_Sim3_GICP* e = new Edge_Sim3_GICP(true);
     e->setVertex(0, vp0);  // set viewpoint
 
     // calculate the relative 3D position of the point
     Eigen::Vector3f pt0, pt1;
-    pt0 = target.at(cor.index_match).getArray3fMap();
-    pt1 = source.at(cor.index_query).getArray3fMap();
+    pt0 = target->at(cor.index_match).getArray3fMap();
+    pt1 = source->at(cor.index_query).getArray3fMap();
 
     EdgeGICP meas;
     meas.pos0 = pt0.cast<double>();
@@ -121,7 +124,14 @@ void Aligner::setEdge7DoFGICP(
     e->setRobustKernel(rk);
     optimizer.addEdge(e);
   }
+}
 
+void Aligner::setEdgeRestriction(
+    g2o::SparseOptimizer& optimizer,
+    const Eigen::Matrix4f& offset_camera,
+    const std::list<Eigen::Matrix4f>& history)
+{
+  g2o::VertexSim3Expmap* vp0 = dynamic_cast<g2o::VertexSim3Expmap*>(optimizer.vertices().find(0)->second);
 
   // Add a scale edge
   {
@@ -133,13 +143,13 @@ void Aligner::setEdge7DoFGICP(
   }
 
   // Add an altitude edge
-  // {
-  //   Edge_Altitude_Restriction* e = new Edge_Altitude_Restriction(altitude_gain);
-  //   e->setVertex(0, vp0);
-  //   e->information().setIdentity();
-  //   e->setMeasurement(camera_pos.topRightCorner(3, 1).cast<double>());
-  //   optimizer.addEdge(e);
-  // }
+  {
+    Edge_Altitude_Restriction* e = new Edge_Altitude_Restriction(altitude_gain);
+    e->setVertex(0, vp0);
+    e->information().setIdentity();
+    e->setMeasurement(offset_camera.topRightCorner(3, 1).cast<double>());
+    optimizer.addEdge(e);
+  }
 
   // Add a latitude edge
   {
@@ -164,5 +174,6 @@ void Aligner::setEdge7DoFGICP(
   //   optimizer.addEdge(e);
   // }
 }
+
 }  // namespace optimize
 }  // namespace vllm

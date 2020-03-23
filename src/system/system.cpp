@@ -41,6 +41,9 @@ System::System(Config& config, const std::shared_ptr<map::Map>& map)
   optimize_config.threshold_rotation = config.converge_rotation;
   optimize_config.threshold_translation = config.converge_translation;
 
+  // During the constructor funtion, there is no way to access members from other threads
+  thread_safe_optimize_gain = optimize_config.gain;
+
   for (int i = 0; i < history; i++)
     vllm_history.push_front(T_init);
 }

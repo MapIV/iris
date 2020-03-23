@@ -36,14 +36,13 @@ class Optimizer
 public:
   void setConfig(const Config& config_) { config = config_; }
 
-
   Outcome optimize(
       const std::shared_ptr<map::Map>& map_ptr,
       const KeypointsWithNormal& offset_keypoints,
       const Eigen::Matrix4f& offset_camera,
       crrspEstimator& estimator,
       const Eigen::Matrix4f& T_initial_align,
-      const std::list<Eigen::Matrix4f>& vllm_histroty);
+      const std::list<Eigen::Matrix4f>& vllm_history);
 
 private:
   Config config;

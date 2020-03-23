@@ -1,5 +1,6 @@
 #pragma once
 #include <g2o/core/sparse_optimizer.h>
+#include <list>
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 #include <pcl/registration/correspondence_types.h>
@@ -22,20 +23,15 @@ public:
 
   ~Aligner() {}
 
-  void setPrePosition(const Eigen::Matrix4f& camera_pos_, const Eigen::Matrix4f& old_pos_, const Eigen::Matrix4f& older_pos_)
-  {
-    // camera_pos = camera_pos_;
-    // old_pos = old_pos_;
-    // older_pos = older_pos_;
-  }
-
   Eigen::Matrix4f estimate7DoF(
       Eigen::Matrix4f& T,
-      const pcl::PointCloud<pcl::PointXYZ>& source,
-      const pcl::PointCloud<pcl::PointXYZ>& target,
-      const pcl::Correspondences& correspondances,
-      const pcl::PointCloud<pcl::Normal>::Ptr& target_normals = nullptr,
-      const pcl::PointCloud<pcl::Normal>::Ptr& source_normals = nullptr);
+      const pcl::PointCloud<pcl::PointXYZ>::Ptr& source,
+      const pcl::PointCloud<pcl::PointXYZ>::Ptr& target,
+      const pcl::CorrespondencesPtr& correspondances,
+      const Eigen::Matrix4f& offset_camera,
+      const std::list<Eigen::Matrix4f>& history,
+      const pcl::PointCloud<pcl::Normal>::Ptr& source_normals = nullptr,
+      const pcl::PointCloud<pcl::Normal>::Ptr& target_normals = nullptr);
 
 private:
   float scale_gain = 0;
@@ -43,16 +39,19 @@ private:
   float altitude_gain = 0;
   float smooth_gain = 0;
 
-  // Eigen::Matrix4f camera_pos, old_pos, older_pos;
-
   void setVertexSim3(g2o::SparseOptimizer& optimizer, Eigen::Matrix4f& T);
   void setVertexSE3(g2o::SparseOptimizer& optimizer, Eigen::Matrix4f& T);
 
+  void setEdgeRestriction(
+      g2o::SparseOptimizer& optimizer,
+      const Eigen::Matrix4f& offset_camera,
+      const std::list<Eigen::Matrix4f>& history);
+
   void setEdge7DoFGICP(
       g2o::SparseOptimizer& optimizer,
-      const pcl::PointCloud<pcl::PointXYZ>& source,
-      const pcl::PointCloud<pcl::PointXYZ>& target,
-      const pcl::Correspondences& correspondances,
+      const pcl::PointCloud<pcl::PointXYZ>::Ptr& source,
+      const pcl::PointCloud<pcl::PointXYZ>::Ptr& target,
+      const pcl::CorrespondencesPtr& correspondances,
       const pcl::PointCloud<pcl::Normal>::Ptr& target_normals,
       const pcl::PointCloud<pcl::Normal>::Ptr& source_normals);
 };

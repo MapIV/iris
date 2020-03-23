@@ -54,7 +54,7 @@ void PangolinViewer::init()
 
   colored_target_cloud = colorizePointCloud(target_cloud);
 
-  optimize::Gain optimize_gain = system_ptr->getOptimizeGain();
+  const optimize::Gain& optimize_gain = system_ptr->getOptimizeGain();
   gui_scale_gain = std::make_shared<pangolin::Var<float>>("ui.scale_gain", optimize_gain.scale, 0.0f, 50.0f);
   gui_smooth_gain = std::make_shared<pangolin::Var<float>>("ui.smooth_gain", optimize_gain.smooth, 0.0f, 50.0f);
   gui_latitude_gain = std::make_shared<pangolin::Var<float>>("ui.latitude_gain", optimize_gain.latitude, 0.0f, 50.0f);
