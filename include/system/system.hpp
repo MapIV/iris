@@ -103,7 +103,7 @@ private:
 
   // for relozalization
   Eigen::Matrix4f vllm_velocity;
-  const int history = 5;
+  const int history = 10;
   std::list<Eigen::Matrix4f> vllm_history;
 };
 

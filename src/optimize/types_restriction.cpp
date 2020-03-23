@@ -46,10 +46,7 @@ void Edge_Smooth_Restriction::computeError()
   Eigen::Vector3d now = vp0->estimate().map(measurement().camera_pos);
 
   Eigen::Vector3d dx = now - old - old + older;
-  if (dx.cwiseAbs().maxCoeff() > 0.5)
-    _error = 1e4 * Eigen::Vector3d::Ones();
-  else
-    _error = gain * (dx);
+  _error(0) = gain * dx.norm();
 }
 
 }  // namespace optimize

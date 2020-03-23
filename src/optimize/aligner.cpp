@@ -159,19 +159,24 @@ void Aligner::setEdgeRestriction(
     optimizer.addEdge(e);
   }
 
-  // TODO:
   // add a const velocity Model Constraint Edge of Scale
-  // {
-  //   Edge_Smooth_Restriction* e = new Edge_Smooth_Restriction(smooth_gain);
-  //   e->setVertex(0, vp0);
-  //   e->information().setIdentity();
-  //   VelocityModel model;
-  //   model.camera_pos = camera_pos.topRightCorner(3, 1).cast<double>();
-  //   model.old_pos = old_pos.topRightCorner(3, 1).cast<double>();
-  //   model.older_pos = older_pos.topRightCorner(3, 1).cast<double>();
-  //   e->setMeasurement(model);
-  //   optimizer.addEdge(e);
-  // }
+  {
+    Edge_Smooth_Restriction* e = new Edge_Smooth_Restriction(smooth_gain);
+    e->setVertex(0, vp0);
+    e->information().setIdentity();
+    VelocityModel model;
+    model.camera_pos = offset_camera.topRightCorner(3, 1).cast<double>();
+
+    const unsigned int DT = 3;
+    auto itr1 = std::next(history.begin(), DT);
+    auto itr2 = std::next(itr1, DT);
+    model.old_pos = itr1->topRightCorner(3, 1).cast<double>();
+    model.older_pos = itr2->topRightCorner(3, 1).cast<double>();
+    e->setMeasurement(model);
+    optimizer.addEdge(e);
+
+    std::cout << "velocity \033[36m" << model.velocity() << "\033[m" << std::endl;
+  }
 }
 
 }  // namespace optimize

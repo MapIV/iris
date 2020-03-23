@@ -27,6 +27,11 @@ public:
     older_pos.setZero();
     camera_pos.setZero();
   }
+
+  double velocity() const
+  {
+    return (old_pos - older_pos).norm();
+  }
 };
 
 class Edge_Scale_Restriction : public g2o::BaseUnaryEdge<1, double, VertexSim3Expmap>
@@ -68,7 +73,7 @@ public:
   void computeError();
 };
 
-class Edge_Smooth_Restriction : public g2o::BaseUnaryEdge<3, VelocityModel, VertexSim3Expmap>
+class Edge_Smooth_Restriction : public g2o::BaseUnaryEdge<1, VelocityModel, VertexSim3Expmap>
 {
 private:
   double gain;
