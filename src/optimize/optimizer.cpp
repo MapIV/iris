@@ -34,10 +34,6 @@ Outcome Optimizer::optimize(
     estimator.determineCorrespondences(*correspondences);
     std::cout << " ,raw_correspondences= \033[32m" << correspondences->size() << "\033[m";
 
-    // for (int i = 0; i < 50; i++) {
-    //   std::cout << " " << correspondences->at(i).distance;
-    // }
-
     // Reject too far c orrespondences
     float distance = config.distance_max - (config.distance_max - config.distance_min) * static_cast<float>(itr) / static_cast<float>(config.iteration);
     distance_rejector.setInputCorrespondences(correspondences);

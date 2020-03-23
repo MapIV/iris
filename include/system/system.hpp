@@ -63,8 +63,8 @@ public:
     thread_safe_optimize_gain = gain_;
   }
 
-  // unsigned int getRecollection() const { return recollection; }
-  // void setRecollection(unsigned int recollection_) { recollection = recollection_; }
+  unsigned int getRecollection() const { return recollection.load(); }
+  void setRecollection(unsigned int recollection_) { recollection.store(recollection_); }
 
 private:
   bool optimize(int iteration);
@@ -77,8 +77,7 @@ private:
 
   State state;
 
-
-  unsigned int recollection = 50;
+  std::atomic<unsigned int> recollection;
 
   std::atomic<bool> reset_requested = false;
 

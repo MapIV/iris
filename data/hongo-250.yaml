@@ -61,11 +61,9 @@ VLLM.pcd_file: "../../vllm-data/hongo-250.pcd"
 VLLM.video_file: "../../vllm-data/hongo-250.mp4"
 VLLM.vocab_file: "orb_vocab.dbow2"
 
-
-VLLM.gpd_size: 8
-VLLM.gpd_gain: 0.5
 VLLM.iteration: 5
 VLLM.frame_skip: 2
+VLLM.recollection: 50
 
 VLLM.scale_gain: 40.0
 VLLM.smooth_gain: 02.0

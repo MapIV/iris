@@ -53,8 +53,11 @@ struct Config {
     fs["VLLM.pcd_file"] >> pcd_file;
     fs["VLLM.video_file"] >> video_file;
     fs["VLLM.vocab_file"] >> vocab_file;
+
     fs["VLLM.iteration"] >> iteration;
     fs["VLLM.frame_skip"] >> frame_skip;
+    fs["VLLM.recollection"] >> recollection;
+
     fs["VLLM.scale_gain"] >> scale_gain;
     fs["VLLM.smooth_gain"] >> smooth_gain;
     fs["VLLM.latitude_gain"] >> latitude_gain;
@@ -73,6 +76,7 @@ struct Config {
   float scale_gain, latitude_gain, smooth_gain, altitude_gain;
   int frame_skip;
   int iteration;
+  int recollection;
 
   float converge_translation;
   float converge_rotation;

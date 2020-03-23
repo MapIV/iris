@@ -60,9 +60,10 @@ void PangolinViewer::init()
   gui_latitude_gain = std::make_shared<pangolin::Var<float>>("ui.latitude_gain", optimize_gain.latitude, 0.0f, 50.0f);
   gui_altitude_gain = std::make_shared<pangolin::Var<float>>("ui.altitude_gain", optimize_gain.altitude, 0.0f, 50.0f);
 
+  gui_recollection = std::make_shared<pangolin::Var<unsigned int>>("ui.recollection", system_ptr->getRecollection(), 0, 200);
+
   // Eigen::Vector2d distance = system_ptr->getSearchDistance();
   // unsigned int recollect = system_ptr->getRecollection();
-  // gui_recollection = std::make_shared<pangolin::Var<unsigned int>>("ui.recollection", recollect, 0, 200);
   // gui_distance_min = std::make_shared<pangolin::Var<double>>("ui.distance_min", distance(0), 0.0, 1.0);
   // gui_distance_max = std::make_shared<pangolin::Var<double>>("ui.distance_max", distance(1), 0.0, 3.0);
 }
@@ -134,9 +135,11 @@ void PangolinViewer::execute()
   if (gui_scale_gain->GuiChanged() || gui_smooth_gain->GuiChanged() || gui_latitude_gain->GuiChanged() || gui_altitude_gain->GuiChanged())
     system_ptr->setOptimizeGain({*gui_scale_gain, *gui_smooth_gain, *gui_latitude_gain, *gui_altitude_gain});
 
+  if (gui_recollection->GuiChanged())
+    system_ptr->setRecollection(*gui_recollection);
+
   // Eigen::Vector2d distance(*gui_distance_min, *gui_distance_max);
   // system_ptr->setSearchDistance(distance);
-  // system_ptr->setRecollection(*gui_recollection);
 
   swap();
 

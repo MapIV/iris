@@ -1,6 +1,5 @@
-#include "core/util.hpp"
-
 #include "optimize/aligner.hpp"
+#include "core/util.hpp"
 #include "optimize/types_gicp.hpp"
 #include "optimize/types_restriction.hpp"
 #include <g2o/core/block_solver.h>

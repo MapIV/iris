@@ -61,10 +61,9 @@ VLLM.pcd_file: "../../vllm-data/moriyama.pcd"
 VLLM.video_file: "../../vllm-data/moriyama-clip.mp4"
 VLLM.vocab_file: "orb_vocab.dbow2"
 
-VLLM.gpd_size: 20
-VLLM.gpd_gain: 0.2
 VLLM.iteration: 10
 VLLM.frame_skip: 1
+VLLM.recollection: 50
 
 VLLM.scale_gain: 1.0
 VLLM.smooth_gain: 5.0

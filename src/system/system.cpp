@@ -23,6 +23,8 @@ System::System(Config& config, const std::shared_ptr<map::Map>& map)
 
   localmap_info = map->getLocalmapInfo();
 
+  recollection.store(config.recollection);
+
   T_init = config.T_init;
   T_align.setIdentity();
   vllm_velocity.setZero();
@@ -134,7 +136,7 @@ int System::execute()
     vslam_camera = bridge.getCameraPose().inverse().cast<float>();
 
     // Get keypoints cloud with normals
-    bridge.getLandmarksAndNormals(raw_keypoints.cloud, raw_keypoints.normals, recollection, accuracy);
+    bridge.getLandmarksAndNormals(raw_keypoints.cloud, raw_keypoints.normals, recollection.load(), accuracy);
 
     // Update threshold to adjust the number of points
     if (raw_keypoints.cloud->size() < 400 && accuracy > 0.01) accuracy -= 0.01;
