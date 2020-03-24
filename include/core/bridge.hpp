@@ -25,6 +25,7 @@ public:
   void getLandmarksAndNormals(
       pcl::PointCloud<pcl::PointXYZ>::Ptr& local_cloud,
       pcl::PointCloud<pcl::Normal>::Ptr& normal,
+      std::vector<float>& weights,
       unsigned int recollection,
       double accuracy) const;
 

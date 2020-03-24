@@ -42,7 +42,8 @@ public:
       const Eigen::Matrix4f& offset_camera,
       crrspEstimator& estimator,
       const Eigen::Matrix4f& T_initial_align,
-      const std::list<Eigen::Matrix4f>& vllm_history);
+      const std::list<Eigen::Matrix4f>& vllm_history,
+      const std::vector<float>& weights);
 
 private:
   Config config;

@@ -22,6 +22,7 @@ Eigen::Matrix4f Aligner::estimate7DoF(
     const pcl::CorrespondencesPtr& correspondances,
     const Eigen::Matrix4f& offset_camera,
     const std::list<Eigen::Matrix4f>& history,
+    const std::vector<float>& weights,
     const pcl::PointCloud<pcl::Normal>::Ptr& source_normals,
     const pcl::PointCloud<pcl::Normal>::Ptr& target_normals)
 {
@@ -31,7 +32,7 @@ Eigen::Matrix4f Aligner::estimate7DoF(
   optimizer.setAlgorithm(solver);
 
   setVertexSim3(optimizer, T);
-  setEdge7DoFGICP(optimizer, source, target, correspondances, target_normals, source_normals);
+  setEdge7DoFGICP(optimizer, source, target, correspondances, weights, target_normals, source_normals);
   setEdgeRestriction(optimizer, offset_camera, history);
 
   // execute
@@ -76,6 +77,7 @@ void Aligner::setEdge7DoFGICP(
     const pcl::PointCloud<pcl::PointXYZ>::Ptr& source,
     const pcl::PointCloud<pcl::PointXYZ>::Ptr& target,
     const pcl::CorrespondencesPtr& correspondances,
+    const std::vector<float>& weights,
     const pcl::PointCloud<pcl::Normal>::Ptr& target_normals,
     const pcl::PointCloud<pcl::Normal>::Ptr& source_normals)
 {
@@ -92,8 +94,10 @@ void Aligner::setEdge7DoFGICP(
     Eigen::Vector3f pt0, pt1;
     pt0 = target->at(cor.index_match).getArray3fMap();
     pt1 = source->at(cor.index_query).getArray3fMap();
+    float weight = weights.at(cor.index_query);
 
     EdgeGICP meas;
+    meas.weight = weight;
     meas.pos0 = pt0.cast<double>();
     meas.pos1 = pt1.cast<double>();
 

@@ -13,7 +13,8 @@ Outcome Optimizer::optimize(
     const Eigen::Matrix4f& offset_camera,
     crrspEstimator& estimator,
     const Eigen::Matrix4f& T_initial_align,
-    const std::list<Eigen::Matrix4f>& vllm_history)
+    const std::list<Eigen::Matrix4f>& vllm_history,
+    const std::vector<float>& weights)
 {
   pcXYZ::Ptr tmp_cloud(new pcXYZ);
   pcNormal::Ptr tmp_normals(new pcNormal);
@@ -46,7 +47,9 @@ Outcome Optimizer::optimize(
 
     // Align pointclouds
     optimize::Aligner aligner(config.gain.scale, config.gain.latitude, config.gain.altitude, config.gain.smooth);
-    T_align = aligner.estimate7DoF(T_align, offset_keypoints.cloud, map_ptr->getTargetCloud(), correspondences, offset_camera, vllm_history, offset_keypoints.normals, map_ptr->getTargetNormals());
+    T_align = aligner.estimate7DoF(
+        T_align, offset_keypoints.cloud, map_ptr->getTargetCloud(), correspondences,
+        offset_camera, vllm_history, weights, offset_keypoints.normals, map_ptr->getTargetNormals());
 
     // Integrate
     vllm_camera = T_align * offset_camera;

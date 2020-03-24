@@ -63,7 +63,7 @@ VLLM.vocab_file: "orb_vocab.dbow2"
 
 VLLM.iteration: 5
 VLLM.frame_skip: 2
-VLLM.recollection: 60
+VLLM.recollection: 30
 
 VLLM.scale_gain: 10.0
 VLLM.smooth_gain: 5.0
@@ -71,7 +71,7 @@ VLLM.latitude_gain: 10.0
 VLLM.altitude_gain: 2.0
 
 VLLM.distance_min: 0.3
-VLLM.distance_max: 5.0
+VLLM.distance_max: 4.0
 
 VLLM.converge_translation: 0.05
 VLLM.converge_rotation: 0.01

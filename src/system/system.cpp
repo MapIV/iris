@@ -19,7 +19,7 @@ System::System(Config& config, const std::shared_ptr<map::Map>& map)
   // Setup correspondence estimator
   estimator.setInputTarget(map->getTargetCloud());
   estimator.setTargetNormals(map->getTargetNormals());
-  estimator.setKSearch(10);
+  estimator.setKSearch(40);
 
   localmap_info = map->getLocalmapInfo();
 
@@ -136,11 +136,11 @@ int System::execute()
     vslam_camera = bridge.getCameraPose().inverse().cast<float>();
 
     // Get keypoints cloud with normals
-    bridge.getLandmarksAndNormals(raw_keypoints.cloud, raw_keypoints.normals, recollection.load(), accuracy);
+    bridge.getLandmarksAndNormals(raw_keypoints.cloud, raw_keypoints.normals, weights, recollection.load(), accuracy);
 
     // Update threshold to adjust the number of points
-    if (raw_keypoints.cloud->size() < 500 && accuracy > 0.10) accuracy -= 0.01;
-    if (raw_keypoints.cloud->size() > 700 && accuracy < 0.90) accuracy += 0.01;
+    if (raw_keypoints.cloud->size() < 300 && accuracy > 0.10) accuracy -= 0.01;
+    if (raw_keypoints.cloud->size() > 500 && accuracy < 0.90) accuracy += 0.01;
 
     // Transform subtract the first pose offset
     pcl::transformPointCloud(*raw_keypoints.cloud, *offset_keypoints.cloud, T_init);
@@ -149,7 +149,7 @@ int System::execute()
     // Optimization
     updateOptimizeGain();
     optimizer.setConfig(optimize_config);
-    optimize::Outcome outcome = optimizer.optimize(map, offset_keypoints, T_init * vslam_camera, estimator, T_align, vllm_history);
+    optimize::Outcome outcome = optimizer.optimize(map, offset_keypoints, T_init * vslam_camera, estimator, T_align, vllm_history, weights);
 
     // Retrieve outcome
     correspondences = outcome.correspondences;

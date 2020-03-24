@@ -82,7 +82,7 @@ void Edge_Sim3_GICP::computeError()
   // get vp1 point into vp0 frame could be more efficient if we computed this transform just once
   Vector3 p1 = vp0->estimate().map(measurement().pos1);
   // Euclidean distance
-  _error = p1 - measurement().pos0;
+  _error = measurement().weight * (p1 - measurement().pos0);
 
   if (!plane2plane)
     return;

@@ -30,6 +30,7 @@ public:
       const pcl::CorrespondencesPtr& correspondances,
       const Eigen::Matrix4f& offset_camera,
       const std::list<Eigen::Matrix4f>& history,
+      const std::vector<float>& weights,
       const pcl::PointCloud<pcl::Normal>::Ptr& source_normals = nullptr,
       const pcl::PointCloud<pcl::Normal>::Ptr& target_normals = nullptr);
 
@@ -52,6 +53,7 @@ private:
       const pcl::PointCloud<pcl::PointXYZ>::Ptr& source,
       const pcl::PointCloud<pcl::PointXYZ>::Ptr& target,
       const pcl::CorrespondencesPtr& correspondances,
+      const std::vector<float>& weights,
       const pcl::PointCloud<pcl::Normal>::Ptr& target_normals,
       const pcl::PointCloud<pcl::Normal>::Ptr& source_normals);
 };

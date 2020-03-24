@@ -96,6 +96,7 @@ private:
 
   BridgeOpenVSLAM bridge;
   double accuracy = 0.5;
+  std::vector<float> weights;
 
   map::Info localmap_info;
 

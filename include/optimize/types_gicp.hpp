@@ -25,7 +25,7 @@ public:
   Vector3 normal0, normal1;
   // rotation matrix for normal
   Matrix3 R0, R1;
-
+  double weight;
   bool plane2plane;
 
   EdgeGICP();

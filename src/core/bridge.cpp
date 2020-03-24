@@ -116,6 +116,7 @@ unsigned int BridgeOpenVSLAM::getPeriodFromInitialId()
 void BridgeOpenVSLAM::getLandmarksAndNormals(
     pcl::PointCloud<pcl::PointXYZ>::Ptr& local_cloud,
     pcl::PointCloud<pcl::Normal>::Ptr& normals,
+    std::vector<float>& weights,
     unsigned int recollection,
     double accuracy) const
 {
@@ -130,12 +131,20 @@ void BridgeOpenVSLAM::getLandmarksAndNormals(
 
   unsigned int max_id = SLAM_ptr->get_map_publisher()->get_max_keyframe_id();
   for (const auto local_lm : landmarks) {
+    unsigned int first_observed_id = local_lm->first_keyfrm_id_;
+    unsigned int last_observed_id = local_lm->last_observed_keyfrm_id_;
     if (local_lm->will_be_erased()) continue;
     if (local_lm->get_observed_ratio() < accuracy) continue;
-    if (max_id > recollection && local_lm->last_observed_keyfrm_id_ < max_id - recollection) continue;
+    if (max_id > recollection && last_observed_id < max_id - recollection) continue;
 
     const openvslam::Vec3_t pos = local_lm->get_pos_in_world();
     const openvslam::Vec3_t normal = local_lm->get_obs_mean_normal();
+
+    float weight;
+    weight = static_cast<float>(recollection - (max_id - first_observed_id)) / static_cast<float>(recollection);
+    if (weight < 0.1f) weight = 0.1f;
+    if (weight > 1.0f) weight = 1.0f;
+    weights.push_back(weight);
 
     pcl::PointXYZ p(
         static_cast<float>(pos.x()),
