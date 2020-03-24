@@ -132,18 +132,19 @@ void Aligner::setEdgeRestriction(
 {
   g2o::VertexSim3Expmap* vp0 = dynamic_cast<g2o::VertexSim3Expmap*>(optimizer.vertices().find(0)->second);
 
-  const unsigned int DT = 2;
-  auto itr1 = std::next(history.begin(), DT);
-  auto itr2 = std::next(itr1, DT);
+  // const unsigned int DT = 2;
+  // auto itr1 = std::next(history.begin(), DT);
+  // auto itr2 = std::next(itr1, DT);
 
   // Add a scale edge
   {
     Edge_Scale_Restriction* e = new Edge_Scale_Restriction(scale_gain);
     e->setVertex(0, vp0);
     e->information().setIdentity();
-    Eigen::Vector2f scales;
-    scales << getScaleFromPose(*itr1), getScaleFromPose(*itr2);
-    e->setMeasurement(scales.cast<double>());
+    std::vector<double> scales;
+    for (const Eigen::Matrix4f& T : history)
+      scales.push_back(static_cast<double>(getScaleFromPose(T)));
+    e->setMeasurement(scales);
     optimizer.addEdge(e);
   }
 
@@ -165,21 +166,20 @@ void Aligner::setEdgeRestriction(
     optimizer.addEdge(e);
   }
 
-  // add a const velocity Model Constraint Edge of Scale
-  {
-    Edge_Smooth_Restriction* e = new Edge_Smooth_Restriction(smooth_gain);
-    e->setVertex(0, vp0);
-    e->information().setIdentity();
-    VelocityModel model;
-    model.camera_pos = offset_camera.topRightCorner(3, 1).cast<double>();
+  //  TODO:
+  // // add a const velocity Model Constraint Edge of Scale
+  // {
+  //   Edge_Smooth_Restriction* e = new Edge_Smooth_Restriction(smooth_gain);
+  //   e->setVertex(0, vp0);
+  //   e->information().setIdentity();
+  //   VelocityModel model;
+  //   model.camera_pos = offset_camera.topRightCorner(3, 1).cast<double>();
 
-    model.old_pos = itr1->topRightCorner(3, 1).cast<double>();
-    model.older_pos = itr2->topRightCorner(3, 1).cast<double>();
-    e->setMeasurement(model);
-    optimizer.addEdge(e);
-
-    std::cout << "velocity \033[36m" << model.velocity() << "\033[m" << std::endl;
-  }
+  //   model.old_pos = itr1->topRightCorner(3, 1).cast<double>();
+  //   model.older_pos = itr2->topRightCorner(3, 1).cast<double>();
+  //   e->setMeasurement(model);
+  //   optimizer.addEdge(e);
+  // }
 }
 
 }  // namespace optimize

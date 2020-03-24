@@ -34,7 +34,7 @@ public:
   }
 };
 
-class Edge_Scale_Restriction : public g2o::BaseUnaryEdge<1, Eigen::Vector2d, VertexSim3Expmap>
+class Edge_Scale_Restriction : public g2o::BaseUnaryEdge<1, std::vector<double>, VertexSim3Expmap>
 {
 private:
   double gain;
@@ -73,18 +73,18 @@ public:
   void computeError();
 };
 
-class Edge_Smooth_Restriction : public g2o::BaseUnaryEdge<1, VelocityModel, VertexSim3Expmap>
-{
-private:
-  double gain;
+// class Edge_Smooth_Restriction : public g2o::BaseUnaryEdge<1, std::vector<Eigen::Vector3f>, VertexSim3Expmap>
+// {
+// private:
+//   double gain;
 
-public:
-  Edge_Smooth_Restriction(double gain = 1.0) : gain(gain) {}
+// public:
+//   Edge_Smooth_Restriction(double gain = 1.0) : gain(gain) {}
 
-  virtual bool read(std::istream&) { return false; }
-  virtual bool write(std::ostream&) const { return false; }
-  void computeError();
-};
+//   virtual bool read(std::istream&) { return false; }
+//   virtual bool write(std::ostream&) const { return false; }
+//   void computeError();
+// };
 
 
 }  // namespace optimize

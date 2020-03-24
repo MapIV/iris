@@ -129,7 +129,7 @@ void BridgeOpenVSLAM::getLandmarksAndNormals(
   if (local_landmarks.empty()) return;
 
   unsigned int max_id = SLAM_ptr->get_map_publisher()->get_max_keyframe_id();
-  for (const auto local_lm : local_landmarks) {
+  for (const auto local_lm : landmarks) {
     if (local_lm->will_be_erased()) continue;
     if (local_lm->get_observed_ratio() < accuracy) continue;
     if (max_id > recollection && local_lm->last_observed_keyfrm_id_ < max_id - recollection) continue;

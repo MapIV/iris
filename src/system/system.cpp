@@ -139,8 +139,8 @@ int System::execute()
     bridge.getLandmarksAndNormals(raw_keypoints.cloud, raw_keypoints.normals, recollection.load(), accuracy);
 
     // Update threshold to adjust the number of points
-    if (raw_keypoints.cloud->size() < 500 && accuracy > 0.01) accuracy -= 0.01;
-    if (raw_keypoints.cloud->size() > 700 && accuracy < 0.99) accuracy += 0.01;
+    if (raw_keypoints.cloud->size() < 500 && accuracy > 0.10) accuracy -= 0.01;
+    if (raw_keypoints.cloud->size() > 700 && accuracy < 0.90) accuracy += 0.01;
 
     // Transform subtract the first pose offset
     pcl::transformPointCloud(*raw_keypoints.cloud, *offset_keypoints.cloud, T_init);
