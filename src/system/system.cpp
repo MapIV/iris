@@ -54,6 +54,7 @@ int System::execute()
 {
   // Execute vSLAM
   bridge.execute();
+  std::cout << "openvslam execute successfully" << std::endl;
   int vslam_state = static_cast<int>(bridge.getState());
   Eigen::Matrix4f vslam_camera = Eigen::Matrix4f::Identity();
 

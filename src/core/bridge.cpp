@@ -42,7 +42,8 @@ void BridgeOpenVSLAM::setup(const Config& config)
 
   // setup logger
   spdlog::set_pattern("[%Y-%m-%d %H:%M:%S.%e] %^[%L] %v%$");
-  spdlog::set_level(spdlog::level::info);
+  spdlog::set_level(spdlog::level::debug);
+  // spdlog::set_level(spdlog::level::info);
 
   // load configuration
   std::shared_ptr<openvslam::config> cfg;

@@ -1,9 +1,9 @@
 cmake_minimum_required(VERSION 3.10)
 
-# == project ==
+# == Project ==
 project(vllm)
 
-# == check C++17 ==
+# == Check C++17 ==
 include(CheckCXXCompilerFlag)
 enable_language(CXX)
 check_cxx_compiler_flag("-std=gnu++17" COMPILER_SUPPORTS_CXX17)
@@ -15,18 +15,18 @@ endif()
 set(CMAKE_CXX_STANDARD 17)
 message("Compiler:\n\t${CMAKE_CXX_COMPILER} (using C++17)")
 
-# == set default build type to release ==
+# == Set default build type to release ==
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE "RELEASE")
 endif()
 string(TOUPPER ${CMAKE_BUILD_TYPE} CMAKE_BUILD_TYPE)
 message("Build Type:\n\t${CMAKE_BUILD_TYPE}")
 
-# == clear "CMAKE_CXX_FLAGS" ==
+# == Clear "CMAKE_CXX_FLAGS" ==
 set(CMAKE_CXX_FLAGS "")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pipe -fopenmp -Ofast -lstdc++fs")
 
-# == set warning flags ==
+# == Set warning flags ==
 set(CXX_WARNING_FLAGS
     -Wall
     -Wextra
@@ -44,7 +44,7 @@ foreach(FLAG IN LISTS CXX_WARNING_FLAGS)
 endforeach()
 message("CMAKE_CXX_FLAGS:\n\t${CMAKE_CXX_FLAGS}")
 
-# == Point Cloud Library (PCl) ==
+# == Point Cloud Library ==
 find_package(PCL QUIET REQUIRED COMPONENTS common io registration visualization kdtree)
 include_directories(SYSTEM ${PCL_INCLUDE_DIRS})
 link_directories(${PCL_LIBRARY_DIRS})
@@ -92,44 +92,28 @@ set(G2O_LIBS
 message(STATUS "g2o version:\n\t${g2o_VERSION}")
 
 # == openvslam ==
-set(BUILD_EXAMPLES 0) # disable building examples
+set(BUILD_EXAMPLES OFF) # disable building examples
 set(USE_PANGOLIN_VIEWER 0) # disbale buidling viewer
 add_subdirectory(3rd/openvslam)
 
-# == header & source ==
+# == Headers and sources ==
 include_directories(${CMAKE_CURRENT_LIST_DIR}/include)
 file(GLOB SOURCES src/**/*.cpp)
 
-# == main ==
-add_executable(main main.cpp ${SOURCES})
+# == Library ==
+add_library(${PROJECT_NAME} STATIC ${SOURCES})
 target_include_directories(
-  main SYSTEM
-  PRIVATE ${PROJECT_SOURCE_DIR}/3rd/openvslam/src/
-          ${PROJECT_SOURCE_DIR}/3rd/openvslam/3rd/popl/include
-          ${PROJECT_SOURCE_DIR}/3rd/openvslam/3rd/spdlog/include)
-target_link_libraries(main ${PCL_LIBRARIES} ${OpenCV_LIBS} pangolin openvslam)
+  ${PROJECT_NAME} SYSTEM
+  PUBLIC ${PROJECT_SOURCE_DIR}/3rd/openvslam/src/
+         ${PROJECT_SOURCE_DIR}/3rd/openvslam/3rd/json/include
+         ${PROJECT_SOURCE_DIR}/3rd/openvslam/3rd/popl/include
+         ${PROJECT_SOURCE_DIR}/3rd/openvslam/3rd/spdlog/include)
+set_target_properties(
+  ${PROJECT_NAME} PROPERTIES OUTPUT_NAME vllm LIBRARY_OUTPUT_DIRECTORY
+                                              ${PROJECT_BINARY_DIR}/lib)
+target_compile_definitions(${PROJECT_NAME} PUBLIC USE_DBOW2)
+target_link_libraries(${PROJECT_NAME} PUBLIC ${OpenCV_LIBS} openvslam pangolin)
 
-# add_executable(tool example/tool.cpp)
-# target_link_libraries(tool PUBLIC ${PCL_LIBRARIES} ${OpenCV_LIBS})
-
-# add_executable(fitting example/fitting_se3.cpp)
-# target_link_libraries(fitting PRIVATE ${OpenCV_LIBS} ${G2O_LIBS})
-
-# add_executable(reg test_regularizer.cpp src/aligner.cpp src/util.cpp src/types_gicp.cpp)
-# target_link_libraries(reg PRIVATE ${PCL_LIBRARIES} ${G2O_LIBS})
-
-# == example file ==
-# add_executable(optimize_sim3 optimize_sim3.cpp)
-# target_link_libraries(optimize_sim3 PUBLIC ${G2O_LIBS})
-
-# add_executable(icp example/icp.cpp src/aligner.cpp src/util.cpp src/pangolin_viewer.cpp src/global_point_distribution.cpp)
-# target_link_libraries(icp PUBLIC ${PCL_LIBRARIES} ${G2O_LIBS} pangolin)
-
-# add_executable(reject example/reject_with_lpd.cpp)
-# target_link_libraries(reject PUBLIC ${PCL_LIBRARIES})
-
-# add_executable(reject_test example/reject_test.cpp)
-# target_link_libraries(reject_test PUBLIC ${PCL_LIBRARIES})
-
-# add_executable(lpd_simple example/lpd_simple.cpp)
-# target_link_libraries(lpd_simple PUBLIC ${PCL_LIBRARIES})
+# == Executable ==
+add_executable(main main.cpp)
+target_link_libraries(main ${PCL_LIBRARIES} ${OpenCV_LIBS} pangolin vllm)
