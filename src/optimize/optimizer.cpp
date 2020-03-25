@@ -26,8 +26,8 @@ Outcome Optimizer::optimize(
     std::cout << "itration= \033[32m" << itr << "\033[m";
 
     // Initial transform
-    pcl::transformPointCloud(*offset_keypoints.cloud, *tmp_cloud, T_initial_align);
-    vllm::transformNormals(*offset_keypoints.normals, *tmp_normals, T_initial_align);
+    pcl::transformPointCloud(*offset_keypoints.cloud, *tmp_cloud, T_align);
+    vllm::transformNormals(*offset_keypoints.normals, *tmp_normals, T_align);
 
     // Get all correspodences
     estimator.setInputSource(tmp_cloud);
@@ -35,7 +35,7 @@ Outcome Optimizer::optimize(
     estimator.determineCorrespondences(*correspondences);
     std::cout << " ,raw_correspondences= \033[32m" << correspondences->size() << "\033[m";
 
-    // Reject too far c orrespondences
+    // Reject too far correspondences
     float distance = config.distance_max - (config.distance_max - config.distance_min) * static_cast<float>(itr) / static_cast<float>(config.iteration);
     distance_rejector.setInputCorrespondences(correspondences);
     distance_rejector.setMaximumDistance(distance);
@@ -55,7 +55,7 @@ Outcome Optimizer::optimize(
     vllm_camera = T_align * offset_camera;
 
     // Get Inovation
-    float scale = getScale(getNormalizedRotation(vllm_camera));
+    float scale = getScale(normalizeRotation(vllm_camera));
     float update_transform = (last_camera - vllm_camera).topRightCorner(3, 1).norm();        // called "Euclid distance"
     float update_rotation = (last_camera - vllm_camera).topLeftCorner(3, 3).norm() / scale;  // called "chordal distance"
     std::cout << "update= \033[33m" << update_transform << " \033[m,\033[33m " << update_rotation << "\033[m" << std::endl;

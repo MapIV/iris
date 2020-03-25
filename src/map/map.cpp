@@ -236,7 +236,7 @@ void Map::updateLocalmap(const Eigen::Matrix4f& T)
 
 float Map::yawFromPose(const Eigen::Matrix4f& T) const
 {
-  Eigen::Matrix3f R = getNormalizedRotation(T);
+  Eigen::Matrix3f R = normalizeRotation(T);
 
   // When the optical axis of the camera is pointing to the X-axis
   // and the upper side of the camera is pointing to the Z-axis,

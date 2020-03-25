@@ -73,8 +73,8 @@ VLLM.altitude_gain: 2.0
 VLLM.distance_min: 0.3
 VLLM.distance_max: 4.0
 
-VLLM.converge_translation: 0.05
-VLLM.converge_rotation: 0.01
+VLLM.converge_translation: 0.1
+VLLM.converge_rotation: 0.1
 
 Map.voxel_grid_leaf: 0.400
 Map.submap_grid_leaf: 50

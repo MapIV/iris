@@ -147,7 +147,7 @@ void Aligner::setEdgeRestriction(
     e->information().setIdentity();
     std::vector<double> scales;
     for (const Eigen::Matrix4f& T : history)
-      scales.push_back(static_cast<double>(getScaleFromPose(T)));
+      scales.push_back(static_cast<double>(getScale(T)));
     e->setMeasurement(scales);
     optimizer.addEdge(e);
   }
