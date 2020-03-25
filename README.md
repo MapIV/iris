@@ -21,7 +21,7 @@
 > submodule
 
 
-## How to Build
+## How to Build without ROS
 * `-DBUILD_WITH_MARCH_NATIVE=OFF`
 > Installing g2o with `march_native=ON` is recommended.
     
@@ -36,6 +36,12 @@ cmake \
 
 ``` bash
 ./main -v ./orb_vocab.dbow2 -m ../data/room-long.mp4 -c config.yaml
+```
+
+## How to Build with ROS
+```bash 
+cd ros
+catkin_make
 ```
 
 ## References
