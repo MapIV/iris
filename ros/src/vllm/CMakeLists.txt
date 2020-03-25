@@ -106,6 +106,16 @@ endif()
 message(STATUS "Use OpenCV ${OpenCV_VERSION}")
 include_directories(${OpenCV_INCLUDE_DIRS})
 
+# Eigen
+find_package(Eigen3 REQUIRED)
+include_directories(SYSTEM ${EIGEN3_INCLUDE_DIR})
+
+# Point Cloud Library
+find_package(PCL QUIET REQUIRED COMPONENTS common io registration visualization kdtree)
+include_directories(SYSTEM ${PCL_INCLUDE_DIRS})
+link_directories(${PCL_LIBRARY_DIRS})
+message(STATUS "PCL version:\n\t${PCL_VERSION}")
+
 # popl
 set(popl_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../../3rd/openvslam/3rd/popl/include)
 include_directories(${popl_INCLUDE_DIR})
@@ -113,6 +123,13 @@ include_directories(${popl_INCLUDE_DIR})
 # vllm
 set(vllm_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../../include)
 include_directories(${vllm_INCLUDE_DIR})
+
+# Pangolin
+find_package(Pangolin)
+include_directories(${Pangolin_INCLUDE_DIRS})
+
+find_package(OpenGL REQUIRED)
+include_directories(${OPENGL_INCLUDE_DIR})
 
 #################################
 # catkin specific configuration #
@@ -124,10 +141,31 @@ catkin_package(CATKIN_DEPENDS cv_bridge image_transport)
 # Build #
 #########
 
-include_directories(${catkin_INCLUDE_DIRS} ${OpenCV_INCLUDE_DIRS})
+# find_library(OpenVSLAM_LIB openvslam HINTS ${OpenVSLAM_LIB_DIR})
+
+# ROOT
+get_filename_component(VLLM_ROOT ${PROJECT_SOURCE_DIR} DIRECTORY)
+get_filename_component(VLLM_ROOT ${VLLM_ROOT} DIRECTORY)
+get_filename_component(VLLM_ROOT ${VLLM_ROOT} DIRECTORY)
+message(STATUS "Root directory of VLLM: ${VLLM_ROOT}")
 
 # OpenVSLAM
-find_library(OpenVSLAM_LIB openvslam HINTS ${OpenVSLAM_LIB_DIR})
+set(OpenVSLAM_ROOT ${VLLM_ROOT}/3rd/openvslam)
+message(STATUS "Root directory of OpenVSLAM: ${OpenVSLAM_ROOT}")
+set(OpenVSLAM_INCLUDE_DIR
+    ${OpenVSLAM_ROOT}/src ${OpenVSLAM_ROOT}/3rd/json/include
+    ${OpenVSLAM_ROOT}/3rd/popl/include ${OpenVSLAM_ROOT}/3rd/spdlog/include)
+message(STATUS "OpenVSLAM_INCLUDE_DIR: ${OpenVSLAM_INCLUDE_DIR}")
 
+# VLLM
+set(VLLM_LIB_DIR ${VLLM_ROOT}/build/lib)
+message(STATUS "Library directory of VLLM: ${VLLM_LIB_DIR}")
+find_library(VLLM_LIB vllm HINTS ${VLLM_LIB_DIR})
+
+include_directories(${catkin_INCLUDE_DIRS} ${OpenVSLAM_INCLUDE_DIR})
+
+# Executable
 add_executable(vllm_node src/vllm_node.cpp)
-target_link_libraries(vllm_node ${catkin_LIBRARIES} ${OpenCV_LIBS})
+target_link_libraries(vllm_node ${catkin_LIBRARIES} ${OpenCV_LIBS} ${PCL_LIBRARIES}
+                      pangolin ${VLLM_LIB})
+target_compile_definitions(vllm_node PUBLIC USE_DBOW2)
