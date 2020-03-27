@@ -38,7 +38,6 @@ void BridgeOpenVSLAM::setup(const Config& config)
   google::InstallFailureSignalHandler();
 #endif
 
-  frame_skip = config.frame_skip;
 
   // setup logger
   spdlog::set_pattern("[%Y-%m-%d %H:%M:%S.%e] %^[%L] %v%$");
@@ -59,8 +58,6 @@ void BridgeOpenVSLAM::setup(const Config& config)
     std::cout << "Invalid setup type: " + cfg->camera_->get_setup_type_string() << std::endl;
     exit(EXIT_FAILURE);
   }
-
-  video = cv::VideoCapture(config.video_file, cv::CAP_FFMPEG);
 
   // build a SLAM system
   SLAM_ptr = std::make_shared<openvslam::system>(cfg, config.vocab_file);
@@ -191,26 +188,8 @@ void BridgeOpenVSLAM::requestReset()
     SLAM_ptr->request_reset();
 }
 
-
-bool BridgeOpenVSLAM::execute()
+void BridgeOpenVSLAM::execute(const cv::Mat& image)
 {
-  if (!is_not_end)
-    return false;
-
-
-  cv::Mat frame;
-  for (int i = 0; i < frame_skip && is_not_end; i++)
-    is_not_end = video.read(frame);
-
-  if (!frame.empty()) {
-    // input the current frame and estimate the camera pose
-    SLAM_ptr->feed_monocular_frame(frame, 0.05, cv::Mat{});
-  } else {
-    return false;
-  }
-
-  // return success
-  return true;
+  SLAM_ptr->feed_monocular_frame(image, 0.05, cv::Mat{});
 }
-
 }  // namespace vllm

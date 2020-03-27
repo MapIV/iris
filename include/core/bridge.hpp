@@ -15,7 +15,7 @@ public:
   ~BridgeOpenVSLAM();
 
   void setup(const Config& config);
-  bool execute();
+  void execute(const cv::Mat& image);
   void requestReset();
 
   void getLandmarks(

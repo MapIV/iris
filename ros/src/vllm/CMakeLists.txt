@@ -96,14 +96,8 @@ endif()
 find_package(catkin REQUIRED COMPONENTS cv_bridge image_transport)
 
 # OpenCV
-find_package(OpenCV 3.3.1 QUIET)
-if(NOT OpenCV_FOUND)
-  find_package(OpenCV 4.0)
-  if(NOT OpenCV_FOUND)
-    message(FATAL_ERROR "OpenCV >= 3.3.1 not found")
-  endif()
-endif()
-message(STATUS "Use OpenCV ${OpenCV_VERSION}")
+find_package(OpenCV 3 REQUIRED)
+message(STATUS "OpenCV version:\n\t${OpenCV_VERSION}")
 include_directories(${OpenCV_INCLUDE_DIRS})
 
 # Eigen
@@ -158,9 +152,10 @@ set(OpenVSLAM_INCLUDE_DIR
 message(STATUS "OpenVSLAM_INCLUDE_DIR: ${OpenVSLAM_INCLUDE_DIR}")
 
 # VLLM
-set(VLLM_LIB_DIR ${VLLM_ROOT}/build/lib)
+set(VLLM_LIB_DIR ${VLLM_ROOT}/build/)
 message(STATUS "Library directory of VLLM: ${VLLM_LIB_DIR}")
 find_library(VLLM_LIB vllm HINTS ${VLLM_LIB_DIR})
+message(STATUS "Library of VLLM: ${VLLM_LIB}")
 
 include_directories(${catkin_INCLUDE_DIRS} ${OpenVSLAM_INCLUDE_DIR} include)
 

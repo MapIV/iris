@@ -50,10 +50,10 @@ System::System(Config& config, const std::shared_ptr<map::Map>& map)
     vllm_history.push_front(T_init);
 }
 
-int System::execute()
+int System::execute(const cv::Mat& image)
 {
   // Execute vSLAM
-  bridge.execute();
+  bridge.execute(image);
   std::cout << "openvslam execute successfully" << std::endl;
   int vslam_state = static_cast<int>(bridge.getState());
   Eigen::Matrix4f vslam_camera = Eigen::Matrix4f::Identity();

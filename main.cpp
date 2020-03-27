@@ -38,14 +38,25 @@ int main(int argc, char* argv[])
   pangolin_viewer.startLoop();
   cv::namedWindow("VLLM", cv::WINDOW_AUTOSIZE);
 
+  // video
+  cv::VideoCapture video = cv::VideoCapture(config.video_file, cv::CAP_FFMPEG);
 
   bool loop = true;
   std::chrono::system_clock::time_point m_start;
 
   while (loop) {
+
+    // Read frame from video
+    cv::Mat frame;
+    bool is_not_end = true;
+    for (int i = 0; i < config.frame_skip && is_not_end; i++) is_not_end = video.read(frame);
+    if (!is_not_end) break;
+
+
     m_start = std::chrono::system_clock::now();
 
-    system->execute();
+    // Execution
+    system->execute(frame);
 
     std::cout << "time= \033[35m"
               << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - m_start).count()

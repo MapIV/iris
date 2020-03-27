@@ -101,7 +101,7 @@ include_directories(${CMAKE_CURRENT_LIST_DIR}/include)
 file(GLOB SOURCES src/**/*.cpp)
 
 # == Library ==
-add_library(${PROJECT_NAME} STATIC ${SOURCES})
+add_library(${PROJECT_NAME} SHARED ${SOURCES})
 target_include_directories(
   ${PROJECT_NAME} SYSTEM
   PUBLIC ${PROJECT_SOURCE_DIR}/3rd/openvslam/src/

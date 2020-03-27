@@ -37,6 +37,7 @@ int main(int argc, char* argv[])
     exit(EXIT_FAILURE);
   }
 
+
   // Initialize config
   vllm::Config config(config_file_path->value());
 
@@ -64,7 +65,7 @@ int main(int argc, char* argv[])
 
     if (!subscribed_image.empty()) {
       // Execution
-      // system->execute(subscribed_image);
+      system->execute(subscribed_image);
 
       // visualize by OpenCV
       cv::imshow("VLLM", system->getFrame());

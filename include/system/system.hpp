@@ -26,7 +26,7 @@ class System
 public:
   // ===== for Main ====
   System(Config& config, const std::shared_ptr<map::Map>& map);
-  int execute();
+  int execute(const cv::Mat& image);
 
 public:
   // ==== for GUI ====
