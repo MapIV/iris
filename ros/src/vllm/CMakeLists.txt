@@ -162,10 +162,13 @@ set(VLLM_LIB_DIR ${VLLM_ROOT}/build/lib)
 message(STATUS "Library directory of VLLM: ${VLLM_LIB_DIR}")
 find_library(VLLM_LIB vllm HINTS ${VLLM_LIB_DIR})
 
-include_directories(${catkin_INCLUDE_DIRS} ${OpenVSLAM_INCLUDE_DIR})
+include_directories(${catkin_INCLUDE_DIRS} ${OpenVSLAM_INCLUDE_DIR} include)
 
 # Executable
 add_executable(vllm_node src/vllm_node.cpp)
 target_link_libraries(vllm_node ${catkin_LIBRARIES} ${OpenCV_LIBS} ${PCL_LIBRARIES}
                       pangolin ${VLLM_LIB})
 target_compile_definitions(vllm_node PUBLIC USE_DBOW2)
+
+add_executable(imu_node src/imu_node.cpp)
+target_link_libraries(imu_node ${catkin_LIBRARIES})
