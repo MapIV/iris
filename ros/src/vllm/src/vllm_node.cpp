@@ -66,20 +66,23 @@ int main(int argc, char* argv[])
     if (!subscribed_image.empty()) {
       // Execution
       system->execute(subscribed_image);
-
+      subscribed_image = cv::Mat();
       // visualize by OpenCV
       cv::imshow("VLLM", system->getFrame());
       if (cv::waitKey(1) == 'q') break;
     }
 
-    std::cout << "time= \033[35m"
-              << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - m_start).count()
-              << "\033[m ms" << std::endl;
+    std::stringstream ss;
+    ss << "time= \033[35m"
+       << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - m_start).count()
+       << "\033[m ms";
+    ROS_INFO("%s", ss.str().c_str());
 
     // spin & wait
     ros::spinOnce();
     loop_rate.sleep();
   }
+  std::cout << "Finalize the system" << std::endl;
 
   // Stop viewer
   pangolin_viewer.quitLoop();

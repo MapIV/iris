@@ -3,3 +3,4 @@ devel*
 .vscode*
 *.cache
 *.pcd
+*.dbow2

@@ -165,5 +165,5 @@ target_link_libraries(vllm_node ${catkin_LIBRARIES} ${OpenCV_LIBS} ${PCL_LIBRARI
                       pangolin ${VLLM_LIB})
 target_compile_definitions(vllm_node PUBLIC USE_DBOW2)
 
-add_executable(imu_node src/imu_node.cpp)
+add_executable(imu_node src/imu_node.cpp src/ekf.cpp)
 target_link_libraries(imu_node ${catkin_LIBRARIES})
