@@ -5,25 +5,23 @@
 
 vllm::EKF ekf;
 
-std::pair<Eigen::Vector3f, Eigen::Vector3f> decomposeIMU(const sensor_msgs::Imu& imu_msg)
-{
-  Eigen::Vector3f a, w;
-  a(0) = imu_msg.linear_acceleration.x;
-  a(1) = imu_msg.linear_acceleration.y;
-  a(2) = imu_msg.linear_acceleration.z;
-  w(0) = imu_msg.angular_velocity.x;  // roll
-  w(1) = imu_msg.angular_velocity.y;  // pitch
-  w(2) = imu_msg.angular_velocity.z;  // yaw
-  return {a, w};
-}
-
 void imuCallback(const sensor_msgs::Imu& msg)
 {
-  std::cout << "It subscribed 'camera/imu'" << std::endl;
-  auto [a, w] = decomposeIMU(msg);
+  Eigen::Vector3f a, w;
+  a(0) = msg.linear_acceleration.x;
+  a(1) = msg.linear_acceleration.y;
+  a(2) = msg.linear_acceleration.z;
+  w(0) = msg.angular_velocity.x;  // roll
+  w(1) = msg.angular_velocity.y;  // pitch
+  w(2) = msg.angular_velocity.z;  // yaw
+
+  std::cout << "ekf::predict" << std::endl;
   ekf.predict(a, w, 0.01);
 }
 
+void vllmCallback(const geometry_msgs::Transform& msg)
+{
+}
 
 int main(int argc, char* argv[])
 {
@@ -32,15 +30,7 @@ int main(int argc, char* argv[])
   ros::NodeHandle nh;
   ros::Subscriber sub_imu = nh.subscribe("/camera/imu", 10, &imuCallback);
 
-  // tf::TransformBroadcaster br;
-  // tf::Transform transform;
-  // transform.setOrigin(tf::Vector3(msg->x, msg->y, 0.0));
-  // tf::Quaternion q;
-  // q.setRPY(0, 0, msg->theta);
-  // transform.setRotation(q);
-  // br.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "world", "vllm"));
-
-  ros::Publisher chatter_pub = nh.advertise<geometry_msgs::Transform>("vllm/predict", 1000);
+  ros::Publisher pub_predict = nh.advertise<geometry_msgs::Transform>("vllm/predict", 1000);
 
   ros::Rate loop_rate(10);
   while (true) {

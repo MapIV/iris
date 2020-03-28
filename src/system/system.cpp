@@ -58,13 +58,11 @@ int System::execute(const cv::Mat& image)
   int vslam_state = static_cast<int>(bridge.getState());
   Eigen::Matrix4f vslam_camera = Eigen::Matrix4f::Identity();
 
-  // TODO:
   // Artifical reset
-  // if (reset_requested.load()) {
-  //   vslam_state = 3;
-  //   reset_requested.store(false);
-  //   T_align = Eigen::Matrix4f::Identity();
-  // }
+  if (reset_requested.load()) {
+    reset_requested.store(false);
+    T_align = Eigen::Matrix4f::Identity();
+  }
 
   // "3" means openvslam::tracking_state_t::Lost
   if (vslam_state == 3) {

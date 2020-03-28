@@ -9,17 +9,19 @@ void Edge_Scale_Restriction::computeError()
   const VertexSim3Expmap* vp0 = static_cast<const VertexSim3Expmap*>(_vertices[0]);
   double scale = vp0->estimate().scale();
 
-  const std::vector<double> scales = measurement();
+  // const std::vector<double> scales = measurement();
 
-  double min = 1e5, max = 0;
-  for (const double s : scales) {
-    if (s < min) min = s;
-    if (max < s) max = s;
-  }
-  if (scale < min) min = scale;
-  if (max < scale) max = scale;
+  // double min = 1e5, max = 0;
+  // for (const double s : scales) {
+  //   if (s < min) min = s;
+  //   if (max < s) max = s;
+  // }
+  // if (scale < min) min = scale;
+  // if (max < scale) max = scale;
 
-  _error(0) = gain * (max - min);
+  // _error(0) = gain * (max - min);
+
+  _error(0) = gain * (1 - scale);
 
   // double ds = scale - scales(0);
   // double thr = 0.1;

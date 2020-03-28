@@ -26,8 +26,8 @@ Outcome Optimizer::optimize(
     std::cout << "itration= \033[32m" << itr << "\033[m";
 
     // Initial transform
-    pcl::transformPointCloud(*offset_keypoints.cloud, *tmp_cloud, T_align);
-    vllm::transformNormals(*offset_keypoints.normals, *tmp_normals, T_align);
+    pcl::transformPointCloud(*offset_keypoints.cloud, *tmp_cloud, T_initial_align);
+    vllm::transformNormals(*offset_keypoints.normals, *tmp_normals, T_initial_align);
 
     // Get all correspodences
     estimator.setInputSource(tmp_cloud);
