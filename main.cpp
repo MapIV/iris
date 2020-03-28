@@ -1,5 +1,6 @@
 #include "core/config.hpp"
-#include "core/topic.hpp"
+#include "imu/ekf.hpp"
+#include "imu/topic.hpp"
 #include "map/map.hpp"
 #include "system/system.hpp"
 #include "viewer/pangolin_viewer.hpp"
@@ -43,8 +44,9 @@ int main(int argc, char* argv[])
   // video
   cv::VideoCapture video = cv::VideoCapture(config.video_file, cv::CAP_FFMPEG);
 
-
+  // for IMU
   vllm::TopicAnalyzer topic("../../vllm-data/hongo2-topic.csv", "../../vllm-data/hongo2-imu.csv");
+  vllm::EKF ekf(Eigen::Matrix4f::Identity());
 
   std::chrono::system_clock::time_point m_start;
   unsigned int time = 0;
@@ -55,19 +57,21 @@ int main(int argc, char* argv[])
     m_start = std::chrono::system_clock::now();
 
     if (is_topic_video) {
-      // Read frame from video
-      cv::Mat frame;
-      bool is_not_end = true;
-      for (int i = 0; i < config.frame_skip && is_not_end; i++) is_not_end = video.read(frame);
-      if (!is_not_end) break;
+      std::cout << "video" << std::endl;
+      // // Read frame from video
+      // cv::Mat frame;
+      // bool is_not_end = true;
+      // for (int i = 0; i < config.frame_skip && is_not_end; i++) is_not_end = video.read(frame);
+      // if (!is_not_end) break;
 
-      // Execution
-      system->execute(frame);
+      // // Execution
+      // system->execute(frame);
     } else {
       Eigen::Vector3f acc = topic.getAcc(time);
       Eigen::Vector3f omega = topic.getOmega(time);
-      std::cout << "acc " << acc.transpose() << std::endl;
-      std::cout << "omega " << omega.transpose() << std::endl;
+
+      ekf.predict(acc, omega, 0.004);
+      std::cout << ekf.getState() << std::endl;
     }
 
     std::cout << "time= \033[35m"
