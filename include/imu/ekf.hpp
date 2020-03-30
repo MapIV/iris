@@ -11,6 +11,8 @@ public:
 
   EKF() : gravity(0, 0, 9.8f)
   {
+    last_ns = 0;
+
     // state variable
     pos.setZero();
     vel.setZero();
@@ -42,9 +44,9 @@ public:
 
   void init(const Eigen::Matrix4f& T, const Eigen::Vector3f& v = Eigen::Vector3f::Zero());
 
-  void predict(const Eigen::Vector3f& acc, const Eigen::Vector3f& omega, float dt);
+  void predict(const Eigen::Vector3f& acc, const Eigen::Vector3f& omega, unsigned long ns);
 
-  void observe(const Eigen::Matrix4f& T, int time_machine = 0);
+  void observe(const Eigen::Matrix4f& T, unsigned long ns);
 
 private:
   Eigen::Quaternionf exp(const Eigen::Vector3f& v);
@@ -57,7 +59,11 @@ private:
 
   Eigen::Matrix3f hat(const Eigen::Vector3f& vec);
 
+  bool isUpadatable() { return (last_ns != 0); }
+
   const Eigen::Vector3f gravity;
+
+  unsigned long last_ns;
 
   // drive noise
   Eigen::MatrixXf LQL;

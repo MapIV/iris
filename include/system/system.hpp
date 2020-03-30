@@ -32,6 +32,11 @@ public:
   // ==== for GUI ====
   cv::Mat getFrame() const { return bridge.getFrame(); }
 
+  Eigen::Matrix4f getT() const
+  {
+    return T_output;
+  }
+
   const std::shared_ptr<map::Map> getMap() const
   {
     return map;
@@ -86,6 +91,7 @@ private:
 
   Eigen::Matrix4f T_init;
   Eigen::Matrix4f T_align = Eigen::Matrix4f::Identity();
+  Eigen::Matrix4f T_output = Eigen::Matrix4f::Identity();
 
   std::vector<Eigen::Vector3f> vllm_trajectory;
   std::vector<Eigen::Vector3f> offset_trajectory;

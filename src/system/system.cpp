@@ -166,6 +166,8 @@ int System::execute(const cv::Mat& image)
   Eigen::Matrix4f offset_camera = T_init * vslam_camera;
   Eigen::Matrix4f vllm_camera = T_align * offset_camera;
 
+  T_output = vllm_camera;
+
   // Update local map
   map->informCurrentPose(vllm_camera);
   map::Info new_localmap_info = map->getLocalmapInfo();

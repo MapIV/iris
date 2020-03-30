@@ -30,8 +30,16 @@ void EKF::init(const Eigen::Matrix4f& T, const Eigen::Vector3f& v)
   P = 0.5 * Eigen::MatrixXf::Identity(9, 9);
 }
 
-void EKF::predict(const Eigen::Vector3f& acc, const Eigen::Vector3f& omega, float dt)
+void EKF::predict(const Eigen::Vector3f& acc, const Eigen::Vector3f& omega, unsigned long ns)
 {
+  if (!isUpadatable()) {
+    last_ns = ns;
+    return;
+  }
+  float dt = static_cast<float>(ns - last_ns) * 1e-9f;
+  last_ns = ns;
+
+
   Eigen::Matrix3f R = qua.toRotationMatrix();
   Eigen::Quaternionf dq = exp(omega * dt);
 
@@ -45,8 +53,16 @@ void EKF::predict(const Eigen::Vector3f& acc, const Eigen::Vector3f& omega, floa
   P = F * P + LQL * dt;
 }
 
-void EKF::observe(const Eigen::Matrix4f& T, int)
+void EKF::observe(const Eigen::Matrix4f& T, unsigned long ns)
 {
+  if (!isUpadatable()) {
+    last_ns = ns;
+    return;
+  }
+  // float dt = static_cast<float>(ns - last_ns) * 1e-9f;
+  last_ns = ns;
+
+
   Eigen::Matrix3f R = T.topLeftCorner(3, 3);
   Eigen::Quaternionf q(R);
   Eigen::Vector3f t = T.topRightCorner(3, 1);
@@ -91,7 +107,7 @@ Eigen::MatrixXf EKF::calcF(const Eigen::Quaternionf& q, const Eigen::Vector3f& a
 {
   Eigen::MatrixXf F = Eigen::MatrixXf::Identity(9, 9);
   F.block(0, 3, 3, 3) = Eigen::Matrix3f::Identity(3, 3) * dt;
-  F.block(3, 6, 3, 3) = -hat(q.toRotationMatrix() * acc);
+  F.block(3, 6, 3, 3) = -hat(q.toRotationMatrix() * acc) * dt;
   return F;
 }
 

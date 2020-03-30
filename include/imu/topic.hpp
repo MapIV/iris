@@ -6,6 +6,12 @@
 
 namespace vllm
 {
+struct ImuMessage {
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+  unsigned long ns;
+  Eigen::Vector3f acc;
+  Eigen::Vector3f omega;
+};
 class TopicAnalyzer
 {
 public:
@@ -18,8 +24,7 @@ public:
 
     std::string line;
     while (std::getline(topic_ifs, line)) {
-      Eigen::Vector3f acc = Eigen::Vector3f::Zero();
-      Eigen::Vector3f omega = Eigen::Vector3f::Zero();
+      ImuMessage msg;
 
       if (line == "image") {
         is_topic_video.push_back(true);
@@ -31,23 +36,20 @@ public:
         std::istringstream ss(imu);
 
         float x, y, z, roll, pitch, yaw;
-        ss >> x >> y >> z >> roll >> pitch >> yaw;
-        acc << x, y, z;
-        omega << roll, pitch, yaw;
+        ss >> msg.ns >> x >> y >> z >> roll >> pitch >> yaw;
+        msg.acc << x, y, z;
+        msg.omega << roll, pitch, yaw;
       }
 
-      acc_data.push_back(acc);
-      omega_data.push_back(omega);
+      data.push_back(msg);
     }
   }
 
   bool isTopicVideo(unsigned int t) const { return is_topic_video.at(t); }
-  Eigen::Vector3f getAcc(unsigned int t) const { return acc_data.at(t); }
-  Eigen::Vector3f getOmega(unsigned int t) const { return omega_data.at(t); }
+  ImuMessage getImuMessage(unsigned int t) const { return data.at(t); }
 
 private:
-  std::vector<Eigen::Vector3f> omega_data;
-  std::vector<Eigen::Vector3f> acc_data;
+  std::vector<ImuMessage> data;
   std::vector<bool> is_topic_video;
 };
 }  // namespace vllm

@@ -138,7 +138,7 @@ void BridgeOpenVSLAM::getLandmarksAndNormals(
     const openvslam::Vec3_t pos = local_lm->get_pos_in_world();
     const openvslam::Vec3_t normal = local_lm->get_obs_mean_normal();
 
-    float weight;
+    float weight = 1.0;
     weight = static_cast<float>(recollection - (max_id - first_observed_id)) / static_cast<float>(recollection);
     if (weight < 0.1f) weight = 0.1f;
     if (weight > 1.0f) weight = 1.0f;
