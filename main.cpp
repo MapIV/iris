@@ -34,19 +34,26 @@ int main(int argc, char* argv[])
   std::shared_ptr<vllm::map::Map> map = std::make_shared<vllm::map::Map>(map_param);
 
   // Initialize system
-  std::shared_ptr<vllm::System> system = std::make_shared<vllm::System>(config, map);
+  // std::shared_ptr<vllm::System> system = std::make_shared<vllm::System>(config, map);
 
   // Initialize viewer
-  vllm::viewer::PangolinViewer pangolin_viewer(system);
-  pangolin_viewer.startLoop();
-  cv::namedWindow("VLLM", cv::WINDOW_AUTOSIZE);
+  // vllm::viewer::PangolinViewer pangolin_viewer(system);
+  // pangolin_viewer.startLoop();
+  // cv::namedWindow("VLLM", cv::WINDOW_AUTOSIZE);
 
   // video
   cv::VideoCapture video = cv::VideoCapture(config.video_file, cv::CAP_FFMPEG);
 
   // for IMU
-  vllm::TopicAnalyzer topic("../../vllm-data/hongo2-topic.csv", "../../vllm-data/hongo2-imu.csv");
-  vllm::EKF ekf(Eigen::Matrix4f::Identity());
+  vllm::TopicAnalyzer topic(config.topic_file, config.imu_file);
+  Eigen::Matrix4f T = Eigen::Matrix4f::Identity(4, 4);
+  Eigen::Matrix3f R;
+  R << 1, 0, 0,
+      0, -1, 0,
+      0, 0, -1;
+  T.topLeftCorner(3, 3) = R;
+  std::cout << T << std::endl;
+  vllm::EKF ekf(T);
 
   std::chrono::system_clock::time_point m_start;
   unsigned int time = 0;
@@ -70,8 +77,8 @@ int main(int argc, char* argv[])
       Eigen::Vector3f acc = topic.getAcc(time);
       Eigen::Vector3f omega = topic.getOmega(time);
 
-      ekf.predict(acc, omega, 0.004);
-      std::cout << ekf.getState() << std::endl;
+      ekf.predict(acc, omega, 0.002);
+      Eigen::Matrix4f T = ekf.getState();
     }
 
     std::cout << "time= \033[35m"
@@ -79,7 +86,7 @@ int main(int argc, char* argv[])
               << "\033[m ms" << std::endl;
 
     // visualize by OpenCV
-    cv::imshow("VLLM", system->getFrame());
+    //cv::imshow("VLLM", system->getFrame());
     int key = cv::waitKey(1);
     if (key == 'q') break;
     if (key == 's') {
@@ -90,6 +97,6 @@ int main(int argc, char* argv[])
     time++;
   }
 
-  pangolin_viewer.quitLoop();
+  // pangolin_viewer.quitLoop();
   return 0;
 }

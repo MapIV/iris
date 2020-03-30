@@ -1,4 +1,5 @@
 #include "imu/ekf.hpp"
+#include <iostream>
 
 namespace vllm
 {
@@ -32,13 +33,16 @@ void EKF::init(const Eigen::Matrix4f& T, const Eigen::Vector3f& v)
 void EKF::predict(const Eigen::Vector3f& acc, const Eigen::Vector3f& omega, float dt)
 {
   Eigen::Matrix3f R = qua.toRotationMatrix();
-  Eigen::Quaternionf dq = exp(R.transpose() * omega * dt);
+  Eigen::Quaternionf dq = exp(omega * dt);
 
+  // Predict state
   pos += vel * dt + 0.5 * (R * acc - gravity) * dt * dt;
   vel += (R * acc - gravity) * dt;
   qua = qua * dq;
 
-  P += V * dt;
+  // Propagate uncertainty
+  Eigen::MatrixXf F = calcF(qua, acc, dt);
+  P = F * P + LQL * dt;
 }
 
 void EKF::observe(const Eigen::Matrix4f& T, int)
@@ -83,6 +87,13 @@ Eigen::MatrixXf EKF::calcH(const Eigen::Quaternionf& q)
   return H;
 }
 
+Eigen::MatrixXf EKF::calcF(const Eigen::Quaternionf& q, const Eigen::Vector3f& acc, float dt)
+{
+  Eigen::MatrixXf F = Eigen::MatrixXf::Identity(9, 9);
+  F.block(0, 3, 3, 3) = Eigen::Matrix3f::Identity(3, 3) * dt;
+  F.block(3, 6, 3, 3) = -hat(q.toRotationMatrix() * acc);
+  return F;
+}
 
 Eigen::VectorXf EKF::toVec(const Eigen::Vector3f& p, const Eigen::Quaternionf& q)
 {
@@ -95,5 +106,16 @@ Eigen::VectorXf EKF::toVec(const Eigen::Vector3f& p, const Eigen::Quaternionf& q
   return x;
 }
 
+Eigen::Matrix3f EKF::hat(const Eigen::Vector3f& vec)
+{
+  Eigen::Matrix3f A;
+  // clang-format off
+  A <<
+        0, -vec(2),  vec(1),
+   vec(2),       0, -vec(0),
+  -vec(1),  vec(0),       0;
+  // clang-format on
+  return A;
+}
 
 }  // namespace vllm

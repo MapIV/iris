@@ -9,7 +9,7 @@ class EKF
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
-  EKF() : gravity(0, 0, -9.8f)
+  EKF() : gravity(0, 0, 9.8f)
   {
     // state variable
     pos.setZero();
@@ -19,10 +19,14 @@ public:
     P.setIdentity(9, 9);
 
     // drive noise
-    V.setZero(9, 9);
-    V.topLeftCorner(3, 3) = 0.1 * Eigen::Matrix3f::Identity(3, 3);      // position noise
-    V.block(3, 3, 3, 3) = 0.1 * Eigen::Matrix3f::Identity(3, 3);        // velocity noise
-    V.bottomRightCorner(3, 3) = 0.1 * Eigen::Matrix3f::Identity(3, 3);  // rotation noise
+    Eigen::MatrixXf L, Q;
+    L.setZero(9, 6);
+    L.block(3, 0, 3, 3).setIdentity();
+    L.bottomRightCorner(3, 3).setIdentity();
+    Q.setZero(6, 6);
+    Q.topLeftCorner(3, 3) = Eigen::Matrix3f::Identity() * 0.1;
+    Q.bottomRightCorner(3, 3) = Eigen::Matrix3f::Identity() * 0.1;
+    LQL = L * Q * L.transpose();
 
     // observe noise
     W.setZero(6, 6);
@@ -49,10 +53,14 @@ private:
 
   Eigen::MatrixXf calcH(const Eigen::Quaternionf& q);
 
+  Eigen::MatrixXf calcF(const Eigen::Quaternionf& q, const Eigen::Vector3f& acc, float dt);
+
+  Eigen::Matrix3f hat(const Eigen::Vector3f& vec);
+
   const Eigen::Vector3f gravity;
 
   // drive noise
-  Eigen::MatrixXf V;
+  Eigen::MatrixXf LQL;
   // observe noise
   Eigen::MatrixXf W;
 

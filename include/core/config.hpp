@@ -50,6 +50,9 @@ struct Config {
     fs["Map.voxel_grid_leaf"] >> voxel_grid_leaf;
     fs["Map.submap_grid_leaf"] >> submap_grid_leaf;
 
+    fs["IMU.topic_file"] >> topic_file;
+    fs["IMU.imu_file"] >> imu_file;
+
     fs["VLLM.pcd_file"] >> pcd_file;
     fs["VLLM.video_file"] >> video_file;
     fs["VLLM.vocab_file"] >> vocab_file;
@@ -89,6 +92,8 @@ struct Config {
   std::string pcd_file;
   std::string video_file;
   std::string vocab_file;
+  std::string imu_file;
+  std::string topic_file;
   Eigen::Matrix4f T_init;
 };
 }  // namespace vllm

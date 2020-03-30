@@ -117,3 +117,7 @@ target_link_libraries(${PROJECT_NAME} PUBLIC ${OpenCV_LIBS} openvslam pangolin)
 # == Executable ==
 add_executable(main main.cpp)
 target_link_libraries(main ${PCL_LIBRARIES} ${OpenCV_LIBS} pangolin vllm)
+
+# # == Tool ==
+# add_executable(adjuster tools/pcd_adjuster.cpp)
+# target_link_libraries(adjuster ${PCL_LIBRARIES} ${OpenCV_LIBS})
