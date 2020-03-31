@@ -1,5 +1,6 @@
 #pragma once
 #include <Eigen/Dense>
+#include <iostream>
 
 namespace vllm
 {
@@ -29,11 +30,13 @@ public:
     Q.topLeftCorner(3, 3) = Eigen::Matrix3f::Identity() * 0.1;
     Q.bottomRightCorner(3, 3) = Eigen::Matrix3f::Identity() * 0.1;
     LQL = L * Q * L.transpose();
+    std::cout << "LQL\n"
+              << LQL << std::endl;
 
     // observe noise
-    W.setZero(6, 6);
-    W.topLeftCorner(3, 3) = 0.1 * Eigen::Matrix3f::Identity(3, 3);      // position noise
-    W.bottomRightCorner(3, 3) = 0.1 * Eigen::Matrix3f::Identity(3, 3);  // rotation noise
+    W.setZero(7, 7);
+    W.topLeftCorner(3, 3) = 0.5 * Eigen::Matrix3f::Identity();      // position noise
+    W.bottomRightCorner(4, 4) = 0.5 * Eigen::Matrix4f::Identity();  // rotation noise
   }
   EKF(const Eigen::Matrix4f& T) : EKF()
   {

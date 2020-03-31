@@ -54,7 +54,6 @@ int System::execute(const cv::Mat& image)
 {
   // Execute vSLAM
   bridge.execute(image);
-  std::cout << "openvslam execute successfully" << std::endl;
   int vslam_state = static_cast<int>(bridge.getState());
   Eigen::Matrix4f vslam_camera = Eigen::Matrix4f::Identity();
 
@@ -166,7 +165,7 @@ int System::execute(const cv::Mat& image)
   Eigen::Matrix4f offset_camera = T_init * vslam_camera;
   Eigen::Matrix4f vllm_camera = T_align * offset_camera;
 
-  T_output = vllm_camera;
+  T_output = normalizePose(vllm_camera);
 
   // Update local map
   map->informCurrentPose(vllm_camera);
@@ -191,6 +190,6 @@ int System::execute(const cv::Mat& image)
       offset_keypoints, vllm_trajectory,
       offset_trajectory, correspondences, localmap_info);
 
-  return 0;
+  return state;
 }
 }  // namespace vllm

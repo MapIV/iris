@@ -65,8 +65,13 @@ int main(int argc, char* argv[])
       if (skipped_frame == config.frame_skip) {
         skipped_frame = 0;
         // Execution
-        system->execute(frame);
-        std::cout << "image" << system->getT().topRightCorner(3, 1).transpose() << std::endl;
+        int state = system->execute(frame);
+        Eigen::Matrix4f T = system->getT();
+        std::cout << time << " image " << T.topRightCorner(3, 1).transpose() << std::endl;
+
+        if (state == vllm::State::Tracking) {
+          ekf.observe(T, 0);
+        }
 
         // visualize by OpenCV
         cv::imshow("VLLM", system->getFrame());  // TODO: critical section
@@ -84,7 +89,7 @@ int main(int argc, char* argv[])
       vllm::ImuMessage msg = topic.getImuMessage(time);
       ekf.predict(msg.acc, msg.omega, msg.ns);
       Eigen::Matrix4f T = ekf.getState();
-      std::cout << "gyro " << T.topRightCorner(3, 1).transpose() << std::endl;
+      std::cout << time << " gyro " << T.topRightCorner(3, 1).transpose() << std::endl;
     }
 
     std::cout << "time= \033[35m"
