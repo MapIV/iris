@@ -51,6 +51,7 @@ int main(int argc, char* argv[])
   std::chrono::system_clock::time_point m_start;
   unsigned int time = 0;
   int skipped_frame = 0;
+  bool imu_least_one_observed = false;
 
   while (true) {
     bool is_topic_video = topic.isTopicVideo(time);
@@ -67,14 +68,19 @@ int main(int argc, char* argv[])
         m_start = std::chrono::system_clock::now();
 
         // Execution
-        // Eigen::Matrix4f estimated_Tw = ekf.getState();
-        // system->setT(estimated_Tw);
+        Eigen::Matrix4f estimated_Tw = ekf.getState();
+        if (imu_least_one_observed) {
+          std::cout << "ekf T_world\n"
+                    << estimated_Tw << std::endl;
+          // system->setImuPrediction(estimated_Tw);
+        }
 
         int state = system->execute(frame);
 
-        // if (state == vllm::State::Tracking) {
-        //   ekf.observe(T, 0);
-        // }
+        if (state == vllm::State::Tracking) {
+          imu_least_one_observed = true;
+          ekf.observe(system->getT(), 0);
+        }
 
         // stop timer
         std::cout << "time= \033[35m"

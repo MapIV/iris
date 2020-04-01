@@ -36,10 +36,10 @@ public:
     return T_world;
   }
 
-  // void setT(const Eigen::Matrix4f& T)
-  // {
-  //   T_world = T;
-  // }
+  void setImuPrediction(const Eigen::Matrix4f& T_world_)
+  {
+    T_imu = T_world_;
+  }
 
   const std::shared_ptr<map::Map> getMap() const
   {
@@ -95,6 +95,7 @@ private:
 
   Eigen::Matrix4f T_align = Eigen::Matrix4f::Identity();
   Eigen::Matrix4f T_world = Eigen::Matrix4f::Identity();
+  Eigen::Matrix4f T_imu = Eigen::Matrix4f::Zero();
 
   std::vector<Eigen::Vector3f> vllm_trajectory;
   std::vector<Eigen::Vector3f> offset_trajectory;
@@ -113,7 +114,7 @@ private:
 
   // for relozalization
   Eigen::Matrix4f vllm_velocity;
-  const int history = 10;
+  const int history = 30;
   std::list<Eigen::Matrix4f> vllm_history;
 };
 

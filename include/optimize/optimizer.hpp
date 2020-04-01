@@ -23,6 +23,7 @@ struct Config {
   float distance_max;
   float distance_min;
   int iteration;
+  float ref_scale = 1;
   Gain gain;
 };
 

@@ -42,6 +42,7 @@ System::System(Config& config, const std::shared_ptr<map::Map>& map)
   optimize_config.iteration = config.iteration;
   optimize_config.threshold_rotation = config.converge_rotation;
   optimize_config.threshold_translation = config.converge_translation;
+  optimize_config.ref_scale = static_cast<double>(getScale(config.T_init));
 
   // During the constructor funtion, there is no way to access members from other threads
   thread_safe_optimize_gain = optimize_config.gain;
@@ -149,7 +150,20 @@ int System::execute(const cv::Mat& image)
     // Optimization
     updateOptimizeGain();
     optimizer.setConfig(optimize_config);
-    Eigen::Matrix4f T_initial_align = T_world * vslam_camera.inverse();
+    // Eigen::Matrix4f T_initial_align = T_world * vslam_camera.inverse();
+    Eigen::Matrix4f T_initial_align = T_align;
+
+    std::cout << "T_align\n"
+              << T_align << std::endl;
+
+    if (!T_imu.isZero()) {
+      std::cout << "T_imu * (T_vslam)^-1\n"
+                << T_imu * (vslam_camera.inverse()) << std::endl;
+
+      T_initial_align = T_imu * vslam_camera.inverse();
+      T_imu.setZero();
+    }
+
 
     optimize::Outcome outcome = optimizer.optimize(map, offset_keypoints, vslam_camera, estimator, T_initial_align, vllm_history, weights);
 
@@ -157,17 +171,16 @@ int System::execute(const cv::Mat& image)
     correspondences = outcome.correspondences;
     // ######################
     T_align = outcome.T_align;
-    // std::cout << "dT\n"
-    //           << outcome.T_align * T_initial_align.inverse() << std::endl;
     // ######################
   }
 
-  // vllm_camera   = T_align * vslam_camera
-  Eigen::Matrix4f vllm_camera = T_align * vslam_camera;
-  T_world = vllm_camera;
+  // update the pose in the world
+  T_world = T_align * vslam_camera;
+  std::cout << "final T_world\n"
+            << T_world << std::endl;
 
   // Update local map
-  map->informCurrentPose(vllm_camera);
+  map->informCurrentPose(T_world);
   map::Info new_localmap_info = map->getLocalmapInfo();
   if (localmap_info != new_localmap_info) {
     // Reinitialize correspondencesEstimator
@@ -179,13 +192,13 @@ int System::execute(const cv::Mat& image)
 
   // Update history
   vllm_history.pop_back();
-  vllm_history.push_front(vllm_camera);
+  vllm_history.push_front(T_world);
 
   // Pubush for the viewer
-  vllm_trajectory.push_back(vllm_camera.topRightCorner(3, 1));
+  vllm_trajectory.push_back(T_world.topRightCorner(3, 1));
   offset_trajectory.push_back(vslam_camera.topRightCorner(3, 1));  // TODO: it was offset_camera
   publisher.push(
-      T_align, vllm_camera, vslam_camera,  // TODO: it was offset_camera
+      T_align, T_world, vslam_camera,  // TODO: it was offset_camera
       offset_keypoints, vllm_trajectory,
       offset_trajectory, correspondences, localmap_info);
 

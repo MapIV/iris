@@ -34,7 +34,7 @@ public:
   }
 };
 
-class Edge_Scale_Restriction : public g2o::BaseUnaryEdge<1, std::vector<double>, VertexSim3Expmap>
+class Edge_Scale_Restriction : public g2o::BaseUnaryEdge<1, double, VertexSim3Expmap>
 {
 private:
   double gain;

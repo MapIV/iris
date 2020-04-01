@@ -49,7 +49,7 @@ Outcome Optimizer::optimize(
     optimize::Aligner aligner(config.gain.scale, config.gain.latitude, config.gain.altitude, config.gain.smooth);
     T_align = aligner.estimate7DoF(
         T_align, offset_keypoints.cloud, map_ptr->getTargetCloud(), correspondences,
-        offset_camera, vllm_history, weights, offset_keypoints.normals, map_ptr->getTargetNormals());
+        offset_camera, vllm_history, weights, config.ref_scale, offset_keypoints.normals, map_ptr->getTargetNormals());
 
     // Integrate
     vllm_camera = T_align * offset_camera;
