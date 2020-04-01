@@ -19,13 +19,13 @@ System::System(Config& config, const std::shared_ptr<map::Map>& map)
   // Setup correspondence estimator
   estimator.setInputTarget(map->getTargetCloud());
   estimator.setTargetNormals(map->getTargetNormals());
-  estimator.setKSearch(40);
+  estimator.setKSearch(10);
 
   localmap_info = map->getLocalmapInfo();
 
   recollection.store(config.recollection);
 
-  T_init = config.T_init;
+  T_world = config.T_init;
   T_align.setIdentity();
   vllm_velocity.setZero();
 
@@ -47,7 +47,7 @@ System::System(Config& config, const std::shared_ptr<map::Map>& map)
   thread_safe_optimize_gain = optimize_config.gain;
 
   for (int i = 0; i < history; i++)
-    vllm_history.push_front(T_init);
+    vllm_history.push_front(T_world);
 }
 
 int System::execute(const cv::Mat& image)
@@ -80,52 +80,53 @@ int System::execute(const cv::Mat& image)
     if (vslam_state == 2) state = State::Tracking;
 
     // ######################
-    // T_init doesn't change
-    // T_align doesn't change
+    T_align = T_world;
     // ######################
   }
 
   // =======================
   if (state == State::Lost) {
+    std::cout << "vllm::Lost has not been implemented yet." << std::endl;
+    exit(1);
 
-    // "2" means openvslam::tracking_state_t::Tracking
-    if (vslam_state == 2) state = State::Relocalizing;
+    // // "2" means openvslam::tracking_state_t::Tracking
+    // if (vslam_state == 2) state = State::Relocalizing;
 
-    if (vllm_velocity.isZero()) vllm_velocity = optimize::calcVelocity(vllm_history);
-    Eigen::Matrix4f last_vllm_camera = *vllm_history.begin();
+    // if (vllm_velocity.isZero()) vllm_velocity = optimize::calcVelocity(vllm_history);
+    // Eigen::Matrix4f last_vllm_camera = *vllm_history.begin();
 
-    // ######################
-    T_init = vllm_velocity * last_vllm_camera;
-    T_align.setIdentity();
-    // ######################
+    // // ######################
+    // T_align = T_world;
+    // // ######################
   }
 
   // ====================
   if (state == State::Relocalizing) {
-    state = State::Tracking;
+    std::cout << "vllm::Relocalization has not been implemented yet." << std::endl;
+    exit(1);
+    // state = State::Tracking;
+    // int period = bridge.getPeriodFromInitialId();
+    // std::cout << "====== period " << period << " ======" << std::endl;
+    // std::cout << "vllm_velocity\n"
+    //           << vllm_velocity << std::endl;
 
-    int period = bridge.getPeriodFromInitialId();
-    std::cout << "====== period " << period << " ======" << std::endl;
-    std::cout << "vllm_velocity\n"
-              << vllm_velocity << std::endl;
+    // Eigen::Matrix4f tmp = T_init;
+    // Eigen::Matrix4f inv = vllm_velocity.inverse();
+    // for (int i = 0; i < period; i++) {
+    //   tmp = inv * tmp;
+    // }
+    // // Reset velocity
+    // vllm_velocity.setZero();
 
-    Eigen::Matrix4f tmp = T_init;
-    Eigen::Matrix4f inv = vllm_velocity.inverse();
-    for (int i = 0; i < period; i++) {
-      tmp = inv * tmp;
-    }
-    // Reset velocity
-    vllm_velocity.setZero();
+    // Eigen::Vector3f dx = (tmp - T_init).topRightCorner(3, 1);
+    // float drift = std::max(dx.norm(), 0.01f);
+    // std::cout << "drift " << drift << std::endl;
 
-    Eigen::Vector3f dx = (tmp - T_init).topRightCorner(3, 1);
-    float drift = std::max(dx.norm(), 0.01f);
-    std::cout << "drift " << drift << std::endl;
-
-    Eigen::Matrix3f sR = T_init.topLeftCorner(3, 3);
-    // ######################
-    T_init.topLeftCorner(3, 3) = drift * sR;
-    T_align.setIdentity();
-    // ######################
+    // Eigen::Matrix3f sR = T_init.topLeftCorner(3, 3);
+    // // ######################
+    // T_init.topLeftCorner(3, 3) = drift * sR;
+    // T_align.setIdentity();
+    // // ######################
   }
 
   // ====================
@@ -140,32 +141,30 @@ int System::execute(const cv::Mat& image)
     if (raw_keypoints.cloud->size() < 300 && accuracy > 0.10) accuracy -= 0.01;
     if (raw_keypoints.cloud->size() > 500 && accuracy < 0.90) accuracy += 0.01;
 
+    // TODO: This is redundant
     // Transform subtract the first pose offset
-    pcl::transformPointCloud(*raw_keypoints.cloud, *offset_keypoints.cloud, T_init);
-    vllm::transformNormals(*raw_keypoints.normals, *offset_keypoints.normals, T_init);
+    pcl::transformPointCloud(*raw_keypoints.cloud, *offset_keypoints.cloud, Eigen::Matrix4f::Identity());
+    vllm::transformNormals(*raw_keypoints.normals, *offset_keypoints.normals, Eigen::Matrix4f::Identity());
 
     // Optimization
     updateOptimizeGain();
     optimizer.setConfig(optimize_config);
-    optimize::Outcome outcome = optimizer.optimize(map, offset_keypoints, T_init * vslam_camera, estimator, T_align, vllm_history, weights);
+    Eigen::Matrix4f T_initial_align = T_world * vslam_camera.inverse();
+
+    optimize::Outcome outcome = optimizer.optimize(map, offset_keypoints, vslam_camera, estimator, T_initial_align, vllm_history, weights);
 
     // Retrieve outcome
     correspondences = outcome.correspondences;
     // ######################
-    // T_init doesn't change
     T_align = outcome.T_align;
+    // std::cout << "dT\n"
+    //           << outcome.T_align * T_initial_align.inverse() << std::endl;
     // ######################
   }
 
-  //  std::cout << "T_init\n" << T_init << std::endl;
-  //  std::cout << "T_align\n" << T_align << std::endl;
-
-  // offset_camera =           T_init * vslam_camera
-  // vllm_camera   = T_align * T_init * vslam_camera
-  Eigen::Matrix4f offset_camera = T_init * vslam_camera;
-  Eigen::Matrix4f vllm_camera = T_align * offset_camera;
-
-  T_output = normalizePose(vllm_camera);
+  // vllm_camera   = T_align * vslam_camera
+  Eigen::Matrix4f vllm_camera = T_align * vslam_camera;
+  T_world = vllm_camera;
 
   // Update local map
   map->informCurrentPose(vllm_camera);
@@ -184,9 +183,9 @@ int System::execute(const cv::Mat& image)
 
   // Pubush for the viewer
   vllm_trajectory.push_back(vllm_camera.topRightCorner(3, 1));
-  offset_trajectory.push_back(offset_camera.topRightCorner(3, 1));
+  offset_trajectory.push_back(vslam_camera.topRightCorner(3, 1));  // TODO: it was offset_camera
   publisher.push(
-      T_align, vllm_camera, offset_camera,
+      T_align, vllm_camera, vslam_camera,  // TODO: it was offset_camera
       offset_keypoints, vllm_trajectory,
       offset_trajectory, correspondences, localmap_info);
 

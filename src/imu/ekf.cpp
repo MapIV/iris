@@ -87,7 +87,7 @@ void EKF::observe(const Eigen::Matrix4f& T, unsigned long)
   qua = qua * dq;
   P -= K * H * P;
 
-  std::cout << "observed p " << pos.transpose() << " v " << vel.transpose() << std::endl;
+  // std::cout << "observed p " << pos.transpose() << " v " << vel.transpose() << std::endl;
 }
 
 Eigen::MatrixXf EKF::calcH(const Eigen::Quaternionf& q)

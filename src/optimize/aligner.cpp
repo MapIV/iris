@@ -140,17 +140,18 @@ void Aligner::setEdgeRestriction(
   // auto itr1 = std::next(history.begin(), DT);
   // auto itr2 = std::next(itr1, DT);
 
+  // TODO:
   // Add a scale edge
-  {
-    Edge_Scale_Restriction* e = new Edge_Scale_Restriction(scale_gain);
-    e->setVertex(0, vp0);
-    e->information().setIdentity();
-    std::vector<double> scales;
-    for (const Eigen::Matrix4f& T : history)
-      scales.push_back(static_cast<double>(getScale(T)));
-    e->setMeasurement(scales);
-    optimizer.addEdge(e);
-  }
+  // {
+  //   Edge_Scale_Restriction* e = new Edge_Scale_Restriction(scale_gain);
+  //   e->setVertex(0, vp0);
+  //   e->information().setIdentity();
+  //   std::vector<double> scales;
+  //   for (const Eigen::Matrix4f& T : history)
+  //     scales.push_back(static_cast<double>(getScale(T)));
+  //   e->setMeasurement(scales);
+  //   optimizer.addEdge(e);
+  // }
 
   // Add an altitude edge
   {
@@ -161,14 +162,15 @@ void Aligner::setEdgeRestriction(
     optimizer.addEdge(e);
   }
 
-  // Add a latitude edge
-  {
-    Edge_Latitude_Restriction* e = new Edge_Latitude_Restriction(latitude_gain);
-    e->setVertex(0, vp0);
-    e->information().setIdentity();
-    e->setMeasurement(0.0);
-    optimizer.addEdge(e);
-  }
+  // TODO:
+  // // Add a latitude edge
+  // {
+  //   Edge_Latitude_Restriction* e = new Edge_Latitude_Restriction(latitude_gain);
+  //   e->setVertex(0, vp0);
+  //   e->information().setIdentity();
+  //   e->setMeasurement(0.0);
+  //   optimizer.addEdge(e);
+  // }
 
   //  TODO:
   // // add a const velocity Model Constraint Edge of Scale

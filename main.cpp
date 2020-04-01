@@ -55,8 +55,6 @@ int main(int argc, char* argv[])
   while (true) {
     bool is_topic_video = topic.isTopicVideo(time);
 
-    m_start = std::chrono::system_clock::now();
-
     if (is_topic_video) {
       // Read frame from video
       cv::Mat frame;
@@ -64,37 +62,40 @@ int main(int argc, char* argv[])
       skipped_frame++;
       if (skipped_frame == config.frame_skip) {
         skipped_frame = 0;
-        // Execution
-        int state = system->execute(frame);
-        Eigen::Matrix4f T = system->getT();
-        std::cout << time << " image " << T.topRightCorner(3, 1).transpose() << std::endl;
 
-        if (state == vllm::State::Tracking) {
-          ekf.observe(T, 0);
-        }
+        // start timer
+        m_start = std::chrono::system_clock::now();
+
+        // Execution
+        // Eigen::Matrix4f estimated_Tw = ekf.getState();
+        // system->setT(estimated_Tw);
+
+        int state = system->execute(frame);
+
+        // if (state == vllm::State::Tracking) {
+        //   ekf.observe(T, 0);
+        // }
+
+        // stop timer
+        std::cout << "time= \033[35m"
+                  << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - m_start).count()
+                  << "\033[m ms" << std::endl;
 
         // visualize by OpenCV
         cv::imshow("VLLM", system->getFrame());  // TODO: critical section
         int key = cv::waitKey(1);
         if (key == 'q') break;
         if (key == 's') {
-          while (key == 's')
-            key = cv::waitKey(0);
+          while (key == 's') key = cv::waitKey(0);
         }
       } else {
-        std::cout << "image skip" << std::endl;
+        // std::cout << "image skip" << std::endl;
       }
 
     } else {
       vllm::ImuMessage msg = topic.getImuMessage(time);
       ekf.predict(msg.acc, msg.omega, msg.ns);
-      Eigen::Matrix4f T = ekf.getState();
-      std::cout << time << " gyro " << T.topRightCorner(3, 1).transpose() << std::endl;
     }
-
-    std::cout << "time= \033[35m"
-              << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - m_start).count()
-              << "\033[m ms" << std::endl;
 
     time++;
   }

@@ -42,7 +42,7 @@ VLLM.t_init:  !!opencv-matrix
     rows: 3
     cols: 1
     dt: f
-    data: [ 0.0, -1.0, 0.0]
+    data: [ 1.0, -1.0, 0.0]
 # normal vector of camera
 VLLM.normal_init:  !!opencv-matrix
     rows: 3
@@ -63,13 +63,13 @@ VLLM.video_file: "../../vllm-data/asano3/asano3.mp4"
 IMU.topic_file:  "../../vllm-data/asano3/topic.csv"
 IMU.imu_file:    "../../vllm-data/asano3/imu.csv"
 
-VLLM.iteration: 5
+VLLM.iteration: 3
 VLLM.frame_skip: 3
 VLLM.recollection: 40
 
 VLLM.scale_gain: 30.0
-VLLM.smooth_gain: 1.5
-VLLM.latitude_gain: 10.0
+VLLM.smooth_gain: 0 # TODO
+VLLM.latitude_gain: 0.0 # TODO
 VLLM.altitude_gain: 2.1
 
 VLLM.distance_min: 0.5
@@ -80,5 +80,5 @@ VLLM.converge_rotation: 0.05
 
 # Map Parameter
 Map.voxel_grid_leaf: 0.400
-Map.submap_grid_leaf: 70
+Map.submap_grid_leaf: 80
 Map.normal_search_leaf: 0.8

@@ -13,7 +13,6 @@
 
 namespace vllm
 {
-
 enum State {
   Inittializing = 0,
   Tracking = 1,
@@ -34,8 +33,13 @@ public:
 
   Eigen::Matrix4f getT() const
   {
-    return T_output;
+    return T_world;
   }
+
+  // void setT(const Eigen::Matrix4f& T)
+  // {
+  //   T_world = T;
+  // }
 
   const std::shared_ptr<map::Map> getMap() const
   {
@@ -89,9 +93,8 @@ private:
   const Config config;
   std::shared_ptr<map::Map> map;
 
-  Eigen::Matrix4f T_init;
   Eigen::Matrix4f T_align = Eigen::Matrix4f::Identity();
-  Eigen::Matrix4f T_output = Eigen::Matrix4f::Identity();
+  Eigen::Matrix4f T_world = Eigen::Matrix4f::Identity();
 
   std::vector<Eigen::Vector3f> vllm_trajectory;
   std::vector<Eigen::Vector3f> offset_trajectory;
