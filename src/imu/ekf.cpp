@@ -21,15 +21,6 @@ Eigen::Quaternionf EKF::exp(const Eigen::Vector3f& v)
   Eigen::Vector3f n = s * v.normalized();
   return Eigen::Quaternionf(c, n.x(), n.y(), n.z());
 }
-void EKF::init(const Eigen::Matrix4f& T, const Eigen::Vector3f& v)
-{
-  Eigen::Matrix3f R = T.topLeftCorner(3, 3);
-  pos = T.topRightCorner(3, 1);
-  qua = Eigen::Quaternionf(R).normalized();  // NOTE: must normalize here
-  vel = v;
-
-  P = 0.5 * Eigen::MatrixXf::Identity(9, 9);
-}
 
 void EKF::predict(const Eigen::Vector3f& acc, const Eigen::Vector3f& omega, unsigned long ns)
 {
@@ -51,7 +42,9 @@ void EKF::predict(const Eigen::Vector3f& acc, const Eigen::Vector3f& omega, unsi
 
   // Propagate uncertainty
   Eigen::MatrixXf F = calcF(qua, acc, dt);
+
   P = F * P * F.transpose() + LQL * dt;
+
 
   // std::cout << "vel " << vel.transpose() << " n-acc " << nominal_acc.transpose() << " " << acc.transpose() << std::endl;
 }
@@ -65,34 +58,39 @@ void EKF::observe(const Eigen::Matrix4f& T, unsigned long)
   // float dt = static_cast<float>(ns - last_ns) * 1e-9f;
   // last_ns = ns;
 
-  std::cout << "pre " << qua.x() << " " << qua.y() << " " << qua.z() << " " << qua.w() << " p " << pos.transpose() << std::endl;
+  std::cout << "pre " << qua.x() << " " << qua.y() << " " << qua.z() << " " << qua.w() << " p " << pos.transpose() << " v " << vel.transpose() << std::endl;
 
   scale = getScale(T);
   Eigen::Matrix3f R = normalizeRotation(T);
   Eigen::Quaternionf q(R);
   Eigen::Vector3f t = T.topRightCorner(3, 1);
   std::cout << "obs-q " << q.x() << " " << q.y() << " " << q.z() << " " << q.w() << " p " << t.transpose() << std::endl;
-  // observation jacobian  (7x9)
+  // observation jacobian  (7x12)
   Eigen::MatrixXf H = calcH(qua);
   // innovation covariance (7x7)
   Eigen::MatrixXf S = H * P * H.transpose() + W;
   Eigen::MatrixXf Si = S.inverse();  // NOTE: can use Cholesky decompose
 
-  // kalman gain           (9x7)
+  // kalman gain           (12x7)=(12x12)*(12x7)*(7x7)
   Eigen::MatrixXf K = P * H.transpose() * Si;
   // error vector          (7)
   Eigen::VectorXf error = toVec(t, q) - toVec(pos, qua);
 
-  Eigen::VectorXf dx = K * error;
-  Eigen::Quaternionf dq = exp(dx.bottomRows(3));
+  Eigen::VectorXf dx = K * error;  // (12x7)*(7)=(12)
+  Eigen::Quaternionf dq = exp(dx.block(6, 0, 3, 1));
 
   // update
   pos += dx.topRows(3);
   vel += dx.block(3, 0, 3, 1);
   qua = qua * dq;
+  gravity += dx.bottomRows(3);
   P -= K * H * P;
 
+
   std::cout << "post-q " << qua.x() << " " << qua.y() << " " << qua.z() << " " << qua.w() << " p " << pos.transpose() << std::endl;
+  std::cout << "gravity " << gravity.transpose() << " vel " << vel.transpose() << std::endl;
+  // std::cout << "P\n"
+  //           << P << std::endl;
 }
 
 Eigen::MatrixXf EKF::calcH(const Eigen::Quaternionf& q)
@@ -106,17 +104,19 @@ Eigen::MatrixXf EKF::calcH(const Eigen::Quaternionf& q)
   // clang-format on
   Q *= 0.5;
 
-  Eigen::MatrixXf H = Eigen::MatrixXf::Zero(7, 9);
+  Eigen::MatrixXf H = Eigen::MatrixXf::Zero(7, 12);
   H.topLeftCorner(3, 3).setIdentity();
-  H.bottomRightCorner(4, 3) = Q;
+  H.block(3, 6, 4, 3) = Q;
   return H;
 }
 
 Eigen::MatrixXf EKF::calcF(const Eigen::Quaternionf& q, const Eigen::Vector3f& acc, float dt)
 {
-  Eigen::MatrixXf F = Eigen::MatrixXf::Identity(9, 9);
+  Eigen::MatrixXf F = Eigen::MatrixXf::Identity(12, 12);
+  Eigen::MatrixXf R = q.toRotationMatrix();
   F.block(0, 3, 3, 3) = Eigen::Matrix3f::Identity(3, 3) * dt;
-  F.block(3, 6, 3, 3) = -hat(q.toRotationMatrix() * acc) * dt;
+  F.block(3, 6, 3, 3) = -R * hat(acc) * dt;
+  F.block(3, 9, 3, 3) = Eigen::Matrix3f::Identity(3, 3) * dt;
   return F;
 }
 

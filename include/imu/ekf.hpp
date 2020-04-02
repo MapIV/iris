@@ -1,57 +1,62 @@
 #pragma once
+#include "imu/kfparam.hpp"
 #include <Eigen/Dense>
 #include <iostream>
 
 namespace vllm
 {
-// error state extended kalman filter
 class EKF
 {
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
-  EKF() : gravity(0, 0, 9.8f)
+  EKF(const KFParam& param,
+      const Eigen::Matrix4f& T,
+      const Eigen::Vector3f& initial_vel = Eigen::Vector3f::Zero()) : param(param)
   {
     last_ns = 0;
 
     // state variable
-    pos.setZero();
-    vel.setZero();
-    qua.setIdentity();
-    // variance covariance matrix
-    P.setIdentity(9, 9);
+    Eigen::Matrix3f R = T.topLeftCorner(3, 3);
+    pos = T.topRightCorner(3, 1);
+    qua = Eigen::Quaternionf(R).normalized();  // NOTE: must normalize here
+    vel = initial_vel;
+    gravity << 0, 0, 9.8f;
 
-    // drive noise
-    Eigen::MatrixXf L, Q;
-    L.setZero(9, 6);
-    L.block(3, 0, 3, 3).setIdentity();
-    L.bottomRightCorner(3, 3).setIdentity();
+    // variance covariance matrix
+    P.setZero(12, 12);
+    P.block(0, 0, 3, 3) = param.initial_cov_p * Eigen::Matrix3f::Identity();
+    P.block(3, 3, 3, 3) = param.initial_cov_v * Eigen::Matrix3f::Identity();
+    P.block(6, 6, 3, 3) = param.initial_cov_theta * Eigen::Matrix3f::Identity();
+    P.block(9, 9, 3, 3) = param.initial_cov_grad * Eigen::Matrix3f::Identity();
+
+    // driving noise
+    Eigen::MatrixXf Q;
     Q.setZero(6, 6);
-    Q.topLeftCorner(3, 3) = Eigen::Matrix3f::Identity() * 1.0;      // velocity variance [m/s]
-    Q.bottomRightCorner(3, 3) = Eigen::Matrix3f::Identity() * 1.0;  // rotation variance [rad]
-    LQL = L * Q * L.transpose();
-    std::cout << "LQL\n"
-              << LQL << std::endl;
+    Q.block(0, 0, 3, 3) = param.drive_cov_v * Eigen::Matrix3f::Identity();      // velocity variance [m/s]
+    Q.block(3, 3, 3, 3) = param.drive_cov_theta * Eigen::Matrix3f::Identity();  // rotation variance [rad]
+
+    Eigen::MatrixXf L;
+    L.setZero(12, 6);
+    L.block(3, 0, 3, 3).setIdentity();
+    L.block(6, 3, 3, 3).setIdentity();
+    LQL = L * Q * L.transpose();  // (12x6)*(6x6)*(6x12)=(12x12)
 
     // observe noise
     W.setZero(7, 7);
-    W.topLeftCorner(3, 3) = 0.05 * Eigen::Matrix3f::Identity();      // position variance [m]
-    W.bottomRightCorner(4, 4) = 0.05 * Eigen::Matrix4f::Identity();  // rotation variance [rad]
-  }
-  EKF(const Eigen::Matrix4f& T) : EKF()
-  {
-    init(T);
+    W.block(0, 0, 3, 3) = param.observe_cov_p * Eigen::Matrix3f::Identity();      // position variance [m]
+    W.block(0, 0, 4, 4) = param.observe_cov_theta * Eigen::Matrix4f::Identity();  // rotation variance [rad]
   }
 
   Eigen::Matrix4f getState();
-
-  void init(const Eigen::Matrix4f& T, const Eigen::Vector3f& v = Eigen::Vector3f::Zero());
 
   void predict(const Eigen::Vector3f& acc, const Eigen::Vector3f& omega, unsigned long ns);
 
   void observe(const Eigen::Matrix4f& T, unsigned long ns);
 
 private:
+  KFParam param;
+
   Eigen::Quaternionf exp(const Eigen::Vector3f& v);
 
   Eigen::VectorXf toVec(const Eigen::Vector3f& p, const Eigen::Quaternionf& q);
@@ -64,8 +69,6 @@ private:
 
   bool isUpadatable() { return (last_ns != 0); }
 
-  const Eigen::Vector3f gravity;
-
   unsigned long last_ns;
 
   float scale = 1.0;
@@ -76,6 +79,7 @@ private:
   Eigen::MatrixXf W;
 
   // nominal state
+  Eigen::Vector3f gravity;
   Eigen::Vector3f pos, vel;
   Eigen::Quaternionf qua;
 

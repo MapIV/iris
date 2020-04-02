@@ -18,6 +18,11 @@ void PangolinViewer::swap()
   pangolin::FinishFrame();
 }
 
+void PangolinViewer::setIMU(const std::vector<Eigen::Vector3f>& tra)
+{
+  std::lock_guard lock(imu_mtx);
+  imu_trajectory = tra;
+}
 void PangolinViewer::init()
 {
   s_cam = std::make_shared<pangolin::OpenGlRenderState>(makeCamera());
@@ -110,6 +115,11 @@ void PangolinViewer::execute()
     colored_target_cloud = colorizePointCloud(target_cloud);
     return;
   }
+  {
+    std::lock_guard lock(imu_mtx);
+    drawTrajectory(imu_trajectory, true, {0.0f, 1.0f, 0.0f, 1.0f});
+  }
+
 
   drawPointCloud(colored_target_cloud, {0.6f, 0.6f, 0.6f, 1.0f});
   if (*gui_target_normals)

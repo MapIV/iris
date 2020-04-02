@@ -3,6 +3,7 @@
 #include "viewer/color.hpp"
 #include "viewer/pangolin_cloud.hpp"
 #include <atomic>
+#include <mutex>
 #include <pangolin/pangolin.h>
 #include <pcl/correspondence.h>
 #include <thread>
@@ -32,6 +33,8 @@ public:
   void execute();
   void startLoop();
   void quitLoop();
+
+  void setIMU(const std::vector<Eigen::Vector3f>& tra);
 
 private:
   void loop();
@@ -75,9 +78,12 @@ private:
   std::thread viewer_thread;
   std::atomic<bool> loop_flag;
 
+  std::mutex imu_mtx;
   pcl::PointCloud<pcl::PointXYZ>::Ptr target_cloud;
   pcl::PointCloud<pcl::Normal>::Ptr target_normals;
   pcl::PointCloud<pcl::PointXYZRGBA>::Ptr colored_target_cloud;
+
+  std::vector<Eigen::Vector3f> imu_trajectory;
 
   Publication publication;
 

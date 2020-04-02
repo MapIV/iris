@@ -1,4 +1,5 @@
 #pragma once
+#include "imu/kfparam.hpp"
 #include <Eigen/Dense>
 #include <iostream>
 #include <opencv2/core/eigen.hpp>
@@ -53,6 +54,16 @@ struct Config {
     fs["IMU.topic_file"] >> topic_file;
     fs["IMU.imu_file"] >> imu_file;
 
+    fs["KF.initial_cov_p"] >> param.initial_cov_p;
+    fs["KF.initial_cov_v"] >> param.initial_cov_v;
+    fs["KF.initial_cov_theta"] >> param.initial_cov_theta;
+    fs["KF.initial_cov_grad"] >> param.initial_cov_grad;
+
+    fs["KF.drive_cov_v"] >> param.drive_cov_v;
+    fs["KF.drive_cov_theta"] >> param.drive_cov_theta;
+    fs["KF.observe_cov_p"] >> param.observe_cov_p;
+    fs["KF.observe_cov_theta"] >> param.observe_cov_theta;
+
     fs["VLLM.pcd_file"] >> pcd_file;
     fs["VLLM.video_file"] >> video_file;
     fs["VLLM.vocab_file"] >> vocab_file;
@@ -74,6 +85,8 @@ struct Config {
 
     cv::Mat T = cv::Mat::eye(4, 4, CV_32FC1);
   }
+
+  KFParam param;
 
   float distance_min, distance_max;
   float scale_gain, latitude_gain, smooth_gain, altitude_gain;

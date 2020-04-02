@@ -19,7 +19,7 @@ System::System(Config& config, const std::shared_ptr<map::Map>& map)
   // Setup correspondence estimator
   estimator.setInputTarget(map->getTargetCloud());
   estimator.setTargetNormals(map->getTargetNormals());
-  estimator.setKSearch(10);
+  estimator.setKSearch(20);
 
   localmap_info = map->getLocalmapInfo();
 
@@ -152,14 +152,13 @@ int System::execute(const cv::Mat& image)
     optimizer.setConfig(optimize_config);
     Eigen::Matrix4f T_initial_align = T_align;
 
-    // std::cout << "T_align\n"
-    //           << T_align << std::endl;
+    std::cout << "T_align\n"
+              << T_align << std::endl;
 
     if (!T_imu.isZero()) {
-      // std::cout << "T_imu * (T_vslam)^-1\n"
-      //           << T_imu * (vslam_camera.inverse()) << std::endl;
-
-      T_initial_align = T_imu * vslam_camera.inverse();
+      std::cout << "T_imu * (T_vslam)^-1\n"
+                << T_imu * (vslam_camera.inverse()) << std::endl;
+      T_initial_align = T_imu * vslam_camera.inverse();  // Feedback!!
       T_imu.setZero();
     }
 
