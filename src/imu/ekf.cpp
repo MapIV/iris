@@ -36,7 +36,7 @@ void EKF::predict(const Eigen::Vector3f& acc, const Eigen::Vector3f& omega, unsi
 
   // Predict state
   Eigen::Vector3f nominal_acc = R * acc - gravity;
-  pos += vel * dt + 0.5 * nominal_acc * dt * dt;
+  pos += vel * dt + 0.5f * nominal_acc * dt * dt;
   vel += nominal_acc * dt;
   qua = qua * dq;
 
@@ -46,7 +46,7 @@ void EKF::predict(const Eigen::Vector3f& acc, const Eigen::Vector3f& omega, unsi
   P = F * P * F.transpose() + LQL * dt;
 
 
-  // std::cout << "vel " << vel.transpose() << " n-acc " << nominal_acc.transpose() << " " << acc.transpose() << std::endl;
+  std::cout << " n-acc " << nominal_acc.transpose() << " r-acc " << acc.transpose() << std::endl;
 }
 
 void EKF::observe(const Eigen::Matrix4f& T, unsigned long)

@@ -53,7 +53,7 @@ int main(int argc, char* argv[])
   int skipped_frame = 0;
   int imu_least_one_observed = 0;
 
-  std::vector<Eigen::Vector3f> imu_trajectory;
+  std::vector<Eigen::Matrix4f> imu_trajectory;
 
   while (true) {
     bool is_topic_video = topic.isTopicVideo(time);
@@ -71,9 +71,7 @@ int main(int argc, char* argv[])
 
         // Execution
         Eigen::Matrix4f estimated_Tw = ekf.getState();
-        // if (imu_least_one_observed > 30) {
-        //   // std::cout << "ekf T_world\n"
-        //   //           << estimated_Tw << std::endl;
+        // if (pangolin_viewer.isEnabledIMU()) {
         //   system->setImuPrediction(estimated_Tw);
         // }
 
@@ -82,7 +80,8 @@ int main(int argc, char* argv[])
 
         if (state == vllm::State::Tracking) {
           imu_least_one_observed++;
-          ekf.observe(system->getT(), 0);
+          if (pangolin_viewer.isEnabledIMU())
+            ekf.observe(system->getT(), 0);
         }
 
         // stop timer
@@ -104,7 +103,7 @@ int main(int argc, char* argv[])
     } else {
       vllm::ImuMessage msg = topic.getImuMessage(time);
       ekf.predict(msg.acc, msg.omega, msg.ns);
-      imu_trajectory.push_back(ekf.getState().topRightCorner(3, 1));
+      imu_trajectory.push_back(ekf.getState());
       pangolin_viewer.setIMU(imu_trajectory);
       // std::cout << "imu " << ekf.getState().topRightCorner(3, 1).transpose() << std::endl;
     }

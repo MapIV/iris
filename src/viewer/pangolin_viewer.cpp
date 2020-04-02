@@ -18,11 +18,12 @@ void PangolinViewer::swap()
   pangolin::FinishFrame();
 }
 
-void PangolinViewer::setIMU(const std::vector<Eigen::Vector3f>& tra)
+void PangolinViewer::setIMU(const std::vector<Eigen::Matrix4f>& pose)
 {
   std::lock_guard lock(imu_mtx);
-  imu_trajectory = tra;
+  imu_poses = pose;
 }
+
 void PangolinViewer::init()
 {
   s_cam = std::make_shared<pangolin::OpenGlRenderState>(makeCamera());
@@ -49,6 +50,7 @@ void PangolinViewer::init()
   gui_target_normals = std::make_shared<pangolin::Var<bool>>("ui.target_normals", false, true);
   gui_target_normals = std::make_shared<pangolin::Var<bool>>("ui.target_normals", false, true);
   gui_correspondences = std::make_shared<pangolin::Var<bool>>("ui.correspondences", true, true);
+  gui_imu = std::make_shared<pangolin::Var<bool>>("ui.IMU", false, true);
 
   // Initialize local map
   target_cloud = pcl::PointCloud<pcl::PointXYZ>::Ptr(new pcl::PointCloud<pcl::PointXYZ>);
@@ -117,7 +119,7 @@ void PangolinViewer::execute()
   }
   {
     std::lock_guard lock(imu_mtx);
-    drawTrajectory(imu_trajectory, true, {0.0f, 1.0f, 0.0f, 1.0f});
+    drawPoses(imu_poses);
   }
 
 
@@ -156,6 +158,8 @@ void PangolinViewer::execute()
   // if (pangolin::Pushed(*gui_quit))
   //   return -1;
 
+  imu_use_flag.store(*gui_imu);
+
   if (pangolin::Pushed(*gui_reset))
     system_ptr->requestReset();
 }
@@ -180,22 +184,24 @@ void PangolinViewer::drawString(const std::string& str, const Color& color) cons
   pangolin::GlFont::I().Text(str).DrawWindow(200, 50 - 2.0f * pangolin::GlFont::I().Height());
 }
 
-// void PangolinViewer::drawGPD(const GPD& gpd) const
-// {
-//   const size_t N = gpd.size();
-//   for (size_t i = 0; i < N; i++) {
-//     for (size_t j = 0; j < N; j++) {
-//       for (size_t k = 0; k < N; k++) {
-//         const LPD& lpd = gpd.at(i, j, k);
-//         if (lpd.N < 20) continue;
-//         glPushMatrix();
-//         glMultMatrixf(lpd.T.transpose().eval().data());
-//         drawRectangular(lpd.sigma.x(), lpd.sigma.y(), lpd.sigma.z());
-//         glPopMatrix();
-//       }
-//     }
-//   }
-// }
+void PangolinViewer::drawPoses(const std::vector<Eigen::Matrix4f>& poses) const
+{
+  glBegin(GL_LINES);
+  glLineWidth(1.0);
+  int c = 0;
+  for (int i = 0; i < poses.size(); i += 10) {
+    const Eigen::Matrix4f& pose = poses.at(i);
+    glColor3fv(convertRGB(Eigen::Vector3f(static_cast<float>(c++ % 360), 1.f, 1.f)).data());
+
+    Eigen::Matrix3f R = normalizeRotation(pose.topLeftCorner(3, 3));
+
+    Eigen::Vector3f t = pose.topRightCorner(3, 1);
+    Eigen::Vector3f f = t + 0.3 * R * Eigen::Vector3f::UnitZ();
+    drawLine(t.x(), t.y(), t.z(), f.x(), f.y(), f.z());
+  }
+  glEnd();
+}
+
 
 void PangolinViewer::drawTrajectory(const std::vector<Eigen::Vector3f>& trajectory, bool colorful, const Color& color)
 {
@@ -272,7 +278,7 @@ void PangolinViewer::drawGridLine() const
 void PangolinViewer::drawCamera(const Eigen::Matrix4f& cam_pose, const Color& color) const
 {
   glPushMatrix();
-  glMultMatrixf(cam_pose.transpose().eval().data());
+  glMultMatrixf(cam_pose.eval().data());
 
   glBegin(GL_LINES);
   glColor3f(color.r, color.g, color.b);

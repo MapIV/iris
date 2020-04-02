@@ -34,7 +34,9 @@ public:
   void startLoop();
   void quitLoop();
 
-  void setIMU(const std::vector<Eigen::Vector3f>& tra);
+  void setIMU(const std::vector<Eigen::Matrix4f>& tra);
+
+  bool isEnabledIMU() { return imu_use_flag.load(); }
 
 private:
   void loop();
@@ -45,6 +47,7 @@ private:
   void drawLine(
       const float x1, const float y1, const float z1,
       const float x2, const float y2, const float z2) const;
+  void drawPoses(const std::vector<Eigen::Matrix4f>& poses) const;
   void drawGridLine() const;
   void drawString(const std::string& str, const Color& color) const;
   void drawTrajectory(const std::vector<Eigen::Vector3f>& trajectory, bool colorful, const Color& color = Color());
@@ -77,13 +80,14 @@ private:
 
   std::thread viewer_thread;
   std::atomic<bool> loop_flag;
+  std::atomic<bool> imu_use_flag;
 
   std::mutex imu_mtx;
   pcl::PointCloud<pcl::PointXYZ>::Ptr target_cloud;
   pcl::PointCloud<pcl::Normal>::Ptr target_normals;
   pcl::PointCloud<pcl::PointXYZRGBA>::Ptr colored_target_cloud;
 
-  std::vector<Eigen::Vector3f> imu_trajectory;
+  std::vector<Eigen::Matrix4f> imu_poses;
 
   Publication publication;
 
@@ -105,6 +109,7 @@ private:
   std::shared_ptr<pangolin::Var<unsigned int>> gui_recollection;
   std::shared_ptr<pangolin::Var<bool>> gui_quit;
   std::shared_ptr<pangolin::Var<bool>> gui_reset;
+  std::shared_ptr<pangolin::Var<bool>> gui_imu;
 };
 
 }  // namespace viewer
