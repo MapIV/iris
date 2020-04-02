@@ -150,15 +150,14 @@ int System::execute(const cv::Mat& image)
     // Optimization
     updateOptimizeGain();
     optimizer.setConfig(optimize_config);
-    // Eigen::Matrix4f T_initial_align = T_world * vslam_camera.inverse();
     Eigen::Matrix4f T_initial_align = T_align;
 
-    std::cout << "T_align\n"
-              << T_align << std::endl;
+    // std::cout << "T_align\n"
+    //           << T_align << std::endl;
 
     if (!T_imu.isZero()) {
-      std::cout << "T_imu * (T_vslam)^-1\n"
-                << T_imu * (vslam_camera.inverse()) << std::endl;
+      // std::cout << "T_imu * (T_vslam)^-1\n"
+      //           << T_imu * (vslam_camera.inverse()) << std::endl;
 
       T_initial_align = T_imu * vslam_camera.inverse();
       T_imu.setZero();
@@ -196,7 +195,7 @@ int System::execute(const cv::Mat& image)
 
   // Pubush for the viewer
   vllm_trajectory.push_back(T_world.topRightCorner(3, 1));
-  offset_trajectory.push_back(vslam_camera.topRightCorner(3, 1));  // TODO: it was offset_camera
+  offset_trajectory.push_back(T_imu.topRightCorner(3, 1));  // TODO: it was offset_camera
   publisher.push(
       T_align, T_world, vslam_camera,  // TODO: it was offset_camera
       offset_keypoints, vllm_trajectory,

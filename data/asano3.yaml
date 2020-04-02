@@ -73,7 +73,7 @@ VLLM.latitude_gain: 5.0
 VLLM.altitude_gain: 3.0
 
 VLLM.distance_min: 0.5
-VLLM.distance_max: 2.0
+VLLM.distance_max: 3.0
 
 VLLM.converge_translation: 0.10
 VLLM.converge_rotation: 0.05

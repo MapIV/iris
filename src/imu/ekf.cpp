@@ -1,4 +1,5 @@
 #include "imu/ekf.hpp"
+#include "core/util.hpp"
 #include <iostream>
 
 namespace vllm
@@ -7,7 +8,7 @@ namespace vllm
 Eigen::Matrix4f EKF::getState()
 {
   Eigen::Matrix4f T = Eigen::Matrix4f::Identity();
-  T.topLeftCorner(3, 3) = qua.toRotationMatrix();
+  T.topLeftCorner(3, 3) = scale * qua.toRotationMatrix();
   T.topRightCorner(3, 1) = pos;
   return T;
 }
@@ -52,7 +53,7 @@ void EKF::predict(const Eigen::Vector3f& acc, const Eigen::Vector3f& omega, unsi
   Eigen::MatrixXf F = calcF(qua, acc, dt);
   P = F * P * F.transpose() + LQL * dt;
 
-  // std::cout << "acc " << nominal_acc.transpose() << " " << acc.transpose() << std::endl;
+  // std::cout << "vel " << vel.transpose() << " n-acc " << nominal_acc.transpose() << " " << acc.transpose() << std::endl;
 }
 
 void EKF::observe(const Eigen::Matrix4f& T, unsigned long)
@@ -64,9 +65,13 @@ void EKF::observe(const Eigen::Matrix4f& T, unsigned long)
   // float dt = static_cast<float>(ns - last_ns) * 1e-9f;
   // last_ns = ns;
 
-  Eigen::Matrix3f R = T.topLeftCorner(3, 3);
+  std::cout << "pre " << qua.x() << " " << qua.y() << " " << qua.z() << " " << qua.w() << " p " << pos.transpose() << std::endl;
+
+  scale = getScale(T);
+  Eigen::Matrix3f R = normalizeRotation(T);
   Eigen::Quaternionf q(R);
   Eigen::Vector3f t = T.topRightCorner(3, 1);
+  std::cout << "obs-q " << q.x() << " " << q.y() << " " << q.z() << " " << q.w() << " p " << t.transpose() << std::endl;
   // observation jacobian  (7x9)
   Eigen::MatrixXf H = calcH(qua);
   // innovation covariance (7x7)
@@ -87,7 +92,7 @@ void EKF::observe(const Eigen::Matrix4f& T, unsigned long)
   qua = qua * dq;
   P -= K * H * P;
 
-  // std::cout << "observed p " << pos.transpose() << " v " << vel.transpose() << std::endl;
+  std::cout << "post-q " << qua.x() << " " << qua.y() << " " << qua.z() << " " << qua.w() << " p " << pos.transpose() << std::endl;
 }
 
 Eigen::MatrixXf EKF::calcH(const Eigen::Quaternionf& q)

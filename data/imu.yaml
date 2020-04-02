@@ -48,13 +48,13 @@ VLLM.normal_init:  !!opencv-matrix
     rows: 3
     cols: 1
     dt: f
-    data: [ 1,-0.15,0]
+    data: [ 0,0,-1]
 # up vector of camera
 VLLM.up_init:  !!opencv-matrix
     rows: 3
     cols: 1
     dt: f
-    data: [ 0,0,1]
+    data: [ 1,0,0]
 VLLM.s_init: 8.0
 
 VLLM.pcd_file: "../../vllm-data/asano.pcd"

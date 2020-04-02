@@ -27,16 +27,16 @@ public:
     L.block(3, 0, 3, 3).setIdentity();
     L.bottomRightCorner(3, 3).setIdentity();
     Q.setZero(6, 6);
-    Q.topLeftCorner(3, 3) = Eigen::Matrix3f::Identity() * 0.1;
-    Q.bottomRightCorner(3, 3) = Eigen::Matrix3f::Identity() * 0.1;
+    Q.topLeftCorner(3, 3) = Eigen::Matrix3f::Identity() * 1.0;      // velocity variance [m/s]
+    Q.bottomRightCorner(3, 3) = Eigen::Matrix3f::Identity() * 1.0;  // rotation variance [rad]
     LQL = L * Q * L.transpose();
     std::cout << "LQL\n"
               << LQL << std::endl;
 
     // observe noise
     W.setZero(7, 7);
-    W.topLeftCorner(3, 3) = 0.5 * Eigen::Matrix3f::Identity();      // position noise
-    W.bottomRightCorner(4, 4) = 0.5 * Eigen::Matrix4f::Identity();  // rotation noise
+    W.topLeftCorner(3, 3) = 0.05 * Eigen::Matrix3f::Identity();      // position variance [m]
+    W.bottomRightCorner(4, 4) = 0.05 * Eigen::Matrix4f::Identity();  // rotation variance [rad]
   }
   EKF(const Eigen::Matrix4f& T) : EKF()
   {
@@ -67,6 +67,8 @@ private:
   const Eigen::Vector3f gravity;
 
   unsigned long last_ns;
+
+  float scale = 1.0;
 
   // drive noise
   Eigen::MatrixXf LQL;
