@@ -55,7 +55,7 @@ VLLM.up_init:  !!opencv-matrix
     cols: 1
     dt: f
     data: [ 0,0,1]
-VLLM.s_init: 2.8
+VLLM.s_init: 3.0
 
 VLLM.vocab_file: "orb_vocab.dbow2"
 VLLM.pcd_file:   "../../vllm-data/asano-050.pcd"
@@ -63,17 +63,17 @@ VLLM.video_file: "../../vllm-data/asano3/asano3.mp4"
 IMU.topic_file:  "../../vllm-data/asano3/topic.csv"
 IMU.imu_file:    "../../vllm-data/asano3/imu.csv"
 
-VLLM.iteration: 10
+VLLM.iteration: 5
 VLLM.frame_skip: 5
 VLLM.recollection: 60
 
 VLLM.scale_gain: 50.0
 VLLM.smooth_gain: 0 # TODO
 VLLM.latitude_gain: 5.0
-VLLM.altitude_gain: 8.0
+VLLM.altitude_gain: 2.0
 
 VLLM.distance_min: 1.5
-VLLM.distance_max: 5.0
+VLLM.distance_max: 4.0
 
 VLLM.converge_translation: 0.050
 VLLM.converge_rotation: 0.01
@@ -88,8 +88,11 @@ KF.initial_cov_p: 0.5
 KF.initial_cov_v: 0.5
 KF.initial_cov_theta: 0.5
 KF.initial_cov_grad: 0.05
+KF.initial_cov_bias: 0.50
 
 KF.drive_cov_v: 1.0
 KF.drive_cov_theta: 1.0
-KF.observe_cov_p: 0.8
+KF.drive_cov_bias: 1.5
+
+KF.observe_cov_p: 2.0
 KF.observe_cov_theta: 1.0

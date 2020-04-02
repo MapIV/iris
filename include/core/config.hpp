@@ -58,9 +58,11 @@ struct Config {
     fs["KF.initial_cov_v"] >> param.initial_cov_v;
     fs["KF.initial_cov_theta"] >> param.initial_cov_theta;
     fs["KF.initial_cov_grad"] >> param.initial_cov_grad;
+    fs["KF.initial_cov_bias"] >> param.initial_cov_bias;
 
     fs["KF.drive_cov_v"] >> param.drive_cov_v;
     fs["KF.drive_cov_theta"] >> param.drive_cov_theta;
+    fs["KF.drive_cov_bias"] >> param.drive_cov_bias;
     fs["KF.observe_cov_p"] >> param.observe_cov_p;
     fs["KF.observe_cov_theta"] >> param.observe_cov_theta;
 

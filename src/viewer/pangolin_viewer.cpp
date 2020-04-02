@@ -50,7 +50,7 @@ void PangolinViewer::init()
   gui_target_normals = std::make_shared<pangolin::Var<bool>>("ui.target_normals", false, true);
   gui_target_normals = std::make_shared<pangolin::Var<bool>>("ui.target_normals", false, true);
   gui_correspondences = std::make_shared<pangolin::Var<bool>>("ui.correspondences", true, true);
-  gui_imu = std::make_shared<pangolin::Var<bool>>("ui.IMU", false, true);
+  gui_imu = std::make_shared<pangolin::Var<bool>>("ui.IMU", true, true);
 
   // Initialize local map
   target_cloud = pcl::PointCloud<pcl::PointXYZ>::Ptr(new pcl::PointCloud<pcl::PointXYZ>);
