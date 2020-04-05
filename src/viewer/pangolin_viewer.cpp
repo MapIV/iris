@@ -116,6 +116,7 @@ void PangolinViewer::execute()
     *target_cloud = *system_ptr->getMap()->getTargetCloud();
     *target_normals = *system_ptr->getMap()->getTargetNormals();
     colored_target_cloud = colorizePointCloud(target_cloud);
+    target_normals_color = colorizeNormals(target_normals);
     return;
   }
   {
@@ -308,7 +309,7 @@ void PangolinViewer::drawNormals(
   for (size_t i = 0; i < cloud->size(); i += skip) {
     Eigen::Vector3f p = cloud->at(i).getArray3fMap();
     Eigen::Vector3f n = normals->at(i).getNormalVector3fMap();
-    n = 0.1f * n;
+    n = 0.2f * n;
     if (std::isfinite(n.x()))
       drawLine(p.x(), p.y(), p.z(), p.x() + n.x(), p.y() + n.y(), p.z() + n.z());
   }
@@ -329,7 +330,7 @@ void PangolinViewer::drawNormals(
 
     glColor4f(c.r, c.g, c.b, 0.4f);
 
-    n = 0.1f * n;  // 500mm
+    n = 0.2f * n;
     if (std::isfinite(n.x()))
       drawLine(p.x(), p.y(), p.z(), p.x() + n.x(), p.y() + n.y(), p.z() + n.z());
   }

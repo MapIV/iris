@@ -82,7 +82,7 @@ VLLM.converge_rotation: 0.01
 # Map Parameter
 Map.voxel_grid_leaf: 0.3
 Map.submap_grid_leaf: 80
-Map.normal_search_leaf: 0.3
+Map.normal_search_leaf: 0.5
 
 # Kalman Filter
 KF.initial_cov_p: 0.5

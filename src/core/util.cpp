@@ -74,44 +74,41 @@ void loadMap(
   normals->clear();
 
   // Load map pointcloud
-  pcl::io::loadPCDFile<pcl::PointXYZ>(pcd_file, *cloud);
+  pcl::PointCloud<pcl::PointXYZ>::Ptr all_cloud(new pcl::PointCloud<pcl::PointXYZ>());
+  pcl::io::loadPCDFile<pcl::PointXYZ>(pcd_file, *all_cloud);
 
-  {
-    pcl::CropBox<pcl::PointXYZ> crop;
-    crop.setInputCloud(cloud);
-    Eigen::Vector4f min4, max4;
-    min4 << -5, -5, -5, 1;
-    max4 << 5, 5, 5, 1;
-    crop.setMin(min4);
-    crop.setMax(max4);
-    crop.filter(*cloud);
+  // {
+  //   pcl::CropBox<pcl::PointXYZ> crop;
+  //   crop.setInputCloud(all_cloud);
+  //   Eigen::Vector4f min4, max4;
+  //   int r = 20;
+  //   min4 << -r, -r, -r, 1;
+  //   max4 << r, r, r, 1;
+  //   crop.setMin(min4);
+  //   crop.setMax(max4);
+  //   crop.filter(*all_cloud);
+  // }
+
+  // filtering
+  if (grid_leaf > 0) {
+    pcl::VoxelGrid<pcl::PointXYZ> filter;
+    filter.setInputCloud(all_cloud);
+    filter.setLeafSize(grid_leaf, grid_leaf, grid_leaf);
+    filter.filter(*cloud);
+  } else {
+    cloud = all_cloud;
   }
+
 
   // normal estimation
   pcl::search::KdTree<pcl::PointXYZ>::Ptr tree(new pcl::search::KdTree<pcl::PointXYZ>());
   vllm::NormalEstimation<pcl::PointXYZ, pcl::Normal> ne;
+  ne.setSearchSurface(all_cloud);
   ne.setInputCloud(cloud);
   ne.setSearchMethod(tree);
   ne.setRadiusSearch(radius);
   ne.compute(*normals);
-
-  if (grid_leaf < 0) return;
-
-  // filtering
-  pcl::VoxelGrid<pcl::PointXYZ> filter;
-  filter.setInputCloud(cloud);
-  filter.setLeafSize(grid_leaf, grid_leaf, grid_leaf);
-  filter.filter(*cloud);
-  pcl::IndicesPtr ind = filter.getIndices();
-
-  pcl::PointCloud<pcl::Normal>::Ptr tmp_normals(new pcl::PointCloud<pcl::Normal>());
-  for (int i : *ind) {
-    tmp_normals->push_back(normals->at(i));
-  }
-  std::cout << "normals " << normals->size() << " tmp_normals " << tmp_normals->size() << " points " << cloud->size() << " ind " << ind->size() << std::endl;
-  std::cout << "removed_ind " << filter.getRemovedIndices()->size() << std::endl;
-
-  normals = tmp_normals;
+  std::cout << " normal " << normals->size() << ", points" << cloud->size() << ", surface " << all_cloud->size() << std::endl;
 
   return;
 }

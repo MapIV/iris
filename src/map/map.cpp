@@ -79,14 +79,15 @@ Map::Map(const Parameter& parameter)
       min4.topRows(3) = min_corner_point + i * Lx + j * Ly;
       max4.topRows(3) = min4.topRows(4) + grid_box_unit;
 
-      pcXYZ cropped_cloud;
-      pcNormal cropped_normals;
+      std::vector<int> indices;
       crop.setMin(min4);
       crop.setMax(max4);
-      crop.filter(cropped_cloud);
+      crop.filter(indices);
 
-      pcl::IndicesPtr indice_ptr = crop.getIndices();
-      pcl::copyPointCloud(*all_target_normals, *indice_ptr, cropped_normals);
+      pcXYZ cropped_cloud;
+      pcNormal cropped_normals;
+      pcl::copyPointCloud(*all_target_cloud, indices, cropped_cloud);
+      pcl::copyPointCloud(*all_target_normals, indices, cropped_normals);
 
       submap_cloud.push_back(std::move(cropped_cloud));
       submap_normals.push_back(std::move(cropped_normals));
