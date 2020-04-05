@@ -41,21 +41,25 @@
 
 #include <pcl/common/copy_point.h>
 
+namespace vllm
+{
+namespace registration
+{
 ///////////////////////////////////////////////////////////////////////////////////////////
 template <typename PointSource, typename PointTarget, typename NormalT, typename Scalar>
-bool pcl::registration::CorrespondenceEstimationBackProjection<PointSource, PointTarget, NormalT, Scalar>::initCompute()
+bool CorrespondenceEstimationBackProjection<PointSource, PointTarget, NormalT, Scalar>::initCompute()
 {
   if (!source_normals_ || !target_normals_) {
     PCL_WARN("[pcl::registration::%s::initCompute] Datasets containing normals for source/target have not been given!\n", getClassName().c_str());
     return (false);
   }
 
-  return (CorrespondenceEstimationBase<PointSource, PointTarget, Scalar>::initCompute());
+  return (pcl::registration::CorrespondenceEstimationBase<PointSource, PointTarget, Scalar>::initCompute());
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 template <typename PointSource, typename PointTarget, typename NormalT, typename Scalar>
-void pcl::registration::CorrespondenceEstimationBackProjection<PointSource, PointTarget, NormalT, Scalar>::determineCorrespondences(
+void CorrespondenceEstimationBackProjection<PointSource, PointTarget, NormalT, Scalar>::determineCorrespondences(
     pcl::Correspondences& correspondences, double max_distance)
 {
   if (!initCompute())
@@ -74,7 +78,7 @@ void pcl::registration::CorrespondenceEstimationBackProjection<PointSource, Poin
 
   // Check if the template types are the same. If true, avoid a copy.
   // Both point types MUST be registered using the POINT_CLOUD_REGISTER_POINT_STRUCT macro!
-  if (isSamePointType<PointSource, PointTarget>()) {
+  if (pcl::isSamePointType<PointSource, PointTarget>()) {
     PointTarget pt;
     // Iterate over the input set of source indices
     for (std::vector<int>::const_iterator idx_i = indices_->begin(); idx_i != indices_->end(); ++idx_i) {
@@ -140,7 +144,7 @@ void pcl::registration::CorrespondenceEstimationBackProjection<PointSource, Poin
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 template <typename PointSource, typename PointTarget, typename NormalT, typename Scalar>
-void pcl::registration::CorrespondenceEstimationBackProjection<PointSource, PointTarget, NormalT, Scalar>::determineReciprocalCorrespondences(
+void CorrespondenceEstimationBackProjection<PointSource, PointTarget, NormalT, Scalar>::determineReciprocalCorrespondences(
     pcl::Correspondences& correspondences, double max_distance)
 {
   if (!initCompute())
@@ -166,7 +170,7 @@ void pcl::registration::CorrespondenceEstimationBackProjection<PointSource, Poin
 
   // Check if the template types are the same. If true, avoid a copy.
   // Both point types MUST be registered using the POINT_CLOUD_REGISTER_POINT_STRUCT macro!
-  if (isSamePointType<PointSource, PointTarget>()) {
+  if (pcl::isSamePointType<PointSource, PointTarget>()) {
     PointTarget pt;
     // Iterate over the input set of source indices
     for (std::vector<int>::const_iterator idx_i = indices_->begin(); idx_i != indices_->end(); ++idx_i) {
@@ -243,5 +247,7 @@ void pcl::registration::CorrespondenceEstimationBackProjection<PointSource, Poin
   correspondences.resize(nr_valid_correspondences);
   deinitCompute();
 }
+}  // namespace registration
+}  // namespace vllm
 
 #endif  // PCL_REGISTRATION_IMPL_CORRESPONDENCE_ESTIMATION_BACK_PROJECTION_HPP_

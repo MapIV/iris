@@ -44,7 +44,7 @@
 #include <pcl/registration/correspondence_types.h>
 
 
-namespace pcl
+namespace vllm
 {
 namespace registration
 {
@@ -54,21 +54,21 @@ namespace registration
       * \ingroup registration
       */
 template <typename PointSource, typename PointTarget, typename NormalT, typename Scalar = float>
-class CorrespondenceEstimationBackProjection : public CorrespondenceEstimationBase<PointSource, PointTarget, Scalar>
+class CorrespondenceEstimationBackProjection : public pcl::registration::CorrespondenceEstimationBase<PointSource, PointTarget, Scalar>
 {
 public:
   typedef boost::shared_ptr<CorrespondenceEstimationBackProjection<PointSource, PointTarget, NormalT, Scalar>> Ptr;
   typedef boost::shared_ptr<const CorrespondenceEstimationBackProjection<PointSource, PointTarget, NormalT, Scalar>> ConstPtr;
 
-  using CorrespondenceEstimationBase<PointSource, PointTarget, Scalar>::initCompute;
-  using CorrespondenceEstimationBase<PointSource, PointTarget, Scalar>::initComputeReciprocal;
-  using CorrespondenceEstimationBase<PointSource, PointTarget, Scalar>::input_transformed_;
-  using PCLBase<PointSource>::deinitCompute;
-  using PCLBase<PointSource>::input_;
-  using PCLBase<PointSource>::indices_;
-  using CorrespondenceEstimationBase<PointSource, PointTarget, Scalar>::getClassName;
-  using CorrespondenceEstimationBase<PointSource, PointTarget, Scalar>::point_representation_;
-  using CorrespondenceEstimationBase<PointSource, PointTarget, Scalar>::target_indices_;
+  using pcl::registration::CorrespondenceEstimationBase<PointSource, PointTarget, Scalar>::initCompute;
+  using pcl::registration::CorrespondenceEstimationBase<PointSource, PointTarget, Scalar>::initComputeReciprocal;
+  using pcl::registration::CorrespondenceEstimationBase<PointSource, PointTarget, Scalar>::input_transformed_;
+  using pcl::PCLBase<PointSource>::deinitCompute;
+  using pcl::PCLBase<PointSource>::input_;
+  using pcl::PCLBase<PointSource>::indices_;
+  using pcl::registration::CorrespondenceEstimationBase<PointSource, PointTarget, Scalar>::getClassName;
+  using pcl::registration::CorrespondenceEstimationBase<PointSource, PointTarget, Scalar>::point_representation_;
+  using pcl::registration::CorrespondenceEstimationBase<PointSource, PointTarget, Scalar>::target_indices_;
 
   typedef typename pcl::search::KdTree<PointTarget> KdTree;
   typedef typename pcl::search::KdTree<PointTarget>::Ptr KdTreePtr;
@@ -190,7 +190,7 @@ public:
   getKSearch() const { return (k_); }
 
   /** \brief Clone and cast to CorrespondenceEstimationBase */
-  virtual boost::shared_ptr<CorrespondenceEstimationBase<PointSource, PointTarget, Scalar>>
+  virtual boost::shared_ptr<pcl::registration::CorrespondenceEstimationBase<PointSource, PointTarget, Scalar>>
   clone() const
   {
     Ptr copy(new CorrespondenceEstimationBackProjection<PointSource, PointTarget, NormalT, Scalar>(*this));
@@ -198,10 +198,10 @@ public:
   }
 
 protected:
-  using CorrespondenceEstimationBase<PointSource, PointTarget, Scalar>::corr_name_;
-  using CorrespondenceEstimationBase<PointSource, PointTarget, Scalar>::tree_;
-  using CorrespondenceEstimationBase<PointSource, PointTarget, Scalar>::tree_reciprocal_;
-  using CorrespondenceEstimationBase<PointSource, PointTarget, Scalar>::target_;
+  using pcl::registration::CorrespondenceEstimationBase<PointSource, PointTarget, Scalar>::corr_name_;
+  using pcl::registration::CorrespondenceEstimationBase<PointSource, PointTarget, Scalar>::tree_;
+  using pcl::registration::CorrespondenceEstimationBase<PointSource, PointTarget, Scalar>::tree_reciprocal_;
+  using pcl::registration::CorrespondenceEstimationBase<PointSource, PointTarget, Scalar>::target_;
 
   /** \brief Internal computation initalization. */
   bool
@@ -221,7 +221,7 @@ private:
   unsigned int k_;
 };
 }  // namespace registration
-}  // namespace pcl
+}  // namespace vllm
 
 // #include <pcl/registration/impl/correspondence_estimation_backprojection.hpp>
 #include "estimator/correspondence_estimation_backprojection_impl.hpp"

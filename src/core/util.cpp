@@ -1,6 +1,7 @@
 #include "core/util.hpp"
+#include "normal/normal_estimator.hpp"
 #include <chrono>
-#include <pcl/features/normal_3d.h>
+// #include <pcl/features/normal_3d.h>
 #include <pcl/filters/crop_box.h>
 #include <pcl/filters/voxel_grid.h>
 #include <pcl/io/pcd_io.h>
@@ -88,7 +89,7 @@ void loadMap(
 
   // normal estimation
   pcl::search::KdTree<pcl::PointXYZ>::Ptr tree(new pcl::search::KdTree<pcl::PointXYZ>());
-  pcl::NormalEstimation<pcl::PointXYZ, pcl::Normal> ne;
+  vllm::NormalEstimation<pcl::PointXYZ, pcl::Normal> ne;
   ne.setInputCloud(cloud);
   ne.setSearchMethod(tree);
   ne.setRadiusSearch(radius);
@@ -115,59 +116,37 @@ void loadMap(
   return;
 }
 
-pcl::PointCloud<pcl::PointXYZ>::Ptr loadMapPointCloud(const std::string& pcd_file, float leaf)
-{
-  // Load map pointcloud
-  pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_map(new pcl::PointCloud<pcl::PointXYZ>);
-  pcl::io::loadPCDFile<pcl::PointXYZ>(pcd_file, *cloud_map);
+// pcl::PointCloud<pcl::PointXYZ>::Ptr loadMapPointCloud(const std::string& pcd_file, float leaf)
+// {
+//   // Load map pointcloud
+//   pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_map(new pcl::PointCloud<pcl::PointXYZ>);
+//   pcl::io::loadPCDFile<pcl::PointXYZ>(pcd_file, *cloud_map);
 
-  // {
-  //   pcl::CropBox<pcl::PointXYZ> crop;
-  //   crop.setInputCloud(cloud_map);
-  //   Eigen::Vector4f min4, max4;
-  //   min4 << -5, -5, -5, 1;
-  //   max4 << 5, 5, 5, 1;
-  //   crop.setMin(min4);
-  //   crop.setMax(max4);
-  //   crop.filter(*cloud_map);
-  // }
+//   if (leaf < 0) {
+//     return cloud_map;
+//   }
 
-  if (leaf < 0) {
-    return cloud_map;
-  }
+//   // filtering
+//   pcl::VoxelGrid<pcl::PointXYZ> filter;
+//   filter.setInputCloud(cloud_map);
+//   filter.setLeafSize(leaf, leaf, leaf);
+//   filter.filter(*cloud_map);
+//   return cloud_map;
+// }
 
-  // filtering
-  pcl::VoxelGrid<pcl::PointXYZ> filter;
-  filter.setInputCloud(cloud_map);
-  filter.setLeafSize(leaf, leaf, leaf);
-  filter.filter(*cloud_map);
-  return cloud_map;
-}
+// pcl::PointCloud<pcl::Normal>::Ptr estimateNormals(const pcXYZ::Ptr& cloud, float leaf)
+// {
+//   pcl::PointCloud<pcl::Normal>::Ptr normals(new pcl::PointCloud<pcl::Normal>);
+//   pcl::search::KdTree<pcl::PointXYZ>::Ptr tree(new pcl::search::KdTree<pcl::PointXYZ>());
 
-pcl::PointCloud<pcl::PointXYZ>::Ptr loadPointCloud(const std::string& pcd_file)
-{
-  pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_source(new pcl::PointCloud<pcl::PointXYZ>);
-  if (pcl::io::loadPCDFile<pcl::PointXYZ>(pcd_file, *cloud_source) == -1) {
-    std::cout << "Couldn't read file test_pcd.pcd " << pcd_file << std::endl;
-    exit(1);
-  }
-  return cloud_source;
-}
+//   pcl::NormalEstimation<pcl::PointXYZ, pcl::Normal> ne;
+//   ne.setInputCloud(cloud);
+//   ne.setSearchMethod(tree);
+//   ne.setRadiusSearch(leaf);
+//   ne.compute(*normals);
 
-
-pcl::PointCloud<pcl::Normal>::Ptr estimateNormals(const pcXYZ::Ptr& cloud, float leaf)
-{
-  pcl::PointCloud<pcl::Normal>::Ptr normals(new pcl::PointCloud<pcl::Normal>);
-  pcl::search::KdTree<pcl::PointXYZ>::Ptr tree(new pcl::search::KdTree<pcl::PointXYZ>());
-
-  pcl::NormalEstimation<pcl::PointXYZ, pcl::Normal> ne;
-  ne.setInputCloud(cloud);
-  ne.setSearchMethod(tree);
-  ne.setRadiusSearch(leaf);
-  ne.compute(*normals);
-
-  return normals;
-}
+//   return normals;
+// }
 
 void transformNormals(const pcNormal& source, pcNormal& target, const Eigen::Matrix4f& T)
 {

@@ -14,8 +14,8 @@ Eigen::Matrix4f normalizePose(const Eigen::Matrix4f& T);
 
 
 // load
-pcl::PointCloud<pcl::PointXYZ>::Ptr loadPointCloud(const std::string& pcd_file);
-pcl::PointCloud<pcl::PointXYZ>::Ptr loadMapPointCloud(const std::string& pcd_file, float leaf = -1.0f);
+// pcl::PointCloud<pcl::PointXYZ>::Ptr loadPointCloud(const std::string& pcd_file);
+// pcl::PointCloud<pcl::PointXYZ>::Ptr loadMapPointCloud(const std::string& pcd_file, float leaf = -1.0f);
 void loadMap(
     const std::string& pcd_file,
     pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud,
