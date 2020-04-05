@@ -47,3 +47,7 @@ catkin_make
 ## References
 * [Monocular Camera Localization in 3D LiDAR Maps](http://www.lifelong-navigation.eu/files/caselitz16iros.pdf)
 
+## Recomended Map Configure
+* leaf size of voxel grid filter is 0.1
+* radius size of normal estimation is 0.1
+* leaf size of the second voxel grid filter is 0.5

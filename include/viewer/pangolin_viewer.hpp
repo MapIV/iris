@@ -59,6 +59,11 @@ private:
       const pcl::PointCloud<pcl::Normal>::Ptr& normals,
       const Color& color,
       int skip = 1) const;
+  void drawNormals(
+      const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud,
+      const pcl::PointCloud<pcl::Normal>::Ptr& normals,
+      const std::vector<Color>& colors,
+      int skip = 1) const;
   void drawCorrespondences(
       const pcl::PointCloud<pcl::PointXYZ>::Ptr& source,
       const pcl::PointCloud<pcl::PointXYZ>::Ptr& target,
@@ -71,6 +76,7 @@ private:
       const pangolin::AxisDirection up = pangolin::AxisZ);
 
   pcl::PointCloud<pcl::PointXYZRGBA>::Ptr colorizePointCloud(const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud);
+  std::vector<Color> colorizeNormals(const pcl::PointCloud<pcl::Normal>::Ptr& normals);
 
   // private member
   std::shared_ptr<System> system_ptr = nullptr;
@@ -86,6 +92,7 @@ private:
   pcl::PointCloud<pcl::PointXYZ>::Ptr target_cloud;
   pcl::PointCloud<pcl::Normal>::Ptr target_normals;
   pcl::PointCloud<pcl::PointXYZRGBA>::Ptr colored_target_cloud;
+  std::vector<Color> target_normals_color;
 
   std::vector<Eigen::Matrix4f> imu_poses;
 

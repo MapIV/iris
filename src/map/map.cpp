@@ -32,11 +32,13 @@ Map::Map(const Parameter& parameter)
   if (recalculation_is_necessary) {
     std::cout << "Because of cache miss, recalculate the target point cloud" << std::endl;
 
-    all_target_cloud = vllm::loadMapPointCloud(parameter.pcd_file, parameter.voxel_grid_leaf);
-    std::cout << parameter.normal_search_radius << std::endl;
-    all_target_normals = vllm::estimateNormals(all_target_cloud, parameter.normal_search_radius);
+    std::cout << "start loading pointcloud & esitmating normal with leafsize " << parameter.voxel_grid_leaf << " search_radius " << parameter.normal_search_radius << std::endl;
+    all_target_cloud = pcXYZ::Ptr(new pcXYZ);
+    all_target_normals = pcNormal::Ptr(new pcNormal);
+    vllm::loadMap(parameter.pcd_file, all_target_cloud, all_target_normals, parameter.voxel_grid_leaf, parameter.normal_search_radius);
 
     // save as cache file
+    std::cout << "save pointcloud with normal" << parameter.normal_search_radius << std::endl;
     pcl::io::savePCDFileBinaryCompressed<pcl::PointXYZ>(cache_cloud_file, *all_target_cloud);
     pcl::io::savePCDFileBinaryCompressed<pcl::Normal>(cache_normals_file, *all_target_normals);
 

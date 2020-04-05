@@ -60,6 +60,7 @@ void PangolinViewer::init()
   *target_normals = *system_ptr->getMap()->getTargetNormals();
 
   colored_target_cloud = colorizePointCloud(target_cloud);
+  target_normals_color = colorizeNormals(target_normals);
 
   const optimize::Gain& optimize_gain = system_ptr->getOptimizeGain();
   gui_scale_gain = std::make_shared<pangolin::Var<float>>("ui.scale_gain", optimize_gain.scale, 0.0f, 50.0f);
@@ -125,7 +126,7 @@ void PangolinViewer::execute()
 
   drawPointCloud(colored_target_cloud, {0.6f, 0.6f, 0.6f, 1.0f});
   if (*gui_target_normals)
-    drawNormals(target_cloud, target_normals, {0.0f, 1.0f, 0.0f, 1.0f}, 30);
+    drawNormals(target_cloud, target_normals, target_normals_color, 3);
 
   drawPointCloud(publication.cloud, {1.0f, 1.0f, 0.0f, 2.0f});
   if (*gui_source_normals)
@@ -307,7 +308,28 @@ void PangolinViewer::drawNormals(
   for (size_t i = 0; i < cloud->size(); i += skip) {
     Eigen::Vector3f p = cloud->at(i).getArray3fMap();
     Eigen::Vector3f n = normals->at(i).getNormalVector3fMap();
-    n = 0.5f * n;  // 500mm
+    n = 0.1f * n;
+    if (std::isfinite(n.x()))
+      drawLine(p.x(), p.y(), p.z(), p.x() + n.x(), p.y() + n.y(), p.z() + n.z());
+  }
+  glEnd();
+}
+void PangolinViewer::drawNormals(
+    const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud,
+    const pcl::PointCloud<pcl::Normal>::Ptr& normals,
+    const std::vector<Color>& colors,
+    int skip) const
+{
+  glBegin(GL_LINES);
+  glLineWidth(1.0);
+  for (size_t i = 0; i < cloud->size(); i += skip) {
+    Eigen::Vector3f p = cloud->at(i).getArray3fMap();
+    Eigen::Vector3f n = normals->at(i).getNormalVector3fMap();
+    Color c = colors.at(i);
+
+    glColor4f(c.r, c.g, c.b, 0.4f);
+
+    n = 0.1f * n;  // 500mm
     if (std::isfinite(n.x()))
       drawLine(p.x(), p.y(), p.z(), p.x() + n.x(), p.y() + n.y(), p.z() + n.z());
   }
@@ -405,6 +427,24 @@ pcl::PointCloud<pcl::PointXYZRGBA>::Ptr PangolinViewer::colorizePointCloud(const
     colored->push_back(c);
   }
   return colored;
+}
+
+std::vector<Color> PangolinViewer::colorizeNormals(const pcl::PointCloud<pcl::Normal>::Ptr& normals)
+{
+  std::vector<Color> colors;
+  colors.reserve(normals->size());
+
+  constexpr float max = 1.0f;
+  constexpr float min = 0.1f;
+  constexpr float gain = (max - min);
+  for (const pcl::Normal& n : *normals) {
+    Color c;
+    c.r = gain * std::abs(n.normal_x) + min;
+    c.g = gain * std::abs(n.normal_y) + min;
+    c.b = gain * std::abs(n.normal_z) + min;
+    colors.push_back(c);
+  }
+  return colors;
 }
 
 }  // namespace viewer

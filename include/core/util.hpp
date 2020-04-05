@@ -16,6 +16,11 @@ Eigen::Matrix4f normalizePose(const Eigen::Matrix4f& T);
 // load
 pcl::PointCloud<pcl::PointXYZ>::Ptr loadPointCloud(const std::string& pcd_file);
 pcl::PointCloud<pcl::PointXYZ>::Ptr loadMapPointCloud(const std::string& pcd_file, float leaf = -1.0f);
+void loadMap(
+    const std::string& pcd_file,
+    pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud,
+    pcl::PointCloud<pcl::Normal>::Ptr& normals,
+    float grid_leaf, float radius);
 
 // normal
 pcl::PointCloud<pcl::Normal>::Ptr estimateNormals(const pcXYZ::Ptr& cloud, float leaf);

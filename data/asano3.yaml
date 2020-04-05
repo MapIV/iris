@@ -58,7 +58,8 @@ VLLM.up_init:  !!opencv-matrix
 VLLM.s_init: 3.0
 
 VLLM.vocab_file: "orb_vocab.dbow2"
-VLLM.pcd_file:   "../../vllm-data/asano-050.pcd"
+#VLLM.pcd_file:   "../../vllm-data/asano-050.pcd"
+VLLM.pcd_file:   "/home/kyabuuchi/Desktop/asano-5min-005.pcd"
 VLLM.video_file: "../../vllm-data/asano3/asano3.mp4"
 IMU.topic_file:  "../../vllm-data/asano3/topic.csv"
 IMU.imu_file:    "../../vllm-data/asano3/imu.csv"
@@ -79,9 +80,9 @@ VLLM.converge_translation: 0.050
 VLLM.converge_rotation: 0.01
 
 # Map Parameter
-Map.voxel_grid_leaf: 0.400
+Map.voxel_grid_leaf: -0.3
 Map.submap_grid_leaf: 80
-Map.normal_search_leaf: 0.8
+Map.normal_search_leaf: 0.3
 
 # Kalman Filter
 KF.initial_cov_p: 0.5
