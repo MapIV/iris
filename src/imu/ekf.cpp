@@ -46,7 +46,7 @@ void EKF::predict(const Eigen::Vector3f& acc, const Eigen::Vector3f& omega, unsi
   P = F * P * F.transpose() + LQL * dt;
 
 
-  std::cout << " n-acc " << nominal_acc.transpose() << " r-acc " << acc.transpose() << std::endl;
+  // std::cout << " n-acc " << nominal_acc.transpose() << " r-acc " << acc.transpose() << std::endl;
 }
 
 void EKF::observe(const Eigen::Matrix4f& T, unsigned long)

@@ -32,6 +32,7 @@ Outcome Optimizer::optimize(
     // Get all correspodences
     estimator.setInputSource(tmp_cloud);
     estimator.setSourceNormals(tmp_normals);
+    estimator.setCenter(offset_camera.topRightCorner(3, 1));
     estimator.determineCorrespondences(*correspondences);
     std::cout << " ,raw_correspondences= \033[32m" << correspondences->size() << "\033[m";
 

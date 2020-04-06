@@ -131,7 +131,7 @@ void PangolinViewer::execute()
 
   drawPointCloud(publication.cloud, {1.0f, 1.0f, 0.0f, 2.0f});
   if (*gui_source_normals)
-    drawNormals(publication.cloud, publication.normals, {1.0f, 0.0f, 1.0f, 1.0f});
+    drawNormals(publication.cloud, publication.normals, {1.0f, 1.0f, 1.0f, 1.0f});
 
   if (*gui_vslam_camera) {
     drawCamera(publication.offset_camera, {1.0f, 0.0f, 1.0f, 1.0f});
@@ -309,7 +309,7 @@ void PangolinViewer::drawNormals(
   for (size_t i = 0; i < cloud->size(); i += skip) {
     Eigen::Vector3f p = cloud->at(i).getArray3fMap();
     Eigen::Vector3f n = normals->at(i).getNormalVector3fMap();
-    n = 0.2f * n;
+    n = 0.4f * n;
     if (std::isfinite(n.x()))
       drawLine(p.x(), p.y(), p.z(), p.x() + n.x(), p.y() + n.y(), p.z() + n.z());
   }

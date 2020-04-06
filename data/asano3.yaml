@@ -58,15 +58,14 @@ VLLM.up_init:  !!opencv-matrix
 VLLM.s_init: 3.0
 
 VLLM.vocab_file: "orb_vocab.dbow2"
-#VLLM.pcd_file:   "../../vllm-data/asano-050.pcd"
-VLLM.pcd_file:   "/home/kyabuuchi/Desktop/asano-5min-005.pcd"
+VLLM.pcd_file:   "../../vllm-data/asano-050.pcd"
 VLLM.video_file: "../../vllm-data/asano3/asano3.mp4"
 IMU.topic_file:  "../../vllm-data/asano3/topic.csv"
 IMU.imu_file:    "../../vllm-data/asano3/imu.csv"
 
 VLLM.iteration: 5
-VLLM.frame_skip: 5
-VLLM.recollection: 60
+VLLM.frame_skip: 4
+VLLM.recollection: 50
 
 VLLM.scale_gain: 50.0
 VLLM.smooth_gain: 0 # TODO

@@ -154,13 +154,15 @@ public:
     setTargetNormals(cloud);
   }
 
+  Eigen::Vector3f center_;
+  void setCenter(const Eigen::Vector3f& center) { center_ = center; }
+
   /** \brief Determine the correspondences between input and target cloud.
           * \param[out] correspondences the found correspondences (index of query point, index of target point, distance)
           * \param[in] max_distance maximum distance between the normal on the source point cloud and the corresponding point in the target
           * point cloud
           */
-  void
-  determineCorrespondences(pcl::Correspondences& correspondences,
+  void determineCorrespondences(pcl::Correspondences& correspondences,
       double max_distance = std::numeric_limits<double>::max());
 
   /** \brief Determine the reciprocal correspondences between input and target cloud.
@@ -172,7 +174,7 @@ public:
           */
   virtual void
   determineReciprocalCorrespondences(pcl::Correspondences& correspondences,
-      double max_distance = std::numeric_limits<double>::max());
+      double max_distance = std::numeric_limits<double>::max()) {}
 
   /** \brief Set the number of nearest neighbours to be considered in the target 
           * point cloud. By default, we use k = 10 nearest neighbors.
