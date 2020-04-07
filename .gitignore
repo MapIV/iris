@@ -1,6 +1,8 @@
 build*
 devel*
+install*
 .vscode*
 *.cache
 *.pcd
 *.dbow2
+

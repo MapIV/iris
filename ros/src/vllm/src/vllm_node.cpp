@@ -1,9 +1,10 @@
-#include "core/config.hpp"
-#include "map/map.hpp"
-#include "system/system.hpp"
-#include "viewer/pangolin_viewer.hpp"
+#include "vllm/core/config.hpp"
+#include "vllm/map/map.hpp"
+#include "vllm/system/system.hpp"
+#include "vllm/viewer/pangolin_viewer.hpp"
 #include <chrono>
 #include <cv_bridge/cv_bridge.h>
+#include <fstream>
 #include <opencv2/opencv.hpp>
 #include <popl.hpp>
 #include <ros/ros.h>
@@ -34,6 +35,7 @@ int main(int argc, char* argv[])
   }
   if (!config_file_path->is_set()) {
     std::cerr << "invalid arguments" << std::endl;
+    std::cout << op.help() << std::endl;
     exit(EXIT_FAILURE);
   }
 

@@ -25,6 +25,9 @@ message("Build Type:\n\t${CMAKE_BUILD_TYPE}")
 # == Clear "CMAKE_CXX_FLAGS" ==
 set(CMAKE_CXX_FLAGS "")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pipe -fopenmp -Ofast -lstdc++fs")
+# set(CMAKE_CXX_FLAGS
+#     "${CMAKE_CXX_FLAGS} -pipe -fopenmp -Ofast -lstdc++fs -mtune=native -march=native -mfpmath=both"
+# )
 
 # == Set warning flags ==
 set(CXX_WARNING_FLAGS

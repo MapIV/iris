@@ -57,7 +57,7 @@ VLLM.up_init:  !!opencv-matrix
     data: [ 0,0,1]
 VLLM.s_init: 3.0
 
-VLLM.vocab_file: "orb_vocab.dbow2"
+VLLM.vocab_file: "../data/orb_vocab.dbow2"
 VLLM.pcd_file:   "../../vllm-data/asano-050.pcd"
 VLLM.video_file: "../../vllm-data/asano3/asano3.mp4"
 IMU.topic_file:  "../../vllm-data/asano3/topic.csv"
