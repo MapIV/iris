@@ -1,4 +1,4 @@
-#include "core/bridge.hpp"
+#include "vllm/core/bridge.hpp"
 #include "openvslam/data/landmark.h"
 #include "openvslam/publish/frame_publisher.h"
 #include "openvslam/publish/map_publisher.h"

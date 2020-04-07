@@ -1,7 +1,7 @@
-#include "system/system.hpp"
-#include "optimize/aligner.hpp"
-#include "optimize/averager.hpp"
-#include "optimize/optimizer.hpp"
+#include "vllm/system/system.hpp"
+#include "vllm/optimize/aligner.hpp"
+#include "vllm/optimize/averager.hpp"
+#include "vllm/optimize/optimizer.hpp"
 #include <opencv2/core/eigen.hpp>
 #include <pcl/common/transforms.h>
 
@@ -19,7 +19,7 @@ System::System(Config& config, const std::shared_ptr<map::Map>& map)
   // Setup correspondence estimator
   estimator.setInputTarget(map->getTargetCloud());
   estimator.setTargetNormals(map->getTargetNormals());
-  estimator.setKSearch(20);
+  estimator.setKSearch(10);
 
   localmap_info = map->getLocalmapInfo();
 

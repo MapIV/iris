@@ -1,7 +1,6 @@
-#include "core/util.hpp"
-#include "normal/normal_estimator.hpp"
+#include "vllm/core/util.hpp"
+#include "vllm/pcl_/normal_estimator.hpp"
 #include <chrono>
-// #include <pcl/features/normal_3d.h>
 #include <pcl/filters/crop_box.h>
 #include <pcl/filters/voxel_grid.h>
 #include <pcl/io/pcd_io.h>
@@ -102,7 +101,7 @@ void loadMap(
 
   // normal estimation
   pcl::search::KdTree<pcl::PointXYZ>::Ptr tree(new pcl::search::KdTree<pcl::PointXYZ>());
-  vllm::NormalEstimation<pcl::PointXYZ, pcl::Normal> ne;
+  vllm::pcl_::NormalEstimation<pcl::PointXYZ, pcl::Normal> ne;
   ne.setSearchSurface(all_cloud);
   ne.setInputCloud(cloud);
   ne.setSearchMethod(tree);

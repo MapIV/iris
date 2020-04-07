@@ -1,4 +1,4 @@
-#include "viewer/pangolin_viewer.hpp"
+#include "vllm/viewer/pangolin_viewer.hpp"
 
 namespace vllm
 {

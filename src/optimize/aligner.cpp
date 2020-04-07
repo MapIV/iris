@@ -1,7 +1,7 @@
-#include "optimize/aligner.hpp"
-#include "core/util.hpp"
-#include "optimize/types_gicp.hpp"
-#include "optimize/types_restriction.hpp"
+#include "vllm/optimize/aligner.hpp"
+#include "vllm/core/util.hpp"
+#include "vllm/optimize/types_gicp.hpp"
+#include "vllm/optimize/types_restriction.hpp"
 #include <g2o/core/block_solver.h>
 #include <g2o/core/optimization_algorithm_levenberg.h>
 #include <g2o/core/robust_kernel_impl.h>
@@ -33,7 +33,7 @@ Eigen::Matrix4f Aligner::estimate7DoF(
   optimizer.setAlgorithm(solver);
 
   setVertexSim3(optimizer, T);
-  setEdge7DoFGICP(optimizer, source, target, correspondances, weights, target_normals, source_normals);
+  setEdge7DoFGICP(optimizer, source, target, correspondances, weights, offset_camera.topRightCorner(3, 1), target_normals, source_normals);
   setEdgeRestriction(optimizer, offset_camera, history, ref_scale);
 
   // execute
@@ -79,6 +79,7 @@ void Aligner::setEdge7DoFGICP(
     const pcl::PointCloud<pcl::PointXYZ>::Ptr& target,
     const pcl::CorrespondencesPtr& correspondances,
     const std::vector<float>& weights,
+    const Eigen::Vector3f& camera,
     const pcl::PointCloud<pcl::Normal>::Ptr& target_normals,
     const pcl::PointCloud<pcl::Normal>::Ptr& source_normals)
 {
@@ -95,10 +96,10 @@ void Aligner::setEdge7DoFGICP(
     Eigen::Vector3f pt0, pt1;
     pt0 = target->at(cor.index_match).getArray3fMap();
     pt1 = source->at(cor.index_query).getArray3fMap();
-    float weight = weights.at(cor.index_query);
+    // float weight = weights.at(cor.index_query);
 
     EdgeGICP meas;
-    meas.weight = weight;
+    meas.weight = 1.0f / ((camera - pt1).norm() + 1.0f);
     meas.pos0 = pt0.cast<double>();
     meas.pos1 = pt1.cast<double>();
 
@@ -109,10 +110,15 @@ void Aligner::setEdge7DoFGICP(
       Eigen::Vector3f n1 = source_normals->at(cor.index_query).getNormalVector3fMap();
 
       // sometime normal0 has NaN
-      if (std::isfinite(n0.x())) meas.normal0 = n0.cast<double>();
+      if (std::isfinite(n0.x())) {
+        meas.normal0 = n0.cast<double>();
+        e->cov0 = meas.cov0(0.05f);  // target
+      } else {
+        e->cov0 = meas.cov0(1.0f);  // target
+      }
+
       meas.normal1 = n1.cast<double>();
-      e->cov0 = meas.cov0(0.01f);  // target
-      e->cov1 = meas.cov1(0.05f);  // source
+      e->cov1 = meas.cov1(0.10f);  // source
       e->information() = (e->cov0 + R * e->cov1 * R.transpose()).inverse();
 
     } else if (target_normals) {

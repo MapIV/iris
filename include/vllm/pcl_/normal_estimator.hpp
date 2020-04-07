@@ -5,6 +5,8 @@
 
 namespace vllm
 {
+namespace pcl_
+{
 /** \brief Compute the Least-Squares plane fit for a given set of points, and return the estimated plane
     * parameters together with the surface curvature.
     * \param cloud the input point cloud
@@ -320,6 +322,7 @@ protected:
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 };
+}  // namespace pcl_
 }  // namespace vllm
 
-#include "normal/normal_estimator_impl.hpp"
+#include "vllm/pcl_/normal_estimator_impl.hpp"

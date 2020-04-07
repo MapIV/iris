@@ -70,10 +70,10 @@ VLLM.recollection: 50
 VLLM.scale_gain: 50.0
 VLLM.smooth_gain: 0 # TODO
 VLLM.latitude_gain: 5.0
-VLLM.altitude_gain: 2.0
+VLLM.altitude_gain: 1.0
 
 VLLM.distance_min: 1.5
-VLLM.distance_max: 4.0
+VLLM.distance_max: 3.0
 
 VLLM.converge_translation: 0.050
 VLLM.converge_rotation: 0.01

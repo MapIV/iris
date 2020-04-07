@@ -1,7 +1,7 @@
 #pragma once
-#include "core/config.hpp"
 #include "openvslam/config.h"
 #include "openvslam/system.h"
+#include "vllm/core/config.hpp"
 #include <opencv2/videoio.hpp>
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>

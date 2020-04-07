@@ -1,7 +1,7 @@
 #pragma once
-#include "system/system.hpp"
-#include "viewer/color.hpp"
-#include "viewer/pangolin_cloud.hpp"
+#include "vllm/system/system.hpp"
+#include "vllm/viewer/color.hpp"
+#include "vllm/viewer/pangolin_cloud.hpp"
 #include <atomic>
 #include <mutex>
 #include <pangolin/pangolin.h>

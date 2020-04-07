@@ -56,6 +56,7 @@ private:
       const pcl::PointCloud<pcl::PointXYZ>::Ptr& target,
       const pcl::CorrespondencesPtr& correspondances,
       const std::vector<float>& weights,
+      const Eigen::Vector3f& camera,
       const pcl::PointCloud<pcl::Normal>::Ptr& target_normals,
       const pcl::PointCloud<pcl::Normal>::Ptr& source_normals);
 };

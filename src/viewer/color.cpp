@@ -1,4 +1,4 @@
-#include "viewer/color.hpp"
+#include "vllm/viewer/color.hpp"
 
 namespace vllm
 {

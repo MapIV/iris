@@ -39,12 +39,13 @@
 #ifndef PCL_REGISTRATION_IMPL_CORRESPONDENCE_ESTIMATION_BACK_PROJECTION_HPP_
 #define PCL_REGISTRATION_IMPL_CORRESPONDENCE_ESTIMATION_BACK_PROJECTION_HPP_
 
+#include "vllm/pcl_/correspondence_estimator.hpp"
 #include <iostream>
 #include <pcl/common/copy_point.h>
 
 namespace vllm
 {
-namespace registration
+namespace pcl_
 {
 ///////////////////////////////////////////////////////////////////////////////////////////
 template <typename PointSource, typename PointTarget, typename NormalT, typename Scalar>
@@ -73,6 +74,7 @@ void CorrespondenceEstimationBackProjection<PointSource, PointTarget, NormalT, S
 
   float min_dist = std::numeric_limits<float>::max();
   int min_index = 0;
+  float min_output_dist = 0;
 
   pcl::Correspondence corr;
   unsigned int nr_valid_correspondences = 0;
@@ -98,6 +100,7 @@ void CorrespondenceEstimationBackProjection<PointSource, PointTarget, NormalT, S
         // Among the K nearest neighbours find the one with minimum perpendicular distance to the normal
         float tmp_min_dist = std::numeric_limits<float>::max();
         int tmp_min_index = 0;
+        float tmp_output_dist = 0;
 
         // Find the best correspondence
         for (size_t j = 0; j < nn_indices.size(); j++) {
@@ -107,12 +110,14 @@ void CorrespondenceEstimationBackProjection<PointSource, PointTarget, NormalT, S
           if (dist < tmp_min_dist) {
             tmp_min_dist = dist;
             tmp_min_index = nn_indices[j];
+            tmp_output_dist = nn_dists[j];
           }
         }
 
         if (tmp_min_dist < min_dist) {
           min_dist = tmp_min_dist;
           min_index = tmp_min_index;
+          min_output_dist = tmp_output_dist;
         }
       }
       if (min_dist > max_distance)
@@ -120,7 +125,7 @@ void CorrespondenceEstimationBackProjection<PointSource, PointTarget, NormalT, S
 
       corr.index_query = *idx_i;
       corr.index_match = min_index;
-      corr.distance = 0;
+      corr.distance = min_output_dist;
       correspondences[nr_valid_correspondences++] = corr;
     }
   } else {
@@ -160,7 +165,7 @@ void CorrespondenceEstimationBackProjection<PointSource, PointTarget, NormalT, S
   correspondences.resize(nr_valid_correspondences);
   deinitCompute();
 }
-}  // namespace registration
+}  // namespace pcl_
 }  // namespace vllm
 
 #endif  // PCL_REGISTRATION_IMPL_CORRESPONDENCE_ESTIMATION_BACK_PROJECTION_HPP_

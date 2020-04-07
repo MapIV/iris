@@ -46,7 +46,7 @@
 
 namespace vllm
 {
-namespace registration
+namespace pcl_
 {
 /** \brief @b CorrespondenceEstimationBackprojection computes
       * correspondences as points in the target cloud which have minimum
@@ -173,8 +173,7 @@ public:
           * \param[in] max_distance maximum allowed distance between correspondences
           */
   virtual void
-  determineReciprocalCorrespondences(pcl::Correspondences& correspondences,
-      double max_distance = std::numeric_limits<double>::max()) {}
+  determineReciprocalCorrespondences(pcl::Correspondences&, double) {}
 
   /** \brief Set the number of nearest neighbours to be considered in the target 
           * point cloud. By default, we use k = 10 nearest neighbors.
@@ -222,10 +221,9 @@ private:
   /** \brief The number of neighbours to be considered in the target point cloud */
   unsigned int k_;
 };
-}  // namespace registration
+}  // namespace pcl_
 }  // namespace vllm
 
-// #include <pcl/registration/impl/correspondence_estimation_backprojection.hpp>
-#include "estimator/correspondence_estimation_backprojection_impl.hpp"
+#include "vllm/pcl_/correspondence_estimator_impl.hpp"
 
 #endif /* PCL_REGISTRATION_CORRESPONDENCE_ESTIMATION_BACK_PROJECTION_H_ */

@@ -1,5 +1,5 @@
 #pragma once
-#include "core/types.hpp"
+#include "vllm/core/types.hpp"
 
 namespace vllm
 {

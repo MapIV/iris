@@ -1,6 +1,6 @@
-#include "optimize/optimizer.hpp"
-#include "core/util.hpp"
-#include "optimize/aligner.hpp"
+#include "vllm/optimize/optimizer.hpp"
+#include "vllm/core/util.hpp"
+#include "vllm/optimize/aligner.hpp"
 #include <iostream>
 
 namespace vllm
@@ -36,6 +36,7 @@ Outcome Optimizer::optimize(
     estimator.determineCorrespondences(*correspondences);
     std::cout << " ,raw_correspondences= \033[32m" << correspondences->size() << "\033[m";
 
+    // NOTE: distance_rejector doesn't seemd to work well.
     // Reject too far correspondences
     float distance = config.distance_max - (config.distance_max - config.distance_min) * static_cast<float>(itr) / static_cast<float>(config.iteration);
     distance_rejector.setInputCorrespondences(correspondences);
