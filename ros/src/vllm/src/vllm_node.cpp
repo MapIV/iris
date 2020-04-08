@@ -6,7 +6,9 @@
 #include <cv_bridge/cv_bridge.h>
 #include <dynamic_reconfigure/server.h>
 #include <fstream>
+#include <image_transport/image_transport.h>
 #include <opencv2/opencv.hpp>
+#include <pcl_ros/point_cloud.h>
 #include <popl.hpp>
 #include <ros/ros.h>
 #include <vllm/dynamicConfig.h>
@@ -19,13 +21,11 @@ void imageCallback(const sensor_msgs::ImageConstPtr& msg)
   subscribed_image = cv_ptr->image.clone();
 }
 
-void callback(vllm::dynamicConfig& config, uint32_t level)
+void callback(vllm::dynamicConfig&, uint32_t)
 {
-  ROS_INFO("Reconfigure Request: %d %f %s %s %d",
-      config.int_param, config.double_param,
-      config.str_param.c_str(),
-      config.bool_param ? "True" : "False");
 }
+
+const std::string WINDOW_NAME = "Visual Localization in 3D LiDAR Map";
 
 int main(int argc, char* argv[])
 {
@@ -34,13 +34,12 @@ int main(int argc, char* argv[])
   ros::NodeHandle nh;
   ros::Subscriber sub = nh.subscribe("camera/color/image_raw", 1, &imageCallback);
 
-  dynamic_reconfigure::Server<vllm::dynamicConfig> server;
-  dynamic_reconfigure::Server<vllm::dynamicConfig>::CallbackType f;
-
-  f = boost::bind(&callback, _1, _2);
-  server.setCallback(f);
-  ros::spin();
-  return 0;
+  // dynamic reconfigure // NOTE: future works
+  // {
+  //   dynamic_reconfigure::Server<vllm::dynamicConfig> server;
+  //   dynamic_reconfigure::Server<vllm::dynamicConfig>::CallbackType f = boost::bind(&callback, _1, _2);
+  //   server.setCallback(f);
+  // }
 
   // Analyze arugments
   popl::OptionParser op("Allowed options");
@@ -57,7 +56,6 @@ int main(int argc, char* argv[])
     exit(EXIT_FAILURE);
   }
 
-
   // Initialize config
   vllm::Config config(config_file_path->value());
 
@@ -71,15 +69,19 @@ int main(int argc, char* argv[])
   std::chrono::system_clock::time_point m_start;
 
   // Initialize viewer
-  vllm::viewer::PangolinViewer pangolin_viewer(system);
-  pangolin_viewer.startLoop();
-  cv::namedWindow("VLLM", cv::WINDOW_AUTOSIZE);
+  cv::namedWindow(WINDOW_NAME, cv::WINDOW_AUTOSIZE);
 
   // The main loop runs at this frequency at most
-  const float hz = 10;
-  ros::Rate loop_rate(hz);
+  ros::Rate loop_10Hz(10);
+
+  // Setup publisher
+  ros::Publisher target_pc_publisher = nh.advertise<pcl::PointCloud<pcl::PointXYZ>>("target_pointcloud", 10);
+  ros::Publisher source_pc_publisher = nh.advertise<pcl::PointCloud<pcl::PointXYZ>>("source_pointcloud", 10);
+  image_transport::ImageTransport it(nh);
+  image_transport::Publisher image_publisher = it.advertise("image", 10);
 
   // Main loop
+  int loop_count = 0;
   while (ros::ok()) {
     m_start = std::chrono::system_clock::now();
 
@@ -87,24 +89,36 @@ int main(int argc, char* argv[])
       // Execution
       system->execute(subscribed_image);
       subscribed_image = cv::Mat();
-      // visualize by OpenCV
-      cv::imshow("VLLM", system->getFrame());
-      if (cv::waitKey(1) == 'q') break;
+
+      sensor_msgs::ImagePtr msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", system->getFrame()).toImageMsg();
+      image_publisher.publish(msg);
     }
 
-    std::stringstream ss;
-    ss << "time= \033[35m"
-       << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - m_start).count()
-       << "\033[m ms";
-    ROS_INFO("%s", ss.str().c_str());
+
+    // inform processing time
+    {
+      std::stringstream ss;
+      ss << "time= \033[35m"
+         << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - m_start).count()
+         << "\033[m ms";
+      ROS_INFO("%s", ss.str().c_str());
+    }
+
+    // publish heavy data
+    if (++loop_count >= 10) {
+      loop_count = 0;
+      auto msg = map->getTargetCloud()->makeShared();
+      msg->header.frame_id = "base_link";
+      pcl_conversions::toPCL(ros::Time::now(), msg->header.stamp);
+      target_pc_publisher.publish(msg);
+    }
+
 
     // spin & wait
     ros::spinOnce();
-    loop_rate.sleep();
+    loop_10Hz.sleep();
   }
-  std::cout << "Finalize the system" << std::endl;
+  ROS_INFO("Finalize the system");
 
-  // Stop viewer
-  pangolin_viewer.quitLoop();
   return 0;
 }

@@ -64,6 +64,7 @@ public:
   bool pop(Publication& p)
   {
     std::lock_guard lock(mtx);
+
     if (flag[(id + 1) % 2] == false) {
       return false;
     }
