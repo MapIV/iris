@@ -25,6 +25,19 @@ void callback(vllm::dynamicConfig&, uint32_t)
 {
 }
 
+class Kusa
+{
+private:
+  mutable std::mutex mtx;
+
+public:
+  void hoge()
+  {
+    std::lock_guard lock(mtx);
+  }
+};
+
+
 const std::string WINDOW_NAME = "Visual Localization in 3D LiDAR Map";
 
 int main(int argc, char* argv[])
@@ -33,6 +46,8 @@ int main(int argc, char* argv[])
   ros::init(argc, argv, "vllm_node");
   ros::NodeHandle nh;
   ros::Subscriber sub = nh.subscribe("camera/color/image_raw", 1, &imageCallback);
+
+  Kusa kusa;
 
   // dynamic reconfigure // NOTE: future works
   // {
@@ -92,8 +107,10 @@ int main(int argc, char* argv[])
 
       sensor_msgs::ImagePtr msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", system->getFrame()).toImageMsg();
       image_publisher.publish(msg);
-    }
 
+      vllm::Publication p;
+      bool a = system->popPublication(p);
+    }
 
     // inform processing time
     {
@@ -105,7 +122,7 @@ int main(int argc, char* argv[])
     }
 
     // publish heavy data
-    if (++loop_count >= 10) {
+    if (++loop_count >= 100) {
       loop_count = 0;
       auto msg = map->getTargetCloud()->makeShared();
       msg->header.frame_id = "base_link";

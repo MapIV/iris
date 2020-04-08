@@ -51,9 +51,10 @@ public:
     reset_requested.store(true);
   }
 
-  bool popPublication(Publication& d)
+  bool popPublication(Publication& p)
   {
-    return publisher.pop(d);
+    publisher.pop(p);
+    return false;
   }
 
   void updateOptimizeGain()

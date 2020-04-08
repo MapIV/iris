@@ -167,6 +167,12 @@ add_executable(vllm_node src/vllm_node.cpp)
 
 add_dependencies(vllm_node vllm_gencfg)
 
-target_link_libraries(vllm_node ${catkin_LIBRARIES} ${OpenCV_LIBS} ${PCL_LIBRARIES}
-                      pangolin ${VLLM_LIB})
+target_link_libraries(
+  vllm_node
+  ${catkin_LIBRARIES}
+  ${OpenCV_LIBS}
+  ${PCL_LIBRARIES}
+  pangolin
+  pthread
+  ${VLLM_LIB})
 target_compile_definitions(vllm_node PUBLIC USE_DBOW2)

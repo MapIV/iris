@@ -72,7 +72,6 @@ int System::execute(const cv::Mat& image)
   }
 
   KeypointsWithNormal raw_keypoints;
-  KeypointsWithNormal offset_keypoints;
 
   // ====================
   if (state == State::Inittializing) {
@@ -142,11 +141,6 @@ int System::execute(const cv::Mat& image)
     if (raw_keypoints.cloud->size() < 300 && accuracy > 0.10) accuracy -= 0.01;
     if (raw_keypoints.cloud->size() > 500 && accuracy < 0.90) accuracy += 0.01;
 
-    // TODO: This is redundant
-    // Transform subtract the first pose offset
-    pcl::transformPointCloud(*raw_keypoints.cloud, *offset_keypoints.cloud, Eigen::Matrix4f::Identity());
-    vllm::transformNormals(*raw_keypoints.normals, *offset_keypoints.normals, Eigen::Matrix4f::Identity());
-
     // Optimization
     updateOptimizeGain();
     optimizer.setConfig(optimize_config);
@@ -163,7 +157,7 @@ int System::execute(const cv::Mat& image)
     }
 
 
-    optimize::Outcome outcome = optimizer.optimize(map, offset_keypoints, vslam_camera, estimator, T_initial_align, vllm_history, weights);
+    optimize::Outcome outcome = optimizer.optimize(map, raw_keypoints, vslam_camera, estimator, T_initial_align, vllm_history, weights);
 
     // Retrieve outcome
     correspondences = outcome.correspondences;
@@ -197,7 +191,7 @@ int System::execute(const cv::Mat& image)
   offset_trajectory.push_back((config.T_init * vslam_camera).topRightCorner(3, 1));  // TODO: it was offset_camera
   publisher.push(
       T_align, T_world, config.T_init * vslam_camera,
-      offset_keypoints, vllm_trajectory,
+      raw_keypoints, vllm_trajectory,
       offset_trajectory, correspondences, localmap_info);
 
   return state;
