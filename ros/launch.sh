@@ -11,7 +11,7 @@ if pgrep -x "roscore" > /dev/null
 then
   echo "roscore is running"
 else
-  echo "rocore is stopping so start roscore"
+  echo "Because roscore is stopping, it starts roscore"
   roscore &
 fi
 

@@ -9,6 +9,8 @@
 #include <opencv2/opencv.hpp>
 #include <popl.hpp>
 
+const std::string WIN_NAME = "☣☣ Visual Localization in 3D LiDAR Map ☣☣";
+
 int main(int argc, char* argv[])
 {
   // analyze arugments
@@ -39,7 +41,7 @@ int main(int argc, char* argv[])
   // Initialize viewer
   vllm::viewer::PangolinViewer pangolin_viewer(system);
   pangolin_viewer.startLoop();
-  cv::namedWindow("VLLM", cv::WINDOW_AUTOSIZE);
+  cv::namedWindow(WIN_NAME, cv::WINDOW_AUTOSIZE);
 
   // video
   cv::VideoCapture video = cv::VideoCapture(config.video_file, cv::CAP_FFMPEG);
@@ -56,7 +58,8 @@ int main(int argc, char* argv[])
   std::vector<Eigen::Matrix4f> imu_trajectory;
 
   while (true) {
-    bool is_topic_video = topic.isTopicVideo(time);
+    // bool is_topic_video = topic.isTopicVideo(time);
+    bool is_topic_video = true;
 
     if (is_topic_video) {
       // Read frame from video
@@ -78,11 +81,11 @@ int main(int argc, char* argv[])
         int state = system->execute(frame);
         // std::cout << "vllm " << system->getT().topRightCorner(3, 1).transpose() << std::endl;
 
-        if (state == vllm::State::Tracking) {
-          imu_least_one_observed++;
-          if (pangolin_viewer.isEnabledIMU())
-            ekf.observe(system->getT(), 0);
-        }
+        // if (state == vllm::State::Tracking) {
+        //   imu_least_one_observed++;
+        //   if (pangolin_viewer.isEnabledIMU())
+        //     ekf.observe(system->getT(), 0);
+        // }
 
         // stop timer
         std::cout << "time= \033[35m"
@@ -90,7 +93,7 @@ int main(int argc, char* argv[])
                   << "\033[m ms" << std::endl;
 
         // visualize by OpenCV
-        cv::imshow("VLLM", system->getFrame());  // TODO: critical section
+        cv::imshow(WIN_NAME, system->getFrame());  // TODO: critical section
         int key = cv::waitKey(1);
         if (key == 'q') break;
         if (key == 's') {
@@ -101,10 +104,10 @@ int main(int argc, char* argv[])
       }
 
     } else {
-      vllm::ImuMessage msg = topic.getImuMessage(time);
-      ekf.predict(msg.acc, msg.omega, msg.ns);
-      imu_trajectory.push_back(ekf.getState());
-      pangolin_viewer.setIMU(imu_trajectory);
+      // vllm::ImuMessage msg = topic.getImuMessage(time);
+      // ekf.predict(msg.acc, msg.omega, msg.ns);
+      // imu_trajectory.push_back(ekf.getState());
+      // pangolin_viewer.setIMU(imu_trajectory);
       // std::cout << "imu " << ekf.getState().topRightCorner(3, 1).transpose() << std::endl;
     }
 

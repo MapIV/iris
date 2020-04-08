@@ -44,8 +44,8 @@ public:
   {
     Publication& tmp = publication[id];
 
-    tmp.vllm_camera = vllm_camera;
-    tmp.offset_camera = offset_camera;
+    tmp.vllm_camera = normalizePose(vllm_camera);
+    tmp.offset_camera = normalizePose(offset_camera);
     tmp.vllm_trajectory = vllm_trajectory;
     tmp.offset_trajectory = offset_trajectory;
     tmp.localmap_info = localmap_info;

@@ -194,9 +194,9 @@ int System::execute(const cv::Mat& image)
 
   // Pubush for the viewer
   vllm_trajectory.push_back(T_world.topRightCorner(3, 1));
-  offset_trajectory.push_back(T_imu.topRightCorner(3, 1));  // TODO: it was offset_camera
+  offset_trajectory.push_back((config.T_init * vslam_camera).topRightCorner(3, 1));  // TODO: it was offset_camera
   publisher.push(
-      T_align, T_world, vslam_camera,  // TODO: it was offset_camera
+      T_align, T_world, config.T_init * vslam_camera,
       offset_keypoints, vllm_trajectory,
       offset_trajectory, correspondences, localmap_info);
 

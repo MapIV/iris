@@ -30,7 +30,7 @@ void PangolinViewer::init()
   handler = std::make_shared<pangolin::Handler3D>(pangolin::Handler3D(*s_cam));
 
   // setup Pangolin viewer
-  pangolin::CreateWindowAndBind("VLLM", 1424, 968);
+  pangolin::CreateWindowAndBind("Visual Localization in 3D LiDAR Map", 1280, 960);
   glEnable(GL_DEPTH_TEST);
 
   // Ensure that blending is enabled for rendering text.
@@ -50,7 +50,7 @@ void PangolinViewer::init()
   gui_target_normals = std::make_shared<pangolin::Var<bool>>("ui.target_normals", false, true);
   gui_target_normals = std::make_shared<pangolin::Var<bool>>("ui.target_normals", false, true);
   gui_correspondences = std::make_shared<pangolin::Var<bool>>("ui.correspondences", true, true);
-  gui_imu = std::make_shared<pangolin::Var<bool>>("ui.IMU", true, true);
+  gui_imu = std::make_shared<pangolin::Var<bool>>("ui.IMU_fusion", false, true);
 
   // Initialize local map
   target_cloud = pcl::PointCloud<pcl::PointXYZ>::Ptr(new pcl::PointCloud<pcl::PointXYZ>);
@@ -124,26 +124,25 @@ void PangolinViewer::execute()
     drawPoses(imu_poses);
   }
 
-
   drawPointCloud(colored_target_cloud, {0.6f, 0.6f, 0.6f, 1.0f});
   if (*gui_target_normals)
-    drawNormals(target_cloud, target_normals, target_normals_color, 3);
+    drawNormals(target_cloud, target_normals, target_normals_color, 20);
 
-  drawPointCloud(publication.cloud, {1.0f, 1.0f, 0.0f, 2.0f});
+  drawPointCloud(publication.cloud, {1.0f, 1.0f, 0.0f, 3.0f});
   if (*gui_source_normals)
-    drawNormals(publication.cloud, publication.normals, {1.0f, 1.0f, 1.0f, 1.0f});
+    drawNormals(publication.cloud, publication.normals, {1.0f, 0.0f, 1.0f, 1.0f});
 
   if (*gui_vslam_camera) {
-    drawCamera(publication.offset_camera, {1.0f, 0.0f, 1.0f, 1.0f});
-    drawTrajectory(publication.offset_trajectory, false, {1.0f, 0.0f, 1.0f, 1.0f});
+    drawCamera(publication.offset_camera, {0.5f, 0.5f, 0.5f, 1.0f});
+    drawTrajectory(publication.offset_trajectory, false, {0.5f, 0.5f, 0.5f, 1.0f});
   }
 
   if (*gui_correspondences) {
     if (publication.localmap_info == localmap_info)
-      drawCorrespondences(publication.cloud, target_cloud, publication.correspondences, {0.0f, 0.0f, 1.0f, 2.0f});
+      drawCorrespondences(publication.cloud, target_cloud, publication.correspondences, {1.0f, 0.0f, 0.0f, 2.0f});
   }
 
-  drawCamera(publication.vllm_camera, {1.0f, 0.0f, 0.0f, 1.0f});
+  drawCamera(publication.vllm_camera, {1.0f, 1.0f, 1.0f, 2.0f});
   drawTrajectory(publication.vllm_trajectory, true);
 
   if (gui_scale_gain->GuiChanged() || gui_smooth_gain->GuiChanged() || gui_latitude_gain->GuiChanged() || gui_altitude_gain->GuiChanged())
@@ -181,8 +180,6 @@ pangolin::OpenGlRenderState PangolinViewer::makeCamera(
 void PangolinViewer::drawString(const std::string& str, const Color& color) const
 {
   glColor3f(color.r, color.g, color.b);
-  glPointSize(color.size);
-  glLineWidth(color.size);
   pangolin::GlFont::I().Text(str).DrawWindow(200, 50 - 2.0f * pangolin::GlFont::I().Height());
 }
 
@@ -246,7 +243,7 @@ void PangolinViewer::drawGridLine() const
   glPushMatrix();
   glMultTransposeMatrixf(origin.data());
 
-  glLineWidth(1);
+  glLineWidth(1.0f);
   glColor3f(0.3f, 0.3f, 0.3f);
 
   glBegin(GL_LINES);
@@ -285,7 +282,7 @@ void PangolinViewer::drawCamera(const Eigen::Matrix4f& cam_pose, const Color& co
   glBegin(GL_LINES);
   glColor3f(color.r, color.g, color.b);
   glLineWidth(color.size);
-  drawFrustum(0.1f);
+  drawFrustum(0.5f);
   glEnd();
 
   glPopMatrix();
@@ -309,7 +306,7 @@ void PangolinViewer::drawNormals(
   for (size_t i = 0; i < cloud->size(); i += skip) {
     Eigen::Vector3f p = cloud->at(i).getArray3fMap();
     Eigen::Vector3f n = normals->at(i).getNormalVector3fMap();
-    n = 0.4f * n;
+    n = 0.5f * n;
     if (std::isfinite(n.x()))
       drawLine(p.x(), p.y(), p.z(), p.x() + n.x(), p.y() + n.y(), p.z() + n.z());
   }
@@ -330,7 +327,7 @@ void PangolinViewer::drawNormals(
 
     glColor4f(c.r, c.g, c.b, 0.4f);
 
-    n = 0.2f * n;
+    n = 0.5f * n;
     if (std::isfinite(n.x()))
       drawLine(p.x(), p.y(), p.z(), p.x() + n.x(), p.y() + n.y(), p.z() + n.z());
   }
