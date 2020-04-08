@@ -4,10 +4,12 @@
 #include "vllm/viewer/pangolin_viewer.hpp"
 #include <chrono>
 #include <cv_bridge/cv_bridge.h>
+#include <dynamic_reconfigure/server.h>
 #include <fstream>
 #include <opencv2/opencv.hpp>
 #include <popl.hpp>
 #include <ros/ros.h>
+#include <vllm/dynamicConfig.h>
 
 cv::Mat subscribed_image;
 void imageCallback(const sensor_msgs::ImageConstPtr& msg)
@@ -17,12 +19,28 @@ void imageCallback(const sensor_msgs::ImageConstPtr& msg)
   subscribed_image = cv_ptr->image.clone();
 }
 
+void callback(vllm::dynamicConfig& config, uint32_t level)
+{
+  ROS_INFO("Reconfigure Request: %d %f %s %s %d",
+      config.int_param, config.double_param,
+      config.str_param.c_str(),
+      config.bool_param ? "True" : "False");
+}
+
 int main(int argc, char* argv[])
 {
   // Initialzie ROS & subscriber
   ros::init(argc, argv, "vllm_node");
   ros::NodeHandle nh;
   ros::Subscriber sub = nh.subscribe("camera/color/image_raw", 1, &imageCallback);
+
+  dynamic_reconfigure::Server<vllm::dynamicConfig> server;
+  dynamic_reconfigure::Server<vllm::dynamicConfig>::CallbackType f;
+
+  f = boost::bind(&callback, _1, _2);
+  server.setCallback(f);
+  ros::spin();
+  return 0;
 
   // Analyze arugments
   popl::OptionParser op("Allowed options");

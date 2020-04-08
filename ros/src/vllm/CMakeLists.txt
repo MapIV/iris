@@ -93,7 +93,7 @@ endif()
 #################
 
 # Find catkin macros and libraries
-find_package(catkin REQUIRED COMPONENTS cv_bridge image_transport)
+find_package(catkin REQUIRED COMPONENTS cv_bridge image_transport dynamic_reconfigure)
 
 # OpenCV
 find_package(OpenCV 3 REQUIRED)
@@ -129,6 +129,9 @@ include_directories(${OPENGL_INCLUDE_DIR})
 # catkin specific configuration #
 #################################
 
+# config
+generate_dynamic_reconfigure_options(cfg/dynamic.cfg)
+
 catkin_package(CATKIN_DEPENDS cv_bridge image_transport)
 
 #########
@@ -161,6 +164,9 @@ include_directories(${catkin_INCLUDE_DIRS} ${OpenVSLAM_INCLUDE_DIR} include)
 
 # Executable
 add_executable(vllm_node src/vllm_node.cpp)
+
+add_dependencies(vllm_node vllm_gencfg)
+
 target_link_libraries(vllm_node ${catkin_LIBRARIES} ${OpenCV_LIBS} ${PCL_LIBRARIES}
                       pangolin ${VLLM_LIB})
 target_compile_definitions(vllm_node PUBLIC USE_DBOW2)
