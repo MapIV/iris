@@ -12,6 +12,7 @@
 #include <popl.hpp>
 #include <ros/ros.h>
 #include <tf/transform_broadcaster.h>
+#include <visualization_msgs/Marker.h>
 
 cv::Mat subscribed_image;
 void imageCallback(const sensor_msgs::ImageConstPtr& msg)
@@ -66,6 +67,7 @@ int main(int argc, char* argv[])
   // Setup publisher
   ros::Publisher target_pc_publisher = nh.advertise<pcl::PointCloud<pcl::PointXYZI>>("target_pointcloud", 10);
   ros::Publisher source_pc_publisher = nh.advertise<pcl::PointCloud<pcl::PointXYZI>>("source_pointcloud", 10);
+  ros::Publisher marker_publisher = nh.advertise<visualization_msgs::Marker>("visualization_marker", 0);
   image_transport::ImageTransport it(nh);
   image_transport::Publisher image_publisher = it.advertise("image", 10);
 
@@ -95,6 +97,32 @@ int main(int argc, char* argv[])
         msg->header.frame_id = "world";
         pcl_conversions::toPCL(ros::Time::now(), msg->header.stamp);
         source_pc_publisher.publish(msg);
+      }
+
+      // Publish trajectory
+      {
+        visualization_msgs::Marker line_strip;
+        line_strip.header.frame_id = "world";
+        line_strip.header.stamp = ros::Time::now();
+        line_strip.ns = "points_and_lines";
+        line_strip.action = visualization_msgs::Marker::ADD;
+        line_strip.pose.orientation.w = 1.0;
+        line_strip.id = 0;
+        line_strip.scale.x = 0.1;
+        line_strip.type = visualization_msgs::Marker::LINE_STRIP;
+        line_strip.color.r = 0.0;
+        line_strip.color.g = 1.0;
+        line_strip.color.b = 0.0;
+        line_strip.color.a = 1.0;
+
+        for (const Eigen::Vector3f& t : system->vllm_trajectory) {
+          geometry_msgs::Point p;
+          p.x = t.x();
+          p.y = t.y();
+          p.z = t.z();
+          line_strip.points.push_back(p);
+        }
+        marker_publisher.publish(line_strip);
       }
 
       // Publish vslam pose

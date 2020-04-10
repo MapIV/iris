@@ -82,6 +82,10 @@ public:
   Eigen::Matrix4f ros_vslam_pose;
   pcXYZ::Ptr ros_pointcloud;
 
+  // TODO: put them into private
+  std::vector<Eigen::Vector3f, Eigen::aligned_allocator<Eigen::Vector3f>> vllm_trajectory;
+  std::vector<Eigen::Vector3f, Eigen::aligned_allocator<Eigen::Vector3f>> offset_trajectory;
+
 private:
   bool optimize(int iteration);
 
@@ -103,9 +107,6 @@ private:
   Eigen::Matrix4f T_align = Eigen::Matrix4f::Identity();
   Eigen::Matrix4f T_world = Eigen::Matrix4f::Identity();
   Eigen::Matrix4f T_imu = Eigen::Matrix4f::Zero();
-
-  std::vector<Eigen::Vector3f, Eigen::aligned_allocator<Eigen::Vector3f>> vllm_trajectory;
-  std::vector<Eigen::Vector3f, Eigen::aligned_allocator<Eigen::Vector3f>> offset_trajectory;
 
   pcl::CorrespondencesPtr correspondences;
 

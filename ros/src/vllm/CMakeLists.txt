@@ -28,7 +28,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pipe -fopenmp -Ofast -lstdc++fs")
 #################
 
 # Find catkin macros and libraries
-find_package(catkin REQUIRED COMPONENTS cv_bridge image_transport tf)
+find_package(catkin REQUIRED COMPONENTS cv_bridge image_transport tf visualization_msgs)
 
 # OpenCV
 find_package(OpenCV 3 REQUIRED)
@@ -63,7 +63,7 @@ include_directories(${OPENGL_INCLUDE_DIR})
 #################################
 # catkin specific configuration #
 #################################
-catkin_package(CATKIN_DEPENDS cv_bridge image_transport tf)
+catkin_package(CATKIN_DEPENDS cv_bridge image_transport tf visualization_msgs)
 
 #########
 # Build #
