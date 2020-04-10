@@ -4,14 +4,15 @@ namespace vllm
 {
 bool Publisher::pop(Publication& p)
 {
-  std::lock_guard<std::mutex> lock(mtx);
+  std::cout << "try to pop " << std::boolalpha << flags[0] << " " << flags[1] << " " << flags << std::endl;
+  // std::lock_guard<std::mutex> lock(mtx);
 
-  if (flag[(id + 1) % 2] == false) {
+  if (flags[(id + 1) % 2] == false) {
     return false;
   }
 
-  p = publication[(id + 1) % 2];
-  flag[(id + 1) % 2] = false;
+  // p = publication[(id + 1) % 2];
+  flags[(id + 1) % 2] = false;
   return true;
 }
 
@@ -21,8 +22,8 @@ void Publisher::push(
     const Eigen::Matrix4f& vllm_camera,
     const Eigen::Matrix4f& offset_camera,
     const KeypointsWithNormal& raw_keypoints,
-    const std::vector<Eigen::Vector3f>& vllm_trajectory,
-    const std::vector<Eigen::Vector3f>& offset_trajectory,
+    const std::vector<Eigen::Vector3f, Eigen::aligned_allocator<Eigen::Vector3f>>& vllm_trajectory,
+    const std::vector<Eigen::Vector3f, Eigen::aligned_allocator<Eigen::Vector3f>>& offset_trajectory,
     const pcl::CorrespondencesPtr& corre,
     const map::Info& localmap_info)
 {
@@ -40,8 +41,9 @@ void Publisher::push(
 
   {
     std::lock_guard<std::mutex> lock(mtx);
-    flag[id] = true;
+    flags[id] = true;
     id = (id + 1) % 2;
   }
+  std::cout << "sytem::publisher pushed " << std::boolalpha << flags[0] << " " << flags[1] << " " << flags << std::endl;
 }
 }  // namespace vllm

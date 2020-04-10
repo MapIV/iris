@@ -18,7 +18,7 @@ void PangolinViewer::swap()
   pangolin::FinishFrame();
 }
 
-void PangolinViewer::setIMU(const std::vector<Eigen::Matrix4f>& pose)
+void PangolinViewer::setIMU(const std::vector<Eigen::Matrix4f, Eigen::aligned_allocator<Eigen::Matrix4f>>& pose)
 {
   std::lock_guard lock(imu_mtx);
   imu_poses = pose;
@@ -183,7 +183,7 @@ void PangolinViewer::drawString(const std::string& str, const Color& color) cons
   pangolin::GlFont::I().Text(str).DrawWindow(200, 50 - 2.0f * pangolin::GlFont::I().Height());
 }
 
-void PangolinViewer::drawPoses(const std::vector<Eigen::Matrix4f>& poses) const
+void PangolinViewer::drawPoses(const std::vector<Eigen::Matrix4f, Eigen::aligned_allocator<Eigen::Matrix4f>>& poses) const
 {
   glBegin(GL_LINES);
   glLineWidth(1.0);
@@ -202,7 +202,7 @@ void PangolinViewer::drawPoses(const std::vector<Eigen::Matrix4f>& poses) const
 }
 
 
-void PangolinViewer::drawTrajectory(const std::vector<Eigen::Vector3f>& trajectory, bool colorful, const Color& color)
+void PangolinViewer::drawTrajectory(const std::vector<Eigen::Vector3f, Eigen::aligned_allocator<Eigen::Vector3f>>& trajectory, bool colorful, const Color& color)
 {
   glBegin(GL_LINE_STRIP);
   glLineWidth(color.size);

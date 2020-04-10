@@ -15,6 +15,8 @@ namespace viewer
 class PangolinViewer
 {
 public:
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
   // constructor
   PangolinViewer(const std::shared_ptr<System>& system_ptr);
   PangolinViewer() : PangolinViewer(nullptr){};
@@ -34,7 +36,7 @@ public:
   void startLoop();
   void quitLoop();
 
-  void setIMU(const std::vector<Eigen::Matrix4f>& tra);
+  void setIMU(const std::vector<Eigen::Matrix4f, Eigen::aligned_allocator<Eigen::Matrix4f>>& tra);
 
   bool isEnabledIMU() { return imu_use_flag.load(); }
 
@@ -47,10 +49,10 @@ private:
   void drawLine(
       const float x1, const float y1, const float z1,
       const float x2, const float y2, const float z2) const;
-  void drawPoses(const std::vector<Eigen::Matrix4f>& poses) const;
+  void drawPoses(const std::vector<Eigen::Matrix4f, Eigen::aligned_allocator<Eigen::Matrix4f>>& poses) const;
   void drawGridLine() const;
   void drawString(const std::string& str, const Color& color) const;
-  void drawTrajectory(const std::vector<Eigen::Vector3f>& trajectory, bool colorful, const Color& color = Color());
+  void drawTrajectory(const std::vector<Eigen::Vector3f, Eigen::aligned_allocator<Eigen::Vector3f>>& trajectory, bool colorful, const Color& color = Color());
   void drawPointCloud(const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud, const Color& color) const;
   void drawPointCloud(const pcl::PointCloud<pcl::PointXYZRGBA>::Ptr& cloud, const Color& color) const;
   void drawCamera(const Eigen::Matrix4f& cam_pose, const Color& color) const;
@@ -94,7 +96,7 @@ private:
   pcl::PointCloud<pcl::PointXYZRGBA>::Ptr colored_target_cloud;
   std::vector<Color> target_normals_color;
 
-  std::vector<Eigen::Matrix4f> imu_poses;
+  std::vector<Eigen::Matrix4f, Eigen::aligned_allocator<Eigen::Matrix4f>> imu_poses;
 
   Publication publication;
 

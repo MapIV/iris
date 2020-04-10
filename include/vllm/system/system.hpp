@@ -23,6 +23,8 @@ enum State {
 class System
 {
 public:
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
   // ===== for Main ====
   System(Config& config, const std::shared_ptr<map::Map>& map);
   int execute(const cv::Mat& image);
@@ -53,8 +55,7 @@ public:
 
   bool popPublication(Publication& p)
   {
-    publisher.pop(p);
-    return false;
+    return publisher.pop(p);
   }
 
   void updateOptimizeGain()
@@ -98,8 +99,8 @@ private:
   Eigen::Matrix4f T_world = Eigen::Matrix4f::Identity();
   Eigen::Matrix4f T_imu = Eigen::Matrix4f::Zero();
 
-  std::vector<Eigen::Vector3f> vllm_trajectory;
-  std::vector<Eigen::Vector3f> offset_trajectory;
+  std::vector<Eigen::Vector3f, Eigen::aligned_allocator<Eigen::Vector3f>> vllm_trajectory;
+  std::vector<Eigen::Vector3f, Eigen::aligned_allocator<Eigen::Vector3f>> offset_trajectory;
 
   pcl::CorrespondencesPtr correspondences;
 

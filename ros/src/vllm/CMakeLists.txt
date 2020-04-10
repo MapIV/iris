@@ -1,99 +1,34 @@
 cmake_minimum_required(VERSION 3.1)
 project(vllm LANGUAGES CXX C)
 
-##################
-# Set build type #
-##################
-
-if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
-  set(CMAKE_BUILD_TYPE "Release")
-  set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "MinSizeRel"
-                                               "RelWithDebInfo")
+# == Set default build type to release ==
+if(NOT CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE "RELEASE")
 endif()
+string(TOUPPER ${CMAKE_BUILD_TYPE} CMAKE_BUILD_TYPE)
+message("Build Type:\n\t${CMAKE_BUILD_TYPE}")
 
-message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
-
-###########################
-# Set application options #
-###########################
-
-set(USE_SANITIZER
-    OFF
-    CACHE BOOL "Enable Address/Memory sanitizer (set env as ASAN_OPTIONS=detect_leaks=1)")
-
-if(USE_SANITIZER)
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fno-omit-frame-pointer -fsanitize=address")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-omit-frame-pointer -fsanitize=address")
-  set(CMAKE_EXE_LINKER_FLAGS
-      "${CMAKE_EXE_LINKER_FLAGS} -fno-omit-frame-pointer -fsanitize=address")
-  set(CMAKE_SHARED_LINKER_FLAGS
-      "${CMAKE_SHARED_LINKER_FLAGS} -fno-omit-frame-pointer -fsanitize=address")
-  message(STATUS "Address/Memory sanitizer: ENABLED")
-else()
-  message(STATUS "Address/Memory sanitizer: DISABLED")
-endif()
-
-########################
-# Set compiler options #
-########################
-
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra")
-
-set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -Og")
-set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Og")
-
-set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -O3 -ffast-math")
-set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -ffast-math")
-
-set(BUILD_WITH_MARCH_NATIVE
-    OFF
-    CACHE BOOL "Enable architecture-aware optimization (-march=native)")
-
-if(BUILD_WITH_MARCH_NATIVE)
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mtune=native -march=native")
-  set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -mtune=native -march=native")
-  message(STATUS "Architecture-aware optimization (-march=native): ENABLED")
-else()
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mtune=native")
-  set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -mtune=native")
-  message(STATUS "Architecture-aware optimization (-march=native): DISABLED")
-endif()
-
-#######################
-# Check C++11 support #
-#######################
-
+# == Check C++17 ==
 include(CheckCXXCompilerFlag)
-check_cxx_compiler_flag("-std=c++17" COMPILER_SUPPORTS_CXX17)
-check_cxx_compiler_flag("-std=c++14" COMPILER_SUPPORTS_CXX14)
-check_cxx_compiler_flag("-std=c++11" COMPILER_SUPPORTS_CXX11)
-check_cxx_compiler_flag("-std=c++0x" COMPILER_SUPPORTS_CXX0X)
-if(COMPILER_SUPPORTS_CXX17)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
-  message(STATUS "C++11 support: OK (-std=c++17)")
-elseif(COMPILER_SUPPORTS_CXX14)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
-  message(STATUS "C++11 support: OK (-std=c++14)")
-elseif(COMPILER_SUPPORTS_CXX11)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
-  message(STATUS "C++11 support: OK (-std=c++11)")
-elseif(COMPILER_SUPPORTS_CXX0X)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
-  message(STATUS "C++11 support: OK (-std=c++0x)")
-else()
-  message(
-    FATAL_ERROR
-      "The compiler ${CMAKE_CXX_COMPILER} has no C++11 support. Please use a different C++ compiler."
-  )
+enable_language(CXX)
+check_cxx_compiler_flag("-std=gnu++17" COMPILER_SUPPORTS_CXX17)
+if(NOT ${COMPILER_SUPPORTS_CXX17})
+  message(FATAL_ERROR "${CMAKE_CXX_COMPILER} doesn't support C++17\n")
 endif()
+# == C++17 ==
+set(CMAKE_CXX_STANDARD 17)
+message("Compiler:\n\t${CMAKE_CXX_COMPILER} (using C++17)")
+
+# == Clear "CMAKE_CXX_FLAGS" ==
+set(CMAKE_CXX_FLAGS "")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pipe -fopenmp -Ofast -lstdc++fs")
 
 #################
 # Find packages #
 #################
 
 # Find catkin macros and libraries
-find_package(catkin REQUIRED COMPONENTS cv_bridge image_transport dynamic_reconfigure)
+find_package(catkin REQUIRED COMPONENTS cv_bridge image_transport tf)
 
 # OpenCV
 find_package(OpenCV 3 REQUIRED)
@@ -128,18 +63,11 @@ include_directories(${OPENGL_INCLUDE_DIR})
 #################################
 # catkin specific configuration #
 #################################
-
-# config
-generate_dynamic_reconfigure_options(cfg/dynamic.cfg)
-
-catkin_package(CATKIN_DEPENDS cv_bridge image_transport)
+catkin_package(CATKIN_DEPENDS cv_bridge image_transport tf)
 
 #########
 # Build #
 #########
-
-# find_library(OpenVSLAM_LIB openvslam HINTS ${OpenVSLAM_LIB_DIR})
-
 # ROOT
 get_filename_component(VLLM_ROOT ${PROJECT_SOURCE_DIR} DIRECTORY)
 get_filename_component(VLLM_ROOT ${VLLM_ROOT} DIRECTORY)
@@ -163,9 +91,7 @@ message(STATUS "Library of VLLM: ${VLLM_LIB}")
 include_directories(${catkin_INCLUDE_DIRS} ${OpenVSLAM_INCLUDE_DIR} include)
 
 # Executable
-add_executable(vllm_node src/vllm_node.cpp)
-
-add_dependencies(vllm_node vllm_gencfg)
+add_executable(vllm_node src/vllm_node.cpp src/decorator.cpp)
 
 target_link_libraries(
   vllm_node

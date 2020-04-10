@@ -15,8 +15,8 @@ struct Publication {
 
   Eigen::Matrix4f vllm_camera;
   Eigen::Matrix4f offset_camera;
-  std::vector<Eigen::Vector3f> vllm_trajectory;
-  std::vector<Eigen::Vector3f> offset_trajectory;
+  std::vector<Eigen::Vector3f, Eigen::aligned_allocator<Eigen::Vector3f>> vllm_trajectory;
+  std::vector<Eigen::Vector3f, Eigen::aligned_allocator<Eigen::Vector3f>> offset_trajectory;
   map::Info localmap_info;
 
   pcXYZ::Ptr cloud;
@@ -28,15 +28,16 @@ struct Publication {
 class Publisher
 {
 private:
-  std::mutex mtx;
   int id;
-  bool flag[2];
+  bool flags[2];
   Publication publication[2];
+  std::mutex mtx;
 
 public:
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
   Publisher()
   {
-    flag[0] = flag[1] = false;
+    flags[0] = flags[1] = false;
     id = 0;
   }
 
@@ -46,8 +47,8 @@ public:
       const Eigen::Matrix4f& vllm_camera,
       const Eigen::Matrix4f& offset_camera,
       const KeypointsWithNormal& raw_keypoints,
-      const std::vector<Eigen::Vector3f>& vllm_trajectory,
-      const std::vector<Eigen::Vector3f>& offset_trajectory,
+      const std::vector<Eigen::Vector3f, Eigen::aligned_allocator<Eigen::Vector3f>>& vllm_trajectory,
+      const std::vector<Eigen::Vector3f, Eigen::aligned_allocator<Eigen::Vector3f>>& offset_trajectory,
       const pcl::CorrespondencesPtr& corre,
       const map::Info& localmap_info);
 };

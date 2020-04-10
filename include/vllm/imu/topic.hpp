@@ -12,6 +12,7 @@ struct ImuMessage {
   Eigen::Vector3f acc;
   Eigen::Vector3f omega;
 };
+
 class TopicAnalyzer
 {
 public:

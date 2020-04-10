@@ -1,17 +1,17 @@
+#include "decorator.hpp"
 #include "vllm/core/config.hpp"
 #include "vllm/map/map.hpp"
 #include "vllm/system/system.hpp"
 #include "vllm/viewer/pangolin_viewer.hpp"
 #include <chrono>
 #include <cv_bridge/cv_bridge.h>
-#include <dynamic_reconfigure/server.h>
 #include <fstream>
 #include <image_transport/image_transport.h>
 #include <opencv2/opencv.hpp>
 #include <pcl_ros/point_cloud.h>
 #include <popl.hpp>
 #include <ros/ros.h>
-#include <vllm/dynamicConfig.h>
+#include <tf/transform_broadcaster.h>
 
 cv::Mat subscribed_image;
 void imageCallback(const sensor_msgs::ImageConstPtr& msg)
@@ -21,23 +21,6 @@ void imageCallback(const sensor_msgs::ImageConstPtr& msg)
   subscribed_image = cv_ptr->image.clone();
 }
 
-void callback(vllm::dynamicConfig&, uint32_t)
-{
-}
-
-class Kusa
-{
-private:
-  mutable std::mutex mtx;
-
-public:
-  void hoge()
-  {
-    std::lock_guard lock(mtx);
-  }
-};
-
-
 const std::string WINDOW_NAME = "Visual Localization in 3D LiDAR Map";
 
 int main(int argc, char* argv[])
@@ -46,15 +29,6 @@ int main(int argc, char* argv[])
   ros::init(argc, argv, "vllm_node");
   ros::NodeHandle nh;
   ros::Subscriber sub = nh.subscribe("camera/color/image_raw", 1, &imageCallback);
-
-  Kusa kusa;
-
-  // dynamic reconfigure // NOTE: future works
-  // {
-  //   dynamic_reconfigure::Server<vllm::dynamicConfig> server;
-  //   dynamic_reconfigure::Server<vllm::dynamicConfig>::CallbackType f = boost::bind(&callback, _1, _2);
-  //   server.setCallback(f);
-  // }
 
   // Analyze arugments
   popl::OptionParser op("Allowed options");
@@ -90,8 +64,8 @@ int main(int argc, char* argv[])
   ros::Rate loop_10Hz(10);
 
   // Setup publisher
-  ros::Publisher target_pc_publisher = nh.advertise<pcl::PointCloud<pcl::PointXYZ>>("target_pointcloud", 10);
-  ros::Publisher source_pc_publisher = nh.advertise<pcl::PointCloud<pcl::PointXYZ>>("source_pointcloud", 10);
+  ros::Publisher target_pc_publisher = nh.advertise<pcl::PointCloud<pcl::PointXYZI>>("target_pointcloud", 10);
+  ros::Publisher source_pc_publisher = nh.advertise<pcl::PointCloud<pcl::PointXYZI>>("source_pointcloud", 10);
   image_transport::ImageTransport it(nh);
   image_transport::Publisher image_publisher = it.advertise("image", 10);
 
@@ -103,13 +77,58 @@ int main(int argc, char* argv[])
     if (!subscribed_image.empty()) {
       // Execution
       system->execute(subscribed_image);
-      subscribed_image = cv::Mat();
-
-      sensor_msgs::ImagePtr msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", system->getFrame()).toImageMsg();
-      image_publisher.publish(msg);
+      subscribed_image = cv::Mat();  // reset input
 
       vllm::Publication p;
-      bool a = system->popPublication(p);
+      system->popPublication(p);
+
+      // Publish image
+      {
+        sensor_msgs::ImagePtr msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", system->getFrame()).toImageMsg();
+        image_publisher.publish(msg);
+      }
+
+      // Publish source cloud
+      {
+        auto msg = p.cloud;
+        msg->header.frame_id = "world";
+        pcl_conversions::toPCL(ros::Time::now(), msg->header.stamp);
+        source_pc_publisher.publish(msg);
+      }
+
+      // Publish vslam pose
+      {
+        geometry_msgs::Pose t_pose;
+        t_pose.position.x = p.offset_camera(0, 3);
+        t_pose.position.y = p.offset_camera(1, 3);
+        t_pose.position.z = p.offset_camera(2, 3);
+        t_pose.orientation.w = 1.0;
+
+        std::cout << "\nvslam_camera\n"
+                  << p.offset_camera << std::endl;
+
+        static tf::TransformBroadcaster br;
+        tf::Transform transform;
+        poseMsgToTF(t_pose, transform);
+        br.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "world", "vslam_pose"));
+      }
+
+      // Publish vllm pose
+      {
+        geometry_msgs::Pose t_pose;
+        t_pose.position.x = p.vllm_camera(0, 3);
+        t_pose.position.y = p.vllm_camera(1, 3);
+        t_pose.position.z = p.vllm_camera(2, 3);
+        t_pose.orientation.w = 1.0;
+
+        std::cout << "\n vllm_camera\n"
+                  << p.vllm_camera << std::endl;
+
+        static tf::TransformBroadcaster br;
+        tf::Transform transform;
+        poseMsgToTF(t_pose, transform);
+        br.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "world", "vllm_pose"));
+      }
     }
 
     // inform processing time
@@ -124,8 +143,8 @@ int main(int argc, char* argv[])
     // publish heavy data
     if (++loop_count >= 100) {
       loop_count = 0;
-      auto msg = map->getTargetCloud()->makeShared();
-      msg->header.frame_id = "base_link";
+      auto msg = map->getTargetCloud();
+      msg->header.frame_id = "world";
       pcl_conversions::toPCL(ros::Time::now(), msg->header.stamp);
       target_pc_publisher.publish(msg);
     }
