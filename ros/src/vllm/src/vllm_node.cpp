@@ -79,8 +79,9 @@ int main(int argc, char* argv[])
       system->execute(subscribed_image);
       subscribed_image = cv::Mat();  // reset input
 
-      vllm::Publication p;
-      system->popPublication(p);
+      // NOTE: ## This is deep darkness. ##
+      // vllm::Publication p;
+      // system->popPublication(p);
 
       // Publish image
       {
@@ -90,7 +91,7 @@ int main(int argc, char* argv[])
 
       // Publish source cloud
       {
-        auto msg = p.cloud;
+        auto msg = system->ros_pointcloud;
         msg->header.frame_id = "world";
         pcl_conversions::toPCL(ros::Time::now(), msg->header.stamp);
         source_pc_publisher.publish(msg);
@@ -98,14 +99,15 @@ int main(int argc, char* argv[])
 
       // Publish vslam pose
       {
+        Eigen::Matrix4f pose = system->ros_vslam_pose;
         geometry_msgs::Pose t_pose;
-        t_pose.position.x = p.offset_camera(0, 3);
-        t_pose.position.y = p.offset_camera(1, 3);
-        t_pose.position.z = p.offset_camera(2, 3);
+        t_pose.position.x = pose(0, 3);
+        t_pose.position.y = pose(1, 3);
+        t_pose.position.z = pose(2, 3);
         t_pose.orientation.w = 1.0;
 
         std::cout << "\nvslam_camera\n"
-                  << p.offset_camera << std::endl;
+                  << pose << std::endl;
 
         static tf::TransformBroadcaster br;
         tf::Transform transform;
@@ -115,14 +117,15 @@ int main(int argc, char* argv[])
 
       // Publish vllm pose
       {
+        Eigen::Matrix4f pose = system->ros_vllm_pose;
         geometry_msgs::Pose t_pose;
-        t_pose.position.x = p.vllm_camera(0, 3);
-        t_pose.position.y = p.vllm_camera(1, 3);
-        t_pose.position.z = p.vllm_camera(2, 3);
+        t_pose.position.x = pose(0, 3);
+        t_pose.position.y = pose(1, 3);
+        t_pose.position.z = pose(2, 3);
         t_pose.orientation.w = 1.0;
 
         std::cout << "\n vllm_camera\n"
-                  << p.vllm_camera << std::endl;
+                  << pose << std::endl;
 
         static tf::TransformBroadcaster br;
         tf::Transform transform;

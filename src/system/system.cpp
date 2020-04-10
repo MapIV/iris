@@ -8,7 +8,7 @@
 namespace vllm
 {
 System::System(Config& config, const std::shared_ptr<map::Map>& map)
-    : config(config), map(map), correspondences(new pcl::Correspondences)
+    : config(config), map(map), correspondences(new pcl::Correspondences), ros_pointcloud(new pcXYZ)
 {
   // System starts in initialization mode
   state = State::Inittializing;
@@ -189,10 +189,15 @@ int System::execute(const cv::Mat& image)
   // Pubush for the viewer
   vllm_trajectory.push_back(T_world.topRightCorner(3, 1));
   offset_trajectory.push_back((config.T_init * vslam_camera).topRightCorner(3, 1));  // TODO: it was offset_camera
-  publisher.push(
-      T_align, T_world, config.T_init * vslam_camera,
-      raw_keypoints, vllm_trajectory,
-      offset_trajectory, correspondences, localmap_info);
+  // publisher.push(
+  //     T_align, T_world, config.T_init * vslam_camera,
+  //     raw_keypoints, vllm_trajectory,
+  //     offset_trajectory, correspondences, localmap_info);
+
+  ros_vllm_pose = normalizePose(T_world);
+  ros_vslam_pose = normalizePose(config.T_init * vslam_camera);
+  pcl::transformPointCloud(*raw_keypoints.cloud, *ros_pointcloud, T_align);
+
 
   return state;
 }

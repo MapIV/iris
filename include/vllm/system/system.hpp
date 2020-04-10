@@ -77,6 +77,11 @@ public:
   unsigned int getRecollection() const { return recollection.load(); }
   void setRecollection(unsigned int recollection_) { recollection.store(recollection_); }
 
+  // for ROS
+  Eigen::Matrix4f ros_vllm_pose;
+  Eigen::Matrix4f ros_vslam_pose;
+  pcXYZ::Ptr ros_pointcloud;
+
 private:
   bool optimize(int iteration);
 
@@ -111,8 +116,8 @@ private:
   std::vector<float> weights;
 
   map::Info localmap_info;
-
   Publisher publisher;
+
 
   // for relozalization
   Eigen::Matrix4f vllm_velocity;
