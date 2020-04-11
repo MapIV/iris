@@ -29,15 +29,15 @@ void Publisher::push(
 {
   Publication& tmp = publication[id];
 
-  tmp.vllm_camera = normalizePose(vllm_camera);
-  tmp.offset_camera = normalizePose(offset_camera);
+  tmp.vllm_camera = util::normalizePose(vllm_camera);
+  tmp.offset_camera = util::normalizePose(offset_camera);
   tmp.vllm_trajectory = vllm_trajectory;
   tmp.offset_trajectory = offset_trajectory;
   tmp.localmap_info = localmap_info;
   *tmp.correspondences = *corre;
 
   pcl::transformPointCloud(*raw_keypoints.cloud, *tmp.cloud, T_align);
-  vllm::transformNormals(*raw_keypoints.normals, *tmp.normals, T_align);
+  util::transformNormals(*raw_keypoints.normals, *tmp.normals, T_align);
 
   {
     std::lock_guard<std::mutex> lock(mtx);

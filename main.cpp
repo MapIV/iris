@@ -53,7 +53,7 @@ int main(int argc, char* argv[])
   std::chrono::system_clock::time_point m_start;
   unsigned int time = 0;
   int skipped_frame = 0;
-  int imu_least_one_observed = 0;
+  // int imu_least_one_observed = 0;
 
   std::vector<Eigen::Matrix4f> imu_trajectory;
 

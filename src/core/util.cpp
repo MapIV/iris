@@ -12,6 +12,9 @@
 namespace vllm
 {
 
+namespace util
+{
+
 namespace
 {
 float getScale_(const Eigen::MatrixXf& R)
@@ -31,8 +34,8 @@ Eigen::Matrix3f normalize_(const Eigen::Matrix3f& R)
 
   return U * Vt;
 }
-
 }  // namespace
+
 
 // get scale factor from rotation matrix
 float getScale(const Eigen::MatrixXf& A)
@@ -43,7 +46,6 @@ float getScale(const Eigen::MatrixXf& A)
     return getScale_(A.topLeftCorner(3, 3));
   return -1;
 }
-
 
 Eigen::Matrix3f normalizeRotation(const Eigen::MatrixXf& A)
 {
@@ -76,18 +78,6 @@ void loadMap(
   pcl::PointCloud<pcl::PointXYZ>::Ptr all_cloud(new pcl::PointCloud<pcl::PointXYZ>());
   pcl::io::loadPCDFile<pcl::PointXYZ>(pcd_file, *all_cloud);
 
-  // {
-  //   pcl::CropBox<pcl::PointXYZ> crop;
-  //   crop.setInputCloud(all_cloud);
-  //   Eigen::Vector4f min4, max4;
-  //   int r = 20;
-  //   min4 << -r, -r, -r, 1;
-  //   max4 << r, r, r, 1;
-  //   crop.setMin(min4);
-  //   crop.setMax(max4);
-  //   crop.filter(*all_cloud);
-  // }
-
   // filtering
   if (grid_leaf > 0) {
     pcl::VoxelGrid<pcl::PointXYZ> filter;
@@ -97,7 +87,6 @@ void loadMap(
   } else {
     cloud = all_cloud;
   }
-
 
   // normal estimation
   pcl::search::KdTree<pcl::PointXYZ>::Ptr tree(new pcl::search::KdTree<pcl::PointXYZ>());
@@ -111,38 +100,6 @@ void loadMap(
 
   return;
 }
-
-// pcl::PointCloud<pcl::PointXYZ>::Ptr loadMapPointCloud(const std::string& pcd_file, float leaf)
-// {
-//   // Load map pointcloud
-//   pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_map(new pcl::PointCloud<pcl::PointXYZ>);
-//   pcl::io::loadPCDFile<pcl::PointXYZ>(pcd_file, *cloud_map);
-
-//   if (leaf < 0) {
-//     return cloud_map;
-//   }
-
-//   // filtering
-//   pcl::VoxelGrid<pcl::PointXYZ> filter;
-//   filter.setInputCloud(cloud_map);
-//   filter.setLeafSize(leaf, leaf, leaf);
-//   filter.filter(*cloud_map);
-//   return cloud_map;
-// }
-
-// pcl::PointCloud<pcl::Normal>::Ptr estimateNormals(const pcXYZ::Ptr& cloud, float leaf)
-// {
-//   pcl::PointCloud<pcl::Normal>::Ptr normals(new pcl::PointCloud<pcl::Normal>);
-//   pcl::search::KdTree<pcl::PointXYZ>::Ptr tree(new pcl::search::KdTree<pcl::PointXYZ>());
-
-//   pcl::NormalEstimation<pcl::PointXYZ, pcl::Normal> ne;
-//   ne.setInputCloud(cloud);
-//   ne.setSearchMethod(tree);
-//   ne.setRadiusSearch(leaf);
-//   ne.compute(*normals);
-
-//   return normals;
-// }
 
 void transformNormals(const pcNormal& source, pcNormal& target, const Eigen::Matrix4f& T)
 {
@@ -176,4 +133,5 @@ void shufflePointCloud(pcXYZ::Ptr& cloud)
   }
 }
 
+}  // namespace util
 }  // namespace vllm

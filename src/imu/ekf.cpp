@@ -62,8 +62,8 @@ void EKF::observe(const Eigen::Matrix4f& T, unsigned long)
   if (slow_start > 1.0)
     slow_start -= 1e-3f;
 
-  scale = getScale(T);
-  Eigen::Matrix3f R = normalizeRotation(T);
+  scale = util::getScale(T);
+  Eigen::Matrix3f R = util::normalizeRotation(T);
   Eigen::Quaternionf q(R);
   Eigen::Vector3f t = T.topRightCorner(3, 1);
   std::cout << "obs-q " << q.x() << " " << q.y() << " " << q.z() << " " << q.w() << " p " << t.transpose() << std::endl;

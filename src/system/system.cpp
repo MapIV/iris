@@ -8,7 +8,7 @@
 namespace vllm
 {
 System::System(Config& config, const std::shared_ptr<map::Map>& map)
-    : config(config), map(map), correspondences(new pcl::Correspondences), ros_pointcloud(new pcXYZ)
+    : config(config), ros_pointcloud(new pcXYZ), map(map), correspondences(new pcl::Correspondences)
 {
   // System starts in initialization mode
   state = State::Inittializing;
@@ -42,7 +42,7 @@ System::System(Config& config, const std::shared_ptr<map::Map>& map)
   optimize_config.iteration = config.iteration;
   optimize_config.threshold_rotation = config.converge_rotation;
   optimize_config.threshold_translation = config.converge_translation;
-  optimize_config.ref_scale = static_cast<double>(getScale(config.T_init));
+  optimize_config.ref_scale = util::getScale(config.T_init);
 
   // During the constructor funtion, there is no way to access members from other threads
   thread_safe_optimize_gain = optimize_config.gain;
@@ -194,8 +194,8 @@ int System::execute(const cv::Mat& image)
   //     raw_keypoints, vllm_trajectory,
   //     offset_trajectory, correspondences, localmap_info);
 
-  ros_vllm_pose = normalizePose(T_world);
-  ros_vslam_pose = normalizePose(config.T_init * vslam_camera);
+  ros_vllm_pose = util::normalizePose(T_world);
+  ros_vslam_pose = util::normalizePose(config.T_init * vslam_camera);
   pcl::transformPointCloud(*raw_keypoints.cloud, *ros_pointcloud, T_align);
 
 

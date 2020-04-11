@@ -61,7 +61,7 @@ void Aligner::setVertexSim3(g2o::SparseOptimizer& optimizer, Eigen::Matrix4f& T)
   Eigen::Vector3d t = T.topRightCorner(3, 1).cast<double>();
   Eigen::Matrix3d R = T.topLeftCorner(3, 3).cast<double>();
   Eigen::Quaterniond q = Eigen::Quaterniond(R);
-  double scale = vllm::getScale(R.cast<float>());
+  double scale = util::getScale(R.cast<float>());
   g2o::Sim3 sim3(q, t, scale);
 
   // set up initial parameter

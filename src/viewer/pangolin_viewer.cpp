@@ -192,7 +192,7 @@ void PangolinViewer::drawPoses(const std::vector<Eigen::Matrix4f, Eigen::aligned
     const Eigen::Matrix4f& pose = poses.at(i);
     glColor3fv(convertRGB(Eigen::Vector3f(static_cast<float>(c++ % 360), 1.f, 1.f)).data());
 
-    Eigen::Matrix3f R = normalizeRotation(pose.topLeftCorner(3, 3));
+    Eigen::Matrix3f R = util::normalizeRotation(pose.topLeftCorner(3, 3));
 
     Eigen::Vector3f t = pose.topRightCorner(3, 1);
     Eigen::Vector3f f = t + 0.3 * R * Eigen::Vector3f::UnitZ();

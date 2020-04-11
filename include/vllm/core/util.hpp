@@ -7,6 +7,8 @@
 
 namespace vllm
 {
+namespace util
+{
 // get scale factor from a rotation matrix or a pose matrix
 float getScale(const Eigen::MatrixXf& A);
 Eigen::Matrix3f normalizeRotation(const Eigen::MatrixXf& A);
@@ -30,5 +32,5 @@ void transformNormals(const pcNormal& source, pcNormal& target, const Eigen::Mat
 Eigen::Matrix3f randomRotation();
 void shufflePointCloud(pcXYZ::Ptr& cloud);
 
-
+}  // namespace util
 }  // namespace vllm

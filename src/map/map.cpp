@@ -35,7 +35,7 @@ Map::Map(const Parameter& parameter)
     std::cout << "start loading pointcloud & esitmating normal with leafsize " << parameter.voxel_grid_leaf << " search_radius " << parameter.normal_search_radius << std::endl;
     all_target_cloud = pcXYZ::Ptr(new pcXYZ);
     all_target_normals = pcNormal::Ptr(new pcNormal);
-    vllm::loadMap(parameter.pcd_file, all_target_cloud, all_target_normals, parameter.voxel_grid_leaf, parameter.normal_search_radius);
+    util::loadMap(parameter.pcd_file, all_target_cloud, all_target_normals, parameter.voxel_grid_leaf, parameter.normal_search_radius);
 
     // save as cache file
     std::cout << "save pointcloud with normal" << parameter.normal_search_radius << std::endl;
@@ -239,7 +239,7 @@ void Map::updateLocalmap(const Eigen::Matrix4f& T)
 
 float Map::yawFromPose(const Eigen::Matrix4f& T) const
 {
-  Eigen::Matrix3f R = normalizeRotation(T);
+  Eigen::Matrix3f R = util::normalizeRotation(T);
 
   // When the optical axis of the camera is pointing to the X-axis
   // and the upper side of the camera is pointing to the Z-axis,
