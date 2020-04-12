@@ -1,4 +1,3 @@
-#include "decorator.hpp"
 #include "vllm/core/config.hpp"
 #include "vllm/map/map.hpp"
 #include "vllm/system/system.hpp"
@@ -82,8 +81,10 @@ int main(int argc, char* argv[])
       subscribed_image = cv::Mat();  // reset input
 
       // NOTE: ## This is deep darkness. ##
-      // vllm::Publication p;
-      // system->popPublication(p);
+      vllm::Publication p;
+      bool flag = system->popPublication(p);
+
+      std::cout << "FlAG:  " << std::boolalpha << flag << std::endl;
 
       // Publish image
       {

@@ -13,7 +13,7 @@ Outcome Optimizer::optimize(
     const Eigen::Matrix4f& offset_camera,
     crrspEstimator& estimator,
     const Eigen::Matrix4f& T_initial_align,
-    const std::list<Eigen::Matrix4f>& vllm_history,
+    const std::list<Eigen::Matrix4f, Eigen::aligned_allocator<Eigen::Matrix4f>>& vllm_history,
     const std::vector<float>& weights)
 {
   pcXYZ::Ptr tmp_cloud(new pcXYZ);

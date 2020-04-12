@@ -84,8 +84,6 @@ struct Config {
 
     fs["VLLM.converge_translation"] >> converge_translation;
     fs["VLLM.converge_rotation"] >> converge_rotation;
-
-    cv::Mat T = cv::Mat::eye(4, 4, CV_32FC1);
   }
 
   KFParam param;

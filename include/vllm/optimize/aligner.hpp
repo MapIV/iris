@@ -29,7 +29,7 @@ public:
       const pcl::PointCloud<pcl::PointXYZ>::Ptr& target,
       const pcl::CorrespondencesPtr& correspondances,
       const Eigen::Matrix4f& offset_camera,
-      const std::list<Eigen::Matrix4f>& history,
+      const std::list<Eigen::Matrix4f, Eigen::aligned_allocator<Eigen::Matrix4f>>& history,
       const std::vector<float>& weights,
       const double ref_scale,
       const pcl::PointCloud<pcl::Normal>::Ptr& source_normals = nullptr,
@@ -47,7 +47,7 @@ private:
   void setEdgeRestriction(
       g2o::SparseOptimizer& optimizer,
       const Eigen::Matrix4f& offset_camera,
-      const std::list<Eigen::Matrix4f>& history,
+      const std::list<Eigen::Matrix4f, Eigen::aligned_allocator<Eigen::Matrix4f>>& history,
       double ref_scale);
 
   void setEdge7DoFGICP(

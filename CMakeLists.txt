@@ -66,6 +66,7 @@ message(STATUS "Eigen3 version:\n\t${EIGEN3_VERSION_STRING}")
 find_package(Pangolin)
 include_directories(${Pangolin_INCLUDE_DIRS})
 
+# == OpenGL==
 find_package(OpenGL REQUIRED)
 include_directories(${OPENGL_INCLUDE_DIR})
 
@@ -98,6 +99,8 @@ message(STATUS "g2o version:\n\t${g2o_VERSION}")
 set(BUILD_EXAMPLES OFF) # disable building examples
 set(USE_PANGOLIN_VIEWER 0) # disbale buidling viewer
 add_subdirectory(3rd/openvslam)
+
+message("CMAKE_CXX_FLAGS:\n\t${CMAKE_CXX_FLAGS}")
 
 # == Headers and sources ==
 include_directories(${CMAKE_CURRENT_LIST_DIR}/include)

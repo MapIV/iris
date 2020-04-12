@@ -39,6 +39,7 @@ public:
   {
     flags[0] = flags[1] = false;
     id = 0;
+    std::cout << "##################DEBUG " << flags << std::endl;
   }
 
   bool pop(Publication& p);
@@ -52,4 +53,5 @@ public:
       const pcl::CorrespondencesPtr& corre,
       const map::Info& localmap_info);
 };
+
 }  // namespace vllm

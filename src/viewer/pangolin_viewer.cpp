@@ -108,48 +108,48 @@ void PangolinViewer::execute()
   drawGridLine();
   drawString("VLLM", {1.0f, 1.0f, 0.0f, 3.0f});
 
-  system_ptr->popPublication(publication);
+  // system_ptr->popPublication(publication);
 
-  map::Info new_localmap_info = system_ptr->getMap()->getLocalmapInfo();
-  if (new_localmap_info != localmap_info) {
-    localmap_info = new_localmap_info;
-    *target_cloud = *system_ptr->getMap()->getTargetCloud();
-    *target_normals = *system_ptr->getMap()->getTargetNormals();
-    colored_target_cloud = colorizePointCloud(target_cloud);
-    target_normals_color = colorizeNormals(target_normals);
-    return;
-  }
-  {
-    std::lock_guard lock(imu_mtx);
-    drawPoses(imu_poses);
-  }
+  // map::Info new_localmap_info = system_ptr->getMap()->getLocalmapInfo();
+  // if (new_localmap_info != localmap_info) {
+  //   localmap_info = new_localmap_info;
+  //   *target_cloud = *system_ptr->getMap()->getTargetCloud();
+  //   *target_normals = *system_ptr->getMap()->getTargetNormals();
+  //   colored_target_cloud = colorizePointCloud(target_cloud);
+  //   target_normals_color = colorizeNormals(target_normals);
+  //   return;
+  // }
+  // {
+  //   std::lock_guard lock(imu_mtx);
+  //   drawPoses(imu_poses);
+  // }
 
-  drawPointCloud(colored_target_cloud, {0.6f, 0.6f, 0.6f, 1.0f});
-  if (*gui_target_normals)
-    drawNormals(target_cloud, target_normals, target_normals_color, 20);
+  // drawPointCloud(colored_target_cloud, {0.6f, 0.6f, 0.6f, 1.0f});
+  // if (*gui_target_normals)
+  //   drawNormals(target_cloud, target_normals, target_normals_color, 20);
 
-  drawPointCloud(publication.cloud, {1.0f, 1.0f, 0.0f, 3.0f});
-  if (*gui_source_normals)
-    drawNormals(publication.cloud, publication.normals, {1.0f, 0.0f, 1.0f, 1.0f});
+  // drawPointCloud(publication.cloud, {1.0f, 1.0f, 0.0f, 3.0f});
+  // if (*gui_source_normals)
+  //   drawNormals(publication.cloud, publication.normals, {1.0f, 0.0f, 1.0f, 1.0f});
 
-  if (*gui_vslam_camera) {
-    drawCamera(publication.offset_camera, {0.5f, 0.5f, 0.5f, 1.0f});
-    drawTrajectory(publication.offset_trajectory, false, {0.5f, 0.5f, 0.5f, 1.0f});
-  }
+  // if (*gui_vslam_camera) {
+  //   drawCamera(publication.offset_camera, {0.5f, 0.5f, 0.5f, 1.0f});
+  //   drawTrajectory(publication.offset_trajectory, false, {0.5f, 0.5f, 0.5f, 1.0f});
+  // }
 
-  if (*gui_correspondences) {
-    if (publication.localmap_info == localmap_info)
-      drawCorrespondences(publication.cloud, target_cloud, publication.correspondences, {1.0f, 0.0f, 0.0f, 2.0f});
-  }
+  // if (*gui_correspondences) {
+  //   if (publication.localmap_info == localmap_info)
+  //     drawCorrespondences(publication.cloud, target_cloud, publication.correspondences, {1.0f, 0.0f, 0.0f, 2.0f});
+  // }
 
-  drawCamera(publication.vllm_camera, {1.0f, 1.0f, 1.0f, 2.0f});
-  drawTrajectory(publication.vllm_trajectory, true);
+  // drawCamera(publication.vllm_camera, {1.0f, 1.0f, 1.0f, 2.0f});
+  // drawTrajectory(publication.vllm_trajectory, true);
 
-  if (gui_scale_gain->GuiChanged() || gui_smooth_gain->GuiChanged() || gui_latitude_gain->GuiChanged() || gui_altitude_gain->GuiChanged())
-    system_ptr->setOptimizeGain({*gui_scale_gain, *gui_smooth_gain, *gui_latitude_gain, *gui_altitude_gain});
+  // if (gui_scale_gain->GuiChanged() || gui_smooth_gain->GuiChanged() || gui_latitude_gain->GuiChanged() || gui_altitude_gain->GuiChanged())
+  //   system_ptr->setOptimizeGain({*gui_scale_gain, *gui_smooth_gain, *gui_latitude_gain, *gui_altitude_gain});
 
-  if (gui_recollection->GuiChanged())
-    system_ptr->setRecollection(*gui_recollection);
+  // if (gui_recollection->GuiChanged())
+  //   system_ptr->setRecollection(*gui_recollection);
 
   // Eigen::Vector2d distance(*gui_distance_min, *gui_distance_max);
   // system_ptr->setSearchDistance(distance);

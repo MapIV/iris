@@ -5,7 +5,7 @@ namespace vllm
 bool Publisher::pop(Publication& p)
 {
   std::cout << "try to pop " << std::boolalpha << flags[0] << " " << flags[1] << " " << flags << std::endl;
-  // std::lock_guard<std::mutex> lock(mtx);
+  std::lock_guard<std::mutex> lock(mtx);
 
   if (flags[(id + 1) % 2] == false) {
     return false;

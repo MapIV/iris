@@ -98,7 +98,7 @@ private:
 
   std::vector<Eigen::Matrix4f, Eigen::aligned_allocator<Eigen::Matrix4f>> imu_poses;
 
-  Publication publication;
+  //   Publication publication;
 
   map::Info localmap_info;
 

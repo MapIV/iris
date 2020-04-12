@@ -28,6 +28,7 @@ struct Config {
 };
 
 struct Outcome {
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
   pcl::CorrespondencesPtr correspondences = nullptr;
   Eigen::Matrix4f T_align;
 };
@@ -43,7 +44,7 @@ public:
       const Eigen::Matrix4f& offset_camera,
       crrspEstimator& estimator,
       const Eigen::Matrix4f& T_initial_align,
-      const std::list<Eigen::Matrix4f>& vllm_history,
+      const std::list<Eigen::Matrix4f, Eigen::aligned_allocator<Eigen::Matrix4f>>& vllm_history,
       const std::vector<float>& weights);
 
 private:

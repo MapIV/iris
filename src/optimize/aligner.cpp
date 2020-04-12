@@ -21,7 +21,7 @@ Eigen::Matrix4f Aligner::estimate7DoF(
     const pcl::PointCloud<pcl::PointXYZ>::Ptr& target,
     const pcl::CorrespondencesPtr& correspondances,
     const Eigen::Matrix4f& offset_camera,
-    const std::list<Eigen::Matrix4f>& history,
+    const std::list<Eigen::Matrix4f, Eigen::aligned_allocator<Eigen::Matrix4f>>& history,
     const std::vector<float>& weights,
     const double ref_scale,
     const pcl::PointCloud<pcl::Normal>::Ptr& source_normals,
@@ -139,7 +139,7 @@ void Aligner::setEdge7DoFGICP(
 void Aligner::setEdgeRestriction(
     g2o::SparseOptimizer& optimizer,
     const Eigen::Matrix4f& offset_camera,
-    const std::list<Eigen::Matrix4f>& history,
+    const std::list<Eigen::Matrix4f, Eigen::aligned_allocator<Eigen::Matrix4f>>& history,
     double ref_scale)
 {
   g2o::VertexSim3Expmap* vp0 = dynamic_cast<g2o::VertexSim3Expmap*>(optimizer.vertices().find(0)->second);

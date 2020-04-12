@@ -26,12 +26,20 @@ public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
   // ===== for Main ====
-  System(Config& config, const std::shared_ptr<map::Map>& map);
+  System()
+  {
+    std::cout << "kuda" << std::endl;
+  }
+  System(const Config& config_, const std::shared_ptr<map::Map>& map_);
   int execute(const cv::Mat& image);
 
 public:
   // ==== for GUI ====
-  cv::Mat getFrame() const { return bridge.getFrame(); }
+  cv::Mat getFrame() const
+  {
+    // return bridge.getFrame();
+    return cv::Mat{};
+  }
 
   Eigen::Matrix4f getT() const
   {
@@ -74,8 +82,14 @@ public:
     thread_safe_optimize_gain = gain_;
   }
 
-  unsigned int getRecollection() const { return recollection.load(); }
-  void setRecollection(unsigned int recollection_) { recollection.store(recollection_); }
+  unsigned int getRecollection() const
+  {
+    return recollection.load();
+  }
+  void setRecollection(unsigned int recollection_)
+  {
+    recollection.store(recollection_);
+  }
 
   // for ROS
   Eigen::Matrix4f ros_vllm_pose;
@@ -87,8 +101,6 @@ public:
   std::vector<Eigen::Vector3f, Eigen::aligned_allocator<Eigen::Vector3f>> offset_trajectory;
 
 private:
-  bool optimize(int iteration);
-
   // ==== private member ====
   optimize::Gain thread_safe_optimize_gain;
   optimize::Config optimize_config;
@@ -101,7 +113,7 @@ private:
 
   std::atomic<bool> reset_requested = false;
 
-  const Config config;
+  Config config;
   std::shared_ptr<map::Map> map;
 
   Eigen::Matrix4f T_align = Eigen::Matrix4f::Identity();
@@ -123,7 +135,7 @@ private:
   // for relozalization
   Eigen::Matrix4f vllm_velocity;
   const int history = 30;
-  std::list<Eigen::Matrix4f> vllm_history;
+  std::list<Eigen::Matrix4f, Eigen::aligned_allocator<Eigen::Matrix4f>> vllm_history;
 };
 
 }  // namespace vllm

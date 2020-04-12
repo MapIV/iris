@@ -22,6 +22,9 @@ namespace vllm
 
 BridgeOpenVSLAM::~BridgeOpenVSLAM()
 {
+  if (SLAM_ptr == nullptr)
+    return;
+
   // wait until the loop BA is finished
   while (SLAM_ptr->loop_BA_is_running()) {
     std::this_thread::sleep_for(std::chrono::microseconds(5000));
@@ -38,10 +41,8 @@ void BridgeOpenVSLAM::setup(const Config& config)
   google::InstallFailureSignalHandler();
 #endif
 
-
   // setup logger
   spdlog::set_pattern("[%Y-%m-%d %H:%M:%S.%e] %^[%L] %v%$");
-  // spdlog::set_level(spdlog::level::debug);
   spdlog::set_level(spdlog::level::info);
 
   // load configuration

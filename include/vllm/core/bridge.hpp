@@ -11,7 +11,7 @@ namespace vllm
 class BridgeOpenVSLAM
 {
 public:
-  BridgeOpenVSLAM() = default;
+  BridgeOpenVSLAM() {}
   ~BridgeOpenVSLAM();
 
   void setup(const Config& config);
@@ -36,9 +36,5 @@ public:
 
 private:
   std::shared_ptr<openvslam::system> SLAM_ptr = nullptr;
-  cv::VideoCapture video;
-
-  int frame_skip = 1;
-  bool is_not_end = true;
 };
 }  // namespace vllm
