@@ -6,7 +6,6 @@ Panels:
       Expanded:
         - /target_trajectory1/Autocompute Value Bounds1
         - /source_trajectory1/Status1
-        - /TF1
         - /TF1/Frames1
         - /TF1/Frames1/vllm_pose1
         - /vllm_trajectory1/Status1
@@ -157,6 +156,14 @@ Visualization Manager:
         points_and_lines: true
       Queue Size: 100
       Value: true
+    - Class: rviz/Marker
+      Enabled: true
+      Marker Topic: /vllm/correspondences
+      Name: correspondences
+      Namespaces:
+        {}
+      Queue Size: 100
+      Value: true
     - Class: rviz/Image
       Enabled: true
       Image Topic: /vllm/image
@@ -197,7 +204,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 61.009063720703125
+      Distance: 129.8347930908203
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -212,10 +219,10 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.9547963738441467
+      Pitch: 1.1847960948944092
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 3.7735767364501953
+      Yaw: 3.75357723236084
     Saved: ~
 Window Geometry:
   Displays:

@@ -1,6 +1,6 @@
 #include "vllm/core/config.hpp"
 #include "vllm/map/map.hpp"
-#include "vllm/publisher.hpp"
+#include "vllm/ros_util.hpp"
 #include "vllm/system/system.hpp"
 #include "vllm/viewer/pangolin_viewer.hpp"
 #include <chrono>
@@ -44,6 +44,7 @@ int main(int argc, char* argv[])
   ros::Publisher source_pc_publisher = nh.advertise<pcl::PointCloud<pcl::PointXYZI>>("vllm/source_pointcloud", 1);
   ros::Publisher vllm_trajectory_publisher = nh.advertise<visualization_msgs::Marker>("vllm/vllm_trajectory", 1);
   ros::Publisher vslam_trajectory_publisher = nh.advertise<visualization_msgs::Marker>("vllm/vslam_trajectory", 1);
+  ros::Publisher correspondences_publisher = nh.advertise<visualization_msgs::Marker>("vllm/correspondences", 1);
   image_transport::Publisher image_publisher = it.advertise("vllm/image", 1);
   vllm::Publication publication;
 
@@ -64,9 +65,8 @@ int main(int argc, char* argv[])
 
   // Main loop
   while (ros::ok()) {
-    m_start = std::chrono::system_clock::now();
-
     if (!subscribed_image.empty()) {
+      m_start = std::chrono::system_clock::now();
 
       // Execution
       system->execute(subscribed_image);
@@ -74,25 +74,26 @@ int main(int argc, char* argv[])
       // Reset input
       subscribed_image = cv::Mat();
 
-      // Publish image
+      // Publish for rviz
       system->popPublication(publication);
       vllm::publishImage(image_publisher, system->getFrame());
       vllm::publishPointcloud(source_pc_publisher, publication.cloud);
       vllm::publishTrajectory(vllm_trajectory_publisher, publication.vllm_trajectory);
       vllm::publishTrajectory(vslam_trajectory_publisher, publication.offset_trajectory);
+      vllm::publishCorrespondences(correspondences_publisher, publication.cloud, map->getTargetCloud(), publication.correspondences);
       vllm::publishPose(publication.offset_camera, "vslam_pose");
       vllm::publishPose(publication.vllm_camera, "vllm_pose");
 
       // Inform processing time
       std::stringstream ss;
-      ss << "time= \033[35m"
+      ss << "processing time= \033[35m"
          << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - m_start).count()
          << "\033[m ms";
       ROS_INFO("%s", ss.str().c_str());
     }
 
     // Publish target pointcloud map
-    if (++loop_count >= 100) {
+    if (++loop_count >= 50) {
       loop_count = 0;
       vllm::publishPointcloud(target_pc_publisher, map->getTargetCloud());
     }

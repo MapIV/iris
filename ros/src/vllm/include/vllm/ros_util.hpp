@@ -42,6 +42,30 @@ void publishImage(image_transport::Publisher& publisher, const cv::Mat& image)
   publisher.publish(msg);
 }
 
+void publishCorrespondences(ros::Publisher& publisher,
+    const pcl::PointCloud<pcl::PointXYZ>::Ptr& source,
+    const pcl::PointCloud<pcl::PointXYZ>::Ptr& target,
+    const pcl::CorrespondencesPtr& correspondences)
+{
+  visualization_msgs::Marker line_strip;
+  line_strip.header.frame_id = "world";
+  line_strip.header.stamp = ros::Time::now();
+  line_strip.ns = "points_and_lines";
+  line_strip.action = visualization_msgs::Marker::ADD;
+  line_strip.pose.orientation.w = 1.0;
+  line_strip.id = 0;
+  line_strip.scale.x = 0.1;
+  line_strip.type = visualization_msgs::Marker::LINE_LIST;
+  line_strip.color.r = 0.0;
+  line_strip.color.g = 1.0;
+  line_strip.color.b = 0.0;
+  line_strip.color.a = 1.0;
+
+  // TODO:
+
+  publisher.publish(line_strip);
+}
+
 void publishTrajectory(ros::Publisher& publisher,
     const std::vector<Eigen::Vector3f, Eigen::aligned_allocator<Eigen::Vector3f>>& trajectory)
 {
