@@ -37,8 +37,7 @@ public:
   // ==== for GUI ====
   cv::Mat getFrame() const
   {
-    // return bridge.getFrame();
-    return cv::Mat{};
+    return bridge.getFrame();
   }
 
   Eigen::Matrix4f getT() const

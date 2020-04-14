@@ -11,7 +11,7 @@ bool Publisher::pop(Publication& p)
     return false;
   }
 
-  // p = publication[(id + 1) % 2];
+  p = publication[(id + 1) % 2];
   flags[(id + 1) % 2] = false;
   return true;
 }
