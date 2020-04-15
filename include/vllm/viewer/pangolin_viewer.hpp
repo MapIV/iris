@@ -27,11 +27,11 @@ public:
   // initialize
   void init();
 
-  // beggining and finishing for drawing
+  // begining and finishing for drawing
   void clear();
   void swap();
 
-  // beggining and finishing for loop
+  // begining and finishing for loop
   void execute();
   void startLoop();
   void quitLoop();
@@ -98,7 +98,7 @@ private:
 
   std::vector<Eigen::Matrix4f, Eigen::aligned_allocator<Eigen::Matrix4f>> imu_poses;
 
-  //   Publication publication;
+  Publication publication;
 
   map::Info localmap_info;
 

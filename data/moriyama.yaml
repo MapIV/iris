@@ -42,7 +42,7 @@ VLLM.t_init:  !!opencv-matrix
     rows: 3
     cols: 1
     dt: f
-    data: [ 10.0, 20.0, -1.0]
+    data: [ 5.0, 10.0, -1.0]
 # normal vector of camera
 VLLM.normal_init:  !!opencv-matrix
     rows: 3
@@ -55,11 +55,12 @@ VLLM.up_init:  !!opencv-matrix
     cols: 1
     dt: f
     data: [ 0,0,1]
-VLLM.s_init: 50
+VLLM.s_init: 2
 
-VLLM.pcd_file: "../../vllm-data/moriyama.pcd"
-VLLM.video_file: "../../vllm-data/moriyama-clip.mp4"
-VLLM.vocab_file: "orb_vocab.dbow2"
+VLLM.vocab_file: "../data/orb_vocab.dbow2"
+VLLM.pcd_file:   "../../vllm-data/moriyama-010.pcd"
+#VLLM.video_file: "../../vllm-data/moriyama/moriyama-clip.mp4"
+VLLM.video_file: "../../vllm-data/moriyama.avi"
 
 VLLM.iteration: 10
 VLLM.frame_skip: 1
@@ -68,7 +69,7 @@ VLLM.recollection: 50
 VLLM.scale_gain: 1.0
 VLLM.smooth_gain: 5.0
 VLLM.latitude_gain: 1.0
-VLLM.altitude_gain: 5.0
+VLLM.altitude_gain: 1.0
 
 VLLM.distance_min: 0.5
 VLLM.distance_max: 3.0

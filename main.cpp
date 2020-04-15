@@ -1,6 +1,6 @@
 #include "vllm/core/config.hpp"
-#include "vllm/imu/ekf.hpp"
-#include "vllm/imu/topic.hpp"
+// #include "vllm/imu/ekf.hpp"
+// #include "vllm/imu/topic.hpp"
 #include "vllm/map/map.hpp"
 #include "vllm/system/system.hpp"
 #include "vllm/viewer/pangolin_viewer.hpp"
@@ -47,18 +47,16 @@ int main(int argc, char* argv[])
   cv::VideoCapture video = cv::VideoCapture(config.video_file, cv::CAP_FFMPEG);
 
   // for IMU
-  vllm::TopicAnalyzer topic(config.topic_file, config.imu_file);
-  vllm::EKF ekf(config.param, config.T_init);
+  // vllm::TopicAnalyzer topic(config.topic_file, config.imu_file);
+  // vllm::EKF ekf(config.param, config.T_init);
 
   std::chrono::system_clock::time_point m_start;
   unsigned int time = 0;
   int skipped_frame = 0;
-  // int imu_least_one_observed = 0;
 
   std::vector<Eigen::Matrix4f> imu_trajectory;
 
   while (true) {
-    // bool is_topic_video = topic.isTopicVideo(time);
     bool is_topic_video = true;
 
     if (is_topic_video) {
@@ -72,20 +70,7 @@ int main(int argc, char* argv[])
         // start timer
         m_start = std::chrono::system_clock::now();
 
-        // Execution
-        Eigen::Matrix4f estimated_Tw = ekf.getState();
-        // if (pangolin_viewer.isEnabledIMU()) {
-        //   system->setImuPrediction(estimated_Tw);
-        // }
-
         int state = system->execute(frame);
-        // std::cout << "vllm " << system->getT().topRightCorner(3, 1).transpose() << std::endl;
-
-        // if (state == vllm::State::Tracking) {
-        //   imu_least_one_observed++;
-        //   if (pangolin_viewer.isEnabledIMU())
-        //     ekf.observe(system->getT(), 0);
-        // }
 
         // stop timer
         std::cout << "time= \033[35m"
@@ -104,11 +89,6 @@ int main(int argc, char* argv[])
       }
 
     } else {
-      // vllm::ImuMessage msg = topic.getImuMessage(time);
-      // ekf.predict(msg.acc, msg.omega, msg.ns);
-      // imu_trajectory.push_back(ekf.getState());
-      // pangolin_viewer.setIMU(imu_trajectory);
-      // std::cout << "imu " << ekf.getState().topRightCorner(3, 1).transpose() << std::endl;
     }
 
     time++;

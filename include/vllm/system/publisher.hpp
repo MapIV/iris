@@ -27,19 +27,12 @@ struct Publication {
 // thread safe publisher
 class Publisher
 {
-private:
-  int id;
-  bool flags[2];
-  Publication publication[2];
-  std::mutex mtx;
-
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
   Publisher()
   {
     flags[0] = flags[1] = false;
     id = 0;
-    std::cout << "##################DEBUG " << flags << std::endl;
   }
 
   bool pop(Publication& p);
@@ -52,6 +45,12 @@ public:
       const std::vector<Eigen::Vector3f, Eigen::aligned_allocator<Eigen::Vector3f>>& offset_trajectory,
       const pcl::CorrespondencesPtr& corre,
       const map::Info& localmap_info);
+
+private:
+  int id;
+  bool flags[2];
+  Publication publication[2];
+  mutable std::mutex mtx;
 };
 
 }  // namespace vllm
