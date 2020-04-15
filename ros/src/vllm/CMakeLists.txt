@@ -285,7 +285,7 @@ message(STATUS "Library of VSLAM: ${VSLAM_LIB}")
 include_directories(${catkin_INCLUDE_DIRS} ${OpenVSLAM_INCLUDE_DIR} include)
 
 # == Executable ==
-add_executable(vllm_node src/vllm_node.cpp)
+add_executable(vllm_node src/vllm_node.cpp src/communication.cpp)
 
 
 target_link_libraries(

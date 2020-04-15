@@ -1,8 +1,8 @@
 #include "vllm/core/config.hpp"
 #include "vllm/map/map.hpp"
-#include "vllm/ros_util.hpp"
 #include "vllm/system/system.hpp"
 #include "vllm/viewer/pangolin_viewer.hpp"
+#include "vllm_ros/communication.hpp"
 #include <chrono>
 #include <cv_bridge/cv_bridge.h>
 #include <fstream>
@@ -37,7 +37,7 @@ int main(int argc, char* argv[])
   ros::NodeHandle nh;
   image_transport::ImageTransport it(nh);
   cv::Mat subscribed_image;
-  image_transport::Subscriber image_subscriber = it.subscribe("camera/color/image_raw", 1, vllm::imageCallbackGenerator(subscribed_image));
+  image_transport::Subscriber image_subscriber = it.subscribe("camera/color/image_raw", 1, vllm_ros::imageCallbackGenerator(subscribed_image));
 
   // Setup publisher
   ros::Publisher target_pc_publisher = nh.advertise<pcl::PointCloud<pcl::PointXYZI>>("vllm/target_pointcloud", 1);
@@ -76,13 +76,13 @@ int main(int argc, char* argv[])
 
       // Publish for rviz
       system->popPublication(publication);
-      vllm::publishImage(image_publisher, system->getFrame());
-      vllm::publishPointcloud(source_pc_publisher, publication.cloud);
-      vllm::publishTrajectory(vllm_trajectory_publisher, publication.vllm_trajectory);
-      vllm::publishTrajectory(vslam_trajectory_publisher, publication.offset_trajectory);
-      vllm::publishCorrespondences(correspondences_publisher, publication.cloud, map->getTargetCloud(), publication.correspondences);
-      vllm::publishPose(publication.offset_camera, "vslam_pose");
-      vllm::publishPose(publication.vllm_camera, "vllm_pose");
+      vllm_ros::publishImage(image_publisher, system->getFrame());
+      vllm_ros::publishPointcloud(source_pc_publisher, publication.cloud);
+      vllm_ros::publishTrajectory(vllm_trajectory_publisher, publication.vllm_trajectory, 0);
+      vllm_ros::publishTrajectory(vslam_trajectory_publisher, publication.offset_trajectory, 1);
+      vllm_ros::publishCorrespondences(correspondences_publisher, publication.cloud, map->getTargetCloud(), publication.correspondences);
+      vllm_ros::publishPose(publication.offset_camera, "vslam_pose");
+      vllm_ros::publishPose(publication.vllm_camera, "vllm_pose");
 
       // Inform processing time
       std::stringstream ss;
@@ -95,7 +95,7 @@ int main(int argc, char* argv[])
     // Publish target pointcloud map
     if (++loop_count >= 50) {
       loop_count = 0;
-      vllm::publishPointcloud(target_pc_publisher, map->getTargetCloud());
+      vllm_ros::publishPointcloud(target_pc_publisher, map->getTargetCloud());
     }
 
     // Spin and wait

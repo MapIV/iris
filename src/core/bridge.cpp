@@ -187,10 +187,9 @@ void BridgeOpenVSLAM::requestReset()
 {
   if (!SLAM_ptr->reset_is_requested())
     SLAM_ptr->request_reset();
-}
 
-void BridgeOpenVSLAM::execute(const cv::Mat& image)
-{
-  SLAM_ptr->feed_monocular_frame(image, 0.05, cv::Mat{});
-}
+  void BridgeOpenVSLAM::execute(const cv::Mat& image)
+  {
+    SLAM_ptr->feed_monocular_frame(image, 0.05, cv::Mat{});
+  }
 }  // namespace vllm

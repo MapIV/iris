@@ -42,20 +42,21 @@ VLLM.t_init:  !!opencv-matrix
     rows: 3
     cols: 1
     dt: f
-    data: [ 1.0, -1.0, 0.0]
+    data: [ 2.0, -2.0, 0.0]
 # normal vector of camera
 VLLM.normal_init:  !!opencv-matrix
     rows: 3
     cols: 1
     dt: f
-    data: [ 1,0.9,0]
+    data: [ 1,0.0,0]
 # up vector of camera
 VLLM.up_init:  !!opencv-matrix
     rows: 3
     cols: 1
     dt: f
     data: [ 0,0,1]
-VLLM.s_init: 3.0
+VLLM.s_init: 0.8
+#VLLM.s_init: 3.0 // for non-ros
 
 VLLM.vocab_file: "../data/orb_vocab.dbow2"
 VLLM.pcd_file:   "../../vllm-data/asano-050.pcd"
