@@ -1,3 +1,4 @@
+#include "vllm/bridge/bridge.hpp"
 #include "vllm/core/config.hpp"
 #include "vllm/map/map.hpp"
 #include "vllm/system/system.hpp"
@@ -60,23 +61,43 @@ int main(int argc, char* argv[])
   std::shared_ptr<vllm::System> system = std::make_shared<vllm::System>(config, map);
   std::chrono::system_clock::time_point m_start;
 
+  // Setup for OpenVSLAM
+  vllm::pcXYZ::Ptr vslam_points(new vllm::pcXYZ);
+  vllm::pcNormal::Ptr vslam_normals(new vllm::pcNormal);
+  std::vector<float> vslam_weights;
+  vllm::BridgeOpenVSLAM bridge;
+  bridge.setup(config);
+
   ros::Rate loop_10Hz(10);
   int loop_count = 0;
+  float accuracy = 0.5f;
 
   // Main loop
   while (ros::ok()) {
     if (!subscribed_image.empty()) {
       m_start = std::chrono::system_clock::now();
 
-      // Execution
-      system->execute(subscribed_image);
+      // process OpenVSLAM
+      bridge.execute(subscribed_image);
+      bridge.setCriteria(30, accuracy);
+      bridge.getLandmarksAndNormals(vslam_points, vslam_normals, vslam_weights);
+      subscribed_image = cv::Mat();  // Reset input
 
-      // Reset input
-      subscribed_image = cv::Mat();
+      // Update threshold to adjust the number of points
+      if (vslam_points->size() < 300 && accuracy > 0.10) accuracy -= 0.01f;
+      if (vslam_points->size() > 500 && accuracy < 0.90) accuracy += 0.01f;
+
+      // Execution
+      system->execute(
+          bridge.getState(),
+          bridge.getCameraPose().inverse(),
+          vslam_points,
+          vslam_normals,
+          vslam_weights);
 
       // Publish for rviz
       system->popPublication(publication);
-      vllm_ros::publishImage(image_publisher, system->getFrame());
+      vllm_ros::publishImage(image_publisher, bridge.getFrame());
       vllm_ros::publishPointcloud(source_pc_publisher, publication.cloud);
       vllm_ros::publishTrajectory(vllm_trajectory_publisher, publication.vllm_trajectory, 0);
       vllm_ros::publishTrajectory(vslam_trajectory_publisher, publication.offset_trajectory, 1);

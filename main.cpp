@@ -48,7 +48,7 @@ int main(int argc, char* argv[])
   std::chrono::system_clock::time_point m_start;
   int skipped_frame = 0;
 
-  float accuracy = 0.5;
+  float accuracy = 0.5f;
 
   while (true) {
 
@@ -67,8 +67,8 @@ int main(int argc, char* argv[])
       bridge.setCriteria(30, accuracy);
       bridge.getLandmarksAndNormals(vslam_points, vslam_normals, vslam_weights);
       // Update threshold to adjust the number of points
-      if (vslam_points->size() < 300 && accuracy > 0.10) accuracy -= 0.01;
-      if (vslam_points->size() > 500 && accuracy < 0.90) accuracy += 0.01;
+      if (vslam_points->size() < 300 && accuracy > 0.10f) accuracy -= 0.01f;
+      if (vslam_points->size() > 500 && accuracy < 0.90f) accuracy += 0.01f;
 
 
       int vllm_state = system->execute(bridge.getState(), bridge.getCameraPose().inverse(), vslam_points, vslam_normals, vslam_weights);

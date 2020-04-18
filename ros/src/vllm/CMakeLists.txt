@@ -284,10 +284,9 @@ message(STATUS "Library of VSLAM: ${VSLAM_LIB}")
 # == include ==
 include_directories(${catkin_INCLUDE_DIRS} ${OpenVSLAM_INCLUDE_DIR} include)
 
-# == Executable ==
+# === VLLM_NODE ===
 add_executable(vllm_node src/vllm_node.cpp src/communication.cpp)
-
-
+target_compile_definitions(vllm_node PUBLIC USE_DBOW2)
 target_link_libraries(
   vllm_node
   ${catkin_LIBRARIES}
@@ -301,6 +300,21 @@ target_link_libraries(
   ${CXSPARSE_LIBRARIES}
   ${SUITESPARSE_LIBRARIES}
   ${LAPACK_LIBRARIES}
-  )
+)
 
-target_compile_definitions(vllm_node PUBLIC USE_DBOW2)
+# === VSLAM_NODE ===
+add_executable(vslam_node src/vslam_node.cpp src/communication.cpp)
+target_compile_definitions(vslam_node PUBLIC USE_DBOW2)
+target_link_libraries(
+  vslam_node
+  ${catkin_LIBRARIES}
+  ${OpenCV_LIBS}
+  ${PCL_LIBRARIES}
+  pthread
+  ${VLLM_LIB}
+  ${VSLAM_LIB}
+  ${G2O_LIBS}
+  ${CXSPARSE_LIBRARIES}
+  ${SUITESPARSE_LIBRARIES}
+  ${LAPACK_LIBRARIES}
+)
