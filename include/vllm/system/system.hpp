@@ -9,7 +9,6 @@
 #include "vllm/system/publisher.hpp"
 #include <atomic>
 #include <memory>
-#include <pcl/registration/correspondence_rejection_distance.h>
 
 namespace vllm
 {
@@ -26,10 +25,6 @@ public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
   // ===== for Main ====
-  System()
-  {
-    std::cout << "kuda" << std::endl;
-  }
   System(const Config& config_, const std::shared_ptr<map::Map>& map_);
   int execute(const cv::Mat& image);
 
@@ -89,15 +84,32 @@ public:
   {
     recollection.store(recollection_);
   }
+  Eigen::Matrix4f getTWorld() const
+  {
+    return T_world;
+  }
 
-  // for ROS
-  Eigen::Matrix4f ros_vllm_pose;
-  Eigen::Matrix4f ros_vslam_pose;
-  pcXYZ::Ptr ros_pointcloud;
+  // TODO:NOTE: This is not thread safe
+  void specifyTWorld(const Eigen::Matrix4f& specified_T_world)
+  {
+    std::cout << "last T_align\n"
+              << T_align << std::endl;
 
-  // TODO: put them into private
-  std::vector<Eigen::Vector3f, Eigen::aligned_allocator<Eigen::Vector3f>> vllm_trajectory;
-  std::vector<Eigen::Vector3f, Eigen::aligned_allocator<Eigen::Vector3f>> offset_trajectory;
+    float scale = util::getScale(T_world);
+    auto tmp = util::applyScaling(specified_T_world, scale);
+    std::cout << "debug\n"
+              << tmp << std::endl;
+    T_align = tmp * vslam_camera.inverse();
+
+    std::cout << "new T_align\n"
+              << T_align << std::endl;
+  }
+
+  // TODO:NOTE: This is not thread safe.
+  void specifyScale(const float scale)
+  {
+    T_align = util::applyScaling(T_align, scale);
+  }
 
 private:
   // ==== private member ====
@@ -105,6 +117,9 @@ private:
   optimize::Config optimize_config;
   optimize::Optimizer optimizer;
   mutable std::mutex optimize_gain_mutex;
+
+  std::vector<Eigen::Vector3f, Eigen::aligned_allocator<Eigen::Vector3f>> vllm_trajectory;
+  std::vector<Eigen::Vector3f, Eigen::aligned_allocator<Eigen::Vector3f>> offset_trajectory;
 
   State state;
 
@@ -118,6 +133,7 @@ private:
   Eigen::Matrix4f T_align = Eigen::Matrix4f::Identity();
   Eigen::Matrix4f T_world = Eigen::Matrix4f::Identity();
   Eigen::Matrix4f T_imu = Eigen::Matrix4f::Zero();
+  Eigen::Matrix4f vslam_camera = Eigen::Matrix4f::Identity();
 
   pcl::CorrespondencesPtr correspondences;
 

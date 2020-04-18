@@ -11,7 +11,6 @@ namespace vllm
 System::System(const Config& config_, const std::shared_ptr<map::Map>& map_)
 {
   config = config_;
-  ros_pointcloud = pcXYZ::Ptr(new pcXYZ);
   correspondences = pcl::CorrespondencesPtr(new pcl::Correspondences);
   map = map_;
 
@@ -61,7 +60,6 @@ int System::execute(const cv::Mat& image)
   // Execute vSLAM
   bridge.execute(image);
   int vslam_state = static_cast<int>(bridge.getState());
-  Eigen::Matrix4f vslam_camera = Eigen::Matrix4f::Identity();
 
   // Artifical reset
   if (reset_requested.load()) {
@@ -91,7 +89,7 @@ int System::execute(const cv::Mat& image)
 
   // =======================
   if (state == State::Lost) {
-    std::cout << "vllm::Lost has not been implemented yet." << std::endl;
+    std::cerr << "\033[31mvllm::Lost has not been implemented yet.\033[m" << std::endl;
     exit(1);
 
     // // "2" means openvslam::tracking_state_t::Tracking
@@ -107,7 +105,7 @@ int System::execute(const cv::Mat& image)
 
   // ====================
   if (state == State::Relocalizing) {
-    std::cout << "vllm::Relocalization has not been implemented yet." << std::endl;
+    std::cerr << "\033[31mvllm::Relocalization has not been implemented yet.\033[m" << std::endl;
     exit(1);
     // state = State::Tracking;
     // int period = bridge.getPeriodFromInitialId();
@@ -161,7 +159,6 @@ int System::execute(const cv::Mat& image)
       T_imu.setZero();
     }
 
-
     optimize::Outcome outcome = optimizer.optimize(map, raw_keypoints, vslam_camera, estimator, T_initial_align, vllm_history, weights);
 
     // Retrieve outcome
@@ -193,16 +190,11 @@ int System::execute(const cv::Mat& image)
 
   // Pubush for the viewer
   vllm_trajectory.push_back(T_world.topRightCorner(3, 1));
-  offset_trajectory.push_back((config.T_init * vslam_camera).topRightCorner(3, 1));  // TODO: it was offset_camera
+  offset_trajectory.push_back((config.T_init * vslam_camera).topRightCorner(3, 1));
   publisher.push(
       T_align, T_world, config.T_init * vslam_camera,
       raw_keypoints, vllm_trajectory,
       offset_trajectory, correspondences, localmap_info);
-
-  ros_vllm_pose = util::normalizePose(T_world);
-  ros_vslam_pose = util::normalizePose(config.T_init * vslam_camera);
-  pcl::transformPointCloud(*raw_keypoints.cloud, *ros_pointcloud, T_align);
-
 
   return state;
 }

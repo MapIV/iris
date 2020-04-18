@@ -36,6 +36,31 @@ Eigen::Matrix3f normalize_(const Eigen::Matrix3f& R)
 }
 }  // namespace
 
+Eigen::Matrix4f make3DPoseFrom2DPose(float x, float y, float nx, float ny)
+{
+  Eigen::Matrix4f T;
+  T.setIdentity();
+
+  T(0, 3) = x;
+  T(1, 3) = y;
+  float theta = std::atan2(ny, nx);
+  Eigen::Matrix3f R;
+  R << 0, 0, 1,
+      -1, 0, 0,
+      0, -1, 0;
+  T.topLeftCorner(3, 3) = Eigen::AngleAxisf(theta, Eigen::Vector3f::UnitZ()).toRotationMatrix() * R;
+  return T;
+}
+
+Eigen::Matrix4f applyScaling(const Eigen::Matrix4f& T, float scale)
+{
+  Eigen::Matrix3f R = normalizeRotation(T);
+  Eigen::Matrix4f scaled;
+  scaled.setIdentity();
+  scaled.rightCols(1) = T.rightCols(1);
+  scaled.topLeftCorner(3, 3) = scale * R;
+  return scaled;
+}
 
 // get scale factor from rotation matrix
 float getScale(const Eigen::MatrixXf& A)
@@ -100,6 +125,7 @@ void loadMap(
 
   return;
 }
+
 
 void transformNormals(const pcNormal& source, pcNormal& target, const Eigen::Matrix4f& T)
 {

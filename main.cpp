@@ -1,6 +1,4 @@
 #include "vllm/core/config.hpp"
-// #include "vllm/imu/ekf.hpp"
-// #include "vllm/imu/topic.hpp"
 #include "vllm/map/map.hpp"
 #include "vllm/system/system.hpp"
 #include "vllm/viewer/pangolin_viewer.hpp"
@@ -46,10 +44,6 @@ int main(int argc, char* argv[])
   // video
   cv::VideoCapture video = cv::VideoCapture(config.video_file, cv::CAP_FFMPEG);
 
-  // for IMU
-  // vllm::TopicAnalyzer topic(config.topic_file, config.imu_file);
-  // vllm::EKF ekf(config.param, config.T_init);
-
   std::chrono::system_clock::time_point m_start;
   unsigned int time = 0;
   int skipped_frame = 0;
@@ -83,6 +77,21 @@ int main(int argc, char* argv[])
         if (key == 'q') break;
         if (key == 's') {
           while (key == 's') key = cv::waitKey(0);
+        }
+        if (key == 'f') {
+          std::cout << "\033[2J\033[1;1H";
+          std::cout << "current T_world\n"
+                    << system->getTWorld() << std::endl;
+          std::cout << "Please specify pose to recover the localization." << std::endl;
+          std::cout << "The format is 'x y nx ny', where (nx,ny) is not necesary to be normalized." << std::endl;
+          std::cout << "ex)'2.0  -1.45 -1.5 0.7[Enter]'" << std::endl;
+          float x, y, nx, ny;
+          std::cin >> x >> y >> nx >> ny;
+          Eigen::Matrix4f T = vllm::util::make3DPoseFrom2DPose(x, y, nx, ny);
+
+          std::cout << "new Pose\n"
+                    << T << std::endl;
+          system->specifyTWorld(T);
         }
       } else {
         // std::cout << "image skip" << std::endl;

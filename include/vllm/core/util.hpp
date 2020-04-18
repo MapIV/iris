@@ -9,11 +9,12 @@ namespace vllm
 {
 namespace util
 {
-// get scale factor from a rotation matrix or a pose matrix
 float getScale(const Eigen::MatrixXf& A);
+Eigen::Matrix4f applyScaling(const Eigen::Matrix4f& T, float scale);
 Eigen::Matrix3f normalizeRotation(const Eigen::MatrixXf& A);
 Eigen::Matrix4f normalizePose(const Eigen::Matrix4f& T);
 
+Eigen::Matrix4f make3DPoseFrom2DPose(float x, float y, float nx, float ny);
 
 // load
 // pcl::PointCloud<pcl::PointXYZ>::Ptr loadPointCloud(const std::string& pcd_file);
