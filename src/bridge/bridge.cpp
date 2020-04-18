@@ -1,4 +1,5 @@
-#include "vllm/core/bridge.hpp"
+#include "vllm/bridge/bridge.hpp"
+#include "openvslam/config.h"
 #include "openvslam/data/landmark.h"
 #include "openvslam/publish/frame_publisher.h"
 #include "openvslam/publish/map_publisher.h"
@@ -12,10 +13,6 @@
 #include <opencv2/videoio.hpp>
 #include <popl.hpp>
 #include <spdlog/spdlog.h>
-
-#ifdef USE_STACK_TRACE_LOGGER
-#include <glog/logging.h>
-#endif
 
 namespace vllm
 {
@@ -36,11 +33,6 @@ BridgeOpenVSLAM::~BridgeOpenVSLAM()
 
 void BridgeOpenVSLAM::setup(const Config& config)
 {
-#ifdef USE_STACK_TRACE_LOGGER
-  google::InitGoogleLogging(argv[0]);
-  google::InstallFailureSignalHandler();
-#endif
-
   // setup logger
   spdlog::set_pattern("[%Y-%m-%d %H:%M:%S.%e] %^[%L] %v%$");
   spdlog::set_level(spdlog::level::info);
@@ -66,59 +58,19 @@ void BridgeOpenVSLAM::setup(const Config& config)
   SLAM_ptr->disable_loop_detector();
 }
 
-void BridgeOpenVSLAM::getLandmarks(
-    pcl::PointCloud<pcl::PointXYZ>::Ptr& local_cloud,
-    pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud) const
-{
-  std::vector<openvslam::data::landmark*> landmarks;
-  std::set<openvslam::data::landmark*> local_landmarks;
-  SLAM_ptr->get_map_publisher()->get_landmarks(landmarks, local_landmarks);
-
-  if (landmarks.empty()) return;
-
-  for (const auto lm : landmarks) {
-    if (!lm || lm->will_be_erased()) {
-      continue;
-    }
-    if (local_landmarks.count(lm)) {
-      continue;
-    }
-    const openvslam::Vec3_t pos = lm->get_pos_in_world();
-    pcl::PointXYZ p(
-        static_cast<float>(pos.x()),
-        static_cast<float>(pos.y()),
-        static_cast<float>(pos.z()));
-
-    cloud->push_back(p);
-  }
-
-  for (const auto local_lm : local_landmarks) {
-    if (local_lm->will_be_erased()) {
-      continue;
-    }
-    const openvslam::Vec3_t pos = local_lm->get_pos_in_world();
-    pcl::PointXYZ p(
-        static_cast<float>(pos.x()),
-        static_cast<float>(pos.y()),
-        static_cast<float>(pos.z()));
-    local_cloud->push_back(p);
-  }
-  return;
-}
-
-unsigned int BridgeOpenVSLAM::getPeriodFromInitialId()
+unsigned int BridgeOpenVSLAM::getPeriodFromInitialId() const
 {
   return SLAM_ptr->get_frame_publisher()->period_from_initial_id_;
 }
 
 
-void BridgeOpenVSLAM::getLandmarksAndNormals(
-    pcl::PointCloud<pcl::PointXYZ>::Ptr& local_cloud,
-    pcl::PointCloud<pcl::Normal>::Ptr& normals,
-    std::vector<float>& weights,
-    unsigned int recollection,
-    double accuracy) const
+void BridgeOpenVSLAM::getLandmarksAndNormals(pcXYZ::Ptr& local_cloud, pcNormal::Ptr& normals, std::vector<float>& weights) const
 {
+  if (recollection == 0 || accuracy < 0) {
+    std::cerr << "ERROR: recollection & accuracy are not set" << std::endl;
+    exit(1);
+  }
+
   std::vector<openvslam::data::landmark*> landmarks;
   std::set<openvslam::data::landmark*> local_landmarks;
   SLAM_ptr->get_map_publisher()->get_landmarks(landmarks, local_landmarks);
@@ -140,7 +92,9 @@ void BridgeOpenVSLAM::getLandmarksAndNormals(
     const openvslam::Vec3_t normal = local_lm->get_obs_mean_normal();
 
     float weight = 1.0;
+    // NOTE:OBSL: Newly observed points have priority
     // weight = static_cast<float>(recollection - (max_id - first_observed_id)) / static_cast<float>(recollection);
+
     if (weight < 0.1f) weight = 0.1f;
     if (weight > 1.0f) weight = 1.0f;
     weights.push_back(weight);
@@ -157,14 +111,11 @@ void BridgeOpenVSLAM::getLandmarksAndNormals(
         static_cast<float>(normal.z()));
     normals->push_back(n);
   }
+
   std::cout
       << "landmark ratio \033[34m" << local_cloud->size()
       << "\033[m / \033[34m" << local_landmarks.size()
-      << "\033[m , latest keyframe \033[34m" << max_id
-      << "\033[m , recollection \033[34m" << recollection
-      << "\033[m , accuracy  \033[34m" << accuracy
       << "\033[m" << std::endl;
-
   return;
 }
 
@@ -178,9 +129,9 @@ cv::Mat BridgeOpenVSLAM::getFrame() const
   return SLAM_ptr->get_frame_publisher()->draw_frame();
 }
 
-Eigen::Matrix4d BridgeOpenVSLAM::getCameraPose() const
+Eigen::Matrix4f BridgeOpenVSLAM::getCameraPose() const
 {
-  return SLAM_ptr->get_map_publisher()->get_current_cam_pose();
+  return SLAM_ptr->get_map_publisher()->get_current_cam_pose().cast<float>();
 }
 
 void BridgeOpenVSLAM::requestReset()
@@ -193,4 +144,20 @@ void BridgeOpenVSLAM::execute(const cv::Mat& image)
 {
   SLAM_ptr->feed_monocular_frame(image, 0.05, cv::Mat{});
 }
+
+void BridgeOpenVSLAM::setCriteria(unsigned int recollection_, float accuracy_)
+{
+  recollection = recollection_;
+  accuracy = accuracy_;
+
+  if (recollection < 1) recollection = 1;
+  if (accuracy < 0.1f) accuracy = 0.1f;
+  if (accuracy > 1.0f) accuracy = 1.0f;
+}
+
+std::pair<unsigned int, float> BridgeOpenVSLAM::getCriteria() const
+{
+  return {recollection, accuracy};
+}
+
 }  // namespace vllm

@@ -1,5 +1,5 @@
 #pragma once
-#include "vllm/core/bridge.hpp"
+#include "vllm/bridge/bridge.hpp"
 #include "vllm/core/config.hpp"
 #include "vllm/core/types.hpp"
 #include "vllm/core/util.hpp"

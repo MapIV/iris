@@ -135,10 +135,11 @@ int System::execute(const cv::Mat& image)
   // ====================
   if (state == State::Tracking) {
     // Get valid camera pose in vSLAM world
-    vslam_camera = bridge.getCameraPose().inverse().cast<float>();
+    vslam_camera = bridge.getCameraPose().inverse();
 
     // Get keypoints cloud with normals
-    bridge.getLandmarksAndNormals(raw_keypoints.cloud, raw_keypoints.normals, weights, recollection.load(), accuracy);
+    bridge.setCriteria(30, 0.5);
+    bridge.getLandmarksAndNormals(raw_keypoints.cloud, raw_keypoints.normals, weights);
 
     // Update threshold to adjust the number of points
     if (raw_keypoints.cloud->size() < 300 && accuracy > 0.10) accuracy -= 0.01;
