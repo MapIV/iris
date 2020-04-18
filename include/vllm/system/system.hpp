@@ -12,7 +12,7 @@
 
 namespace vllm
 {
-enum State {
+enum VllmState {
   Inittializing = 0,
   Tracking = 1,
   Lost = 2,
@@ -26,15 +26,11 @@ public:
 
   // ===== for Main ====
   System(const Config& config_, const std::shared_ptr<map::Map>& map_);
-  int execute(const cv::Mat& image);
+
+  int execute(int vslam_state, const Eigen::Matrix4f& T_vslam, const pcXYZ::Ptr& vslam_points,
+      const pcNormal::Ptr& vslam_normals, const std::vector<float>& vslam_weights);
 
 public:
-  // ==== for GUI ====
-  cv::Mat getFrame() const
-  {
-    return bridge.getFrame();
-  }
-
   Eigen::Matrix4f getT() const
   {
     return T_world;
@@ -121,7 +117,7 @@ private:
   std::vector<Eigen::Vector3f, Eigen::aligned_allocator<Eigen::Vector3f>> vllm_trajectory;
   std::vector<Eigen::Vector3f, Eigen::aligned_allocator<Eigen::Vector3f>> offset_trajectory;
 
-  State state;
+  VllmState vllm_state;
 
   std::atomic<unsigned int> recollection;
 
@@ -136,12 +132,7 @@ private:
   Eigen::Matrix4f vslam_camera = Eigen::Matrix4f::Identity();
 
   pcl::CorrespondencesPtr correspondences;
-
   crrspEstimator estimator;
-
-  BridgeOpenVSLAM bridge;
-  double accuracy = 0.5;
-  std::vector<float> weights;
 
   map::Info localmap_info;
   Publisher publisher;

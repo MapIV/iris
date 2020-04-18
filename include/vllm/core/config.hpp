@@ -20,6 +20,11 @@ struct Config {
     self_path = yaml_file;
 
     cv::FileStorage fs(yaml_file, cv::FileStorage::READ);
+    if (!fs.isOpened()) {
+      std::cout << "can not open " << yaml_file << std::endl;
+      exit(1);
+    }
+
     {
       cv::Mat trans, normal, up;
       float s;

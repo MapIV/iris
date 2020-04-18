@@ -15,10 +15,7 @@ System::System(const Config& config_, const std::shared_ptr<map::Map>& map_)
   map = map_;
 
   // System starts in initialization mode
-  state = State::Inittializing;
-
-  // Setup for OpenVSLAM
-  bridge.setup(config);
+  vllm_state = VllmState::Inittializing;
 
   // Setup correspondence estimator
   estimator.setInputTarget(map->getTargetCloud());
@@ -55,96 +52,34 @@ System::System(const Config& config_, const std::shared_ptr<map::Map>& map_)
     vllm_history.push_front(T_world);
 }
 
-int System::execute(const cv::Mat& image)
+int System::execute(int vslam_state, const Eigen::Matrix4f& T_vslam, const pcXYZ::Ptr& vslam_points,
+    const pcNormal::Ptr& vslam_normals, const std::vector<float>& vslam_weights)
 {
-  // Execute vSLAM
-  bridge.execute(image);
-  int vslam_state = static_cast<int>(bridge.getState());
-
-  // Artifical reset
-  if (reset_requested.load()) {
-    reset_requested.store(false);
-    T_align = Eigen::Matrix4f::Identity();
-  }
-
-  // "3" means openvslam::tracking_state_t::Lost
-  if (vslam_state == 3) {
-    std::cout << "\n\033[33m ##### Request Reset #####\n\033[m" << std::endl;
-    bridge.requestReset();
-    state = State::Lost;
-  }
-
-  KeypointsWithNormal raw_keypoints;
+  KeypointsWithNormal vslam_keypoints;
+  vslam_keypoints.cloud = vslam_points;
+  vslam_keypoints.normals = vslam_normals;
 
   // ====================
-  if (state == State::Inittializing) {
-
-    // "2" means openvslam::tracking_state_t::Tracking
-    if (vslam_state == 2) state = State::Tracking;
-
-    // ######################
+  if (vllm_state == VllmState::Inittializing) {
+    // NOTE: "2" means openvslam::tracking_state_t::Tracking
+    if (vslam_state == 2) vllm_state = VllmState::Tracking;
     T_align = T_world;
-    // ######################
   }
 
   // =======================
-  if (state == State::Lost) {
-    std::cerr << "\033[31mvllm::Lost has not been implemented yet.\033[m" << std::endl;
+  if (vllm_state == VllmState::Lost) {
+    std::cerr << "\033[31mVllmState::Lost has not been implemented yet.\033[m" << std::endl;
     exit(1);
-
-    // // "2" means openvslam::tracking_state_t::Tracking
-    // if (vslam_state == 2) state = State::Relocalizing;
-
-    // if (vllm_velocity.isZero()) vllm_velocity = optimize::calcVelocity(vllm_history);
-    // Eigen::Matrix4f last_vllm_camera = *vllm_history.begin();
-
-    // // ######################
-    // T_align = T_world;
-    // // ######################
   }
 
   // ====================
-  if (state == State::Relocalizing) {
-    std::cerr << "\033[31mvllm::Relocalization has not been implemented yet.\033[m" << std::endl;
+  if (vllm_state == VllmState::Relocalizing) {
+    std::cerr << "\033[31mVllmState::Relocalizing has not been implemented yet.\033[m" << std::endl;
     exit(1);
-    // state = State::Tracking;
-    // int period = bridge.getPeriodFromInitialId();
-    // std::cout << "====== period " << period << " ======" << std::endl;
-    // std::cout << "vllm_velocity\n"
-    //           << vllm_velocity << std::endl;
-
-    // Eigen::Matrix4f tmp = T_init;
-    // Eigen::Matrix4f inv = vllm_velocity.inverse();
-    // for (int i = 0; i < period; i++) {
-    //   tmp = inv * tmp;
-    // }
-    // // Reset velocity
-    // vllm_velocity.setZero();
-
-    // Eigen::Vector3f dx = (tmp - T_init).topRightCorner(3, 1);
-    // float drift = std::max(dx.norm(), 0.01f);
-    // std::cout << "drift " << drift << std::endl;
-
-    // Eigen::Matrix3f sR = T_init.topLeftCorner(3, 3);
-    // // ######################
-    // T_init.topLeftCorner(3, 3) = drift * sR;
-    // T_align.setIdentity();
-    // // ######################
   }
 
   // ====================
-  if (state == State::Tracking) {
-    // Get valid camera pose in vSLAM world
-    vslam_camera = bridge.getCameraPose().inverse();
-
-    // Get keypoints cloud with normals
-    bridge.setCriteria(30, 0.5);
-    bridge.getLandmarksAndNormals(raw_keypoints.cloud, raw_keypoints.normals, weights);
-
-    // Update threshold to adjust the number of points
-    if (raw_keypoints.cloud->size() < 300 && accuracy > 0.10) accuracy -= 0.01;
-    if (raw_keypoints.cloud->size() > 500 && accuracy < 0.90) accuracy += 0.01;
-
+  if (vllm_state == VllmState::Tracking) {
     // Optimization
     updateOptimizeGain();
     optimizer.setConfig(optimize_config);
@@ -153,14 +88,8 @@ int System::execute(const cv::Mat& image)
     std::cout << "T_align\n"
               << T_align << std::endl;
 
-    if (!T_imu.isZero()) {
-      std::cout << "T_imu * (T_vslam)^-1\n"
-                << T_imu * (vslam_camera.inverse()) << std::endl;
-      T_initial_align = T_imu * vslam_camera.inverse();  // Feedback!!
-      T_imu.setZero();
-    }
-
-    optimize::Outcome outcome = optimizer.optimize(map, raw_keypoints, vslam_camera, estimator, T_initial_align, vllm_history, weights);
+    optimize::Outcome outcome = optimizer.optimize(
+        map, vslam_keypoints, T_vslam, estimator, T_initial_align, vllm_history, vslam_weights);
 
     // Retrieve outcome
     correspondences = outcome.correspondences;
@@ -170,9 +99,7 @@ int System::execute(const cv::Mat& image)
   }
 
   // update the pose in the world
-  T_world = T_align * vslam_camera;
-  std::cout << "final T_world\n"
-            << T_world << std::endl;
+  T_world = T_align * T_vslam;
 
   // Update local map
   map->informCurrentPose(T_world);
@@ -191,12 +118,12 @@ int System::execute(const cv::Mat& image)
 
   // Pubush for the viewer
   vllm_trajectory.push_back(T_world.topRightCorner(3, 1));
-  offset_trajectory.push_back((config.T_init * vslam_camera).topRightCorner(3, 1));
+  offset_trajectory.push_back((config.T_init * T_vslam).topRightCorner(3, 1));
   publisher.push(
-      T_align, T_world, config.T_init * vslam_camera,
-      raw_keypoints, vllm_trajectory,
+      T_align, T_world, config.T_init * T_vslam,
+      vslam_keypoints, vllm_trajectory,
       offset_trajectory, correspondences, localmap_info);
 
-  return state;
+  return vllm_state;
 }
 }  // namespace vllm

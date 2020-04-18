@@ -77,6 +77,7 @@ void BridgeOpenVSLAM::getLandmarksAndNormals(pcXYZ::Ptr& local_cloud, pcNormal::
 
   local_cloud->clear();
   normals->clear();
+  weights.clear();
 
   if (local_landmarks.empty()) return;
 
@@ -143,6 +144,10 @@ void BridgeOpenVSLAM::requestReset()
 void BridgeOpenVSLAM::execute(const cv::Mat& image)
 {
   SLAM_ptr->feed_monocular_frame(image, 0.05, cv::Mat{});
+  if (SLAM_ptr->get_frame_publisher()->get_tracking_state() == openvslam::tracker_state_t::Lost) {
+    std::cout << "\n\033[33m ##### Request Reset #####\n\033[m" << std::endl;
+    requestReset();
+  }
 }
 
 void BridgeOpenVSLAM::setCriteria(unsigned int recollection_, float accuracy_)
