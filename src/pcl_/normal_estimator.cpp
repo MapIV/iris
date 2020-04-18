@@ -41,6 +41,7 @@
 #ifndef PCL_FEATURES_IMPL_NORMAL_3D_H_
 #define PCL_FEATURES_IMPL_NORMAL_3D_H_
 
+#include "vllm/pcl_/normal_estimator.hpp"
 // #include "vllm/pcl_/normal_estimator.hpp"
 
 namespace vllm
@@ -86,6 +87,8 @@ void NormalEstimation<PointInT, PointOutT>::computeFeature(PointCloudOut& output
     }
   }
 }
+template class NormalEstimation<pcl::PointXYZ, pcl::Normal>;
+
 }  // namespace pcl_
 }  // namespace vllm
 

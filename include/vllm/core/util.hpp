@@ -26,7 +26,6 @@ void loadMap(
     float grid_leaf, float radius);
 
 // normal
-pcl::PointCloud<pcl::Normal>::Ptr estimateNormals(const pcXYZ::Ptr& cloud, float leaf);
 void transformNormals(const pcNormal& source, pcNormal& target, const Eigen::Matrix4f& T);
 
 // randomize

@@ -40,7 +40,6 @@
 #define PCL_REGISTRATION_IMPL_CORRESPONDENCE_ESTIMATION_BACK_PROJECTION_HPP_
 
 #include "vllm/pcl_/correspondence_estimator.hpp"
-#include <iostream>
 #include <pcl/common/copy_point.h>
 
 namespace vllm
@@ -85,6 +84,7 @@ void CorrespondenceEstimationBackProjection<PointSource, PointTarget, NormalT, S
   // Check if the template types are the same. If true, avoid a copy.
   // Both point types MUST be registered using the POINT_CLOUD_REGISTER_POINT_STRUCT macro!
   if (pcl::isSamePointType<PointSource, PointTarget>()) {
+
     PointTarget pt;
     // Iterate over the input set of source indices
     for (std::vector<int>::const_iterator idx_i = indices_->begin(); idx_i != indices_->end(); ++idx_i) {
@@ -130,41 +130,12 @@ void CorrespondenceEstimationBackProjection<PointSource, PointTarget, NormalT, S
     }
   } else {
     PCL_WARN("called the NOT implemented function in CorrespondenceEstimationBackprojection::determinCorrespondence!\n", getClassName().c_str());
-    // PointTarget pt;
-
-    // // Iterate over the input set of source indices
-    // for (std::vector<int>::const_iterator idx_i = indices_->begin(); idx_i != indices_->end(); ++idx_i) {
-    //   tree_->nearestKSearch(input_->points[*idx_i], k_, nn_indices, nn_dists);
-
-    //   // Among the K nearest neighbours find the one with minimum perpendicular distance to the normal
-    //   min_dist = std::numeric_limits<float>::max();
-
-    //   // Find the best correspondence
-    //   for (size_t j = 0; j < nn_indices.size(); j++) {
-    //     PointSource pt_src;
-    //     // Copy the source data to a target PointTarget format so we can search in the tree
-    //     copyPoint(input_->points[*idx_i], pt_src);
-
-    //     float cos_angle = source_normals_->points[*idx_i].normal_x * target_normals_->points[nn_indices[j]].normal_x + source_normals_->points[*idx_i].normal_y * target_normals_->points[nn_indices[j]].normal_y + source_normals_->points[*idx_i].normal_z * target_normals_->points[nn_indices[j]].normal_z;
-    //     float dist = nn_dists[j] * (2.0f - cos_angle * cos_angle);
-
-    //     if (dist < min_dist) {
-    //       min_dist = dist;
-    //       min_index = static_cast<int>(j);
-    //     }
-    //   }
-    //   if (min_dist > max_distance)
-    //     continue;
-
-    //   corr.index_query = *idx_i;
-    //   corr.index_match = nn_indices[min_index];
-    //   corr.distance = nn_dists[min_index];  //min_dist;
-    //   correspondences[nr_valid_correspondences++] = corr;
-    // }
   }
   correspondences.resize(nr_valid_correspondences);
   deinitCompute();
 }
+template class CorrespondenceEstimationBackProjection<pcl::PointXYZ, pcl::PointXYZ, pcl::Normal>;
+
 }  // namespace pcl_
 }  // namespace vllm
 

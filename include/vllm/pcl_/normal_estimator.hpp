@@ -322,7 +322,6 @@ protected:
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 };
+
 }  // namespace pcl_
 }  // namespace vllm
-
-#include "vllm/pcl_/normal_estimator_impl.hpp"
