@@ -8,37 +8,54 @@
 #include <cv_bridge/cv_bridge.h>
 #include <fstream>
 #include <image_transport/image_transport.h>
+#include <message_filters/subscriber.h>
+#include <message_filters/time_synchronizer.h>
 #include <opencv2/opencv.hpp>
 #include <popl.hpp>
 #include <ros/ros.h>
+#include <std_msgs/Float32MultiArray.h>
 #include <tf/transform_broadcaster.h>
+#include <tf/transform_listener.h>
 #include <visualization_msgs/Marker.h>
+
+pcl::PointCloud<pcl::PointXYZINormal>::Ptr vslam_data(new pcl::PointCloud<pcl::PointXYZINormal>);
+void callback(const pcl::PointCloud<pcl::PointXYZINormal>::ConstPtr& msg)
+{
+  ROS_INFO("subscribe vslam_data");
+}
 
 int main(int argc, char* argv[])
 {
   // Initialzie ROS & subscriber
   ros::init(argc, argv, "vllm_node");
 
-  // Analyze arugments
-  popl::OptionParser op("Allowed options");
-  auto config_file_path = op.add<popl::Value<std::string>>("c", "config", "config file path");
-  try {
-    op.parse(argc, argv);
-  } catch (const std::exception& e) {
-    std::cerr << e.what() << std::endl;
-    exit(EXIT_FAILURE);
-  }
-  if (!config_file_path->is_set()) {
-    std::cerr << "invalid arguments" << std::endl;
-    std::cout << op.help() << std::endl;
-    exit(EXIT_FAILURE);
-  }
+  // // Analyze arugments
+  // popl::OptionParser op("Allowed options");
+  // auto config_file_path = op.add<popl::Value<std::string>>("c", "config", "config file path");
+  // try {
+  //   op.parse(argc, argv);
+  // } catch (const std::exception& e) {
+  //   std::cerr << e.what() << std::endl;
+  //   exit(EXIT_FAILURE);
+  // }
+  // if (!config_file_path->is_set()) {
+  //   std::cerr << "invalid arguments" << std::endl;
+  //   std::cout << op.help() << std::endl;
+  //   exit(EXIT_FAILURE);
+  // }
+
+  std::string config_file_path = "../data/asano3.yaml";
+
+  ros::NodeHandle nh;
+
+  // Setup for OpenVSLAM
+  vllm::pcXYZ::Ptr vslam_points(new vllm::pcXYZ);
+  vllm::pcNormal::Ptr vslam_normals(new vllm::pcNormal);
+  std::vector<float> vslam_weights;
 
   // Setup subscriber
-  ros::NodeHandle nh;
-  image_transport::ImageTransport it(nh);
-  cv::Mat subscribed_image;
-  image_transport::Subscriber image_subscriber = it.subscribe("camera/color/image_raw", 1, vllm_ros::imageCallbackGenerator(subscribed_image));
+  ros::Subscriber vslam_subscriber = nh.subscribe<pcl::PointCloud<pcl::PointXYZINormal>>("vllm/vslam_data", 1, callback);
+  tf::TransformListener listener;
 
   // Setup publisher
   ros::Publisher target_pc_publisher = nh.advertise<pcl::PointCloud<pcl::PointXYZI>>("vllm/target_pointcloud", 1);
@@ -46,11 +63,10 @@ int main(int argc, char* argv[])
   ros::Publisher vllm_trajectory_publisher = nh.advertise<visualization_msgs::Marker>("vllm/vllm_trajectory", 1);
   ros::Publisher vslam_trajectory_publisher = nh.advertise<visualization_msgs::Marker>("vllm/vslam_trajectory", 1);
   ros::Publisher correspondences_publisher = nh.advertise<visualization_msgs::Marker>("vllm/correspondences", 1);
-  image_transport::Publisher image_publisher = it.advertise("vllm/image", 1);
   vllm::Publication publication;
 
   // Initialize config
-  vllm::Config config(config_file_path->value());
+  vllm::Config config(config_file_path);
 
   // Load LiDAR map
   vllm::map::Parameter map_param(
@@ -61,43 +77,34 @@ int main(int argc, char* argv[])
   std::shared_ptr<vllm::System> system = std::make_shared<vllm::System>(config, map);
   std::chrono::system_clock::time_point m_start;
 
-  // Setup for OpenVSLAM
-  vllm::pcXYZ::Ptr vslam_points(new vllm::pcXYZ);
-  vllm::pcNormal::Ptr vslam_normals(new vllm::pcNormal);
-  std::vector<float> vslam_weights;
-  vllm::BridgeOpenVSLAM bridge;
-  bridge.setup(config);
-
   ros::Rate loop_10Hz(10);
   int loop_count = 0;
-  float accuracy = 0.5f;
 
   // Main loop
   while (ros::ok()) {
-    if (!subscribed_image.empty()) {
+
+    tf::StampedTransform transform;
+    try {
+      listener.waitForTransform("world", "vllm/vslam_pose", ros::Time(0), ros::Duration(10.0));
+      listener.lookupTransform("world", "vllm/vslam_pose", ros::Time(0), transform);
+    } catch (tf::TransformException ex) {
+      ROS_ERROR("%s", ex.what());
+    }
+
+    // TODO:
+    if (false) {
       m_start = std::chrono::system_clock::now();
 
-      // process OpenVSLAM
-      bridge.execute(subscribed_image);
-      bridge.setCriteria(30, accuracy);
-      bridge.getLandmarksAndNormals(vslam_points, vslam_normals, vslam_weights);
-      subscribed_image = cv::Mat();  // Reset input
-
-      // Update threshold to adjust the number of points
-      if (vslam_points->size() < 300 && accuracy > 0.10) accuracy -= 0.01f;
-      if (vslam_points->size() > 500 && accuracy < 0.90) accuracy += 0.01f;
-
       // Execution
-      system->execute(
-          bridge.getState(),
-          bridge.getCameraPose().inverse(),
-          vslam_points,
-          vslam_normals,
-          vslam_weights);
+      // system->execute(
+      //     bridge.getState(),
+      //     bridge.getCameraPose().inverse(),
+      //     vslam_points,
+      //     vslam_normals,
+      //     vslam_weights);
 
       // Publish for rviz
       system->popPublication(publication);
-      vllm_ros::publishImage(image_publisher, bridge.getFrame());
       vllm_ros::publishPointcloud(source_pc_publisher, publication.cloud);
       vllm_ros::publishTrajectory(vllm_trajectory_publisher, publication.vllm_trajectory, 0);
       vllm_ros::publishTrajectory(vslam_trajectory_publisher, publication.offset_trajectory, 1);
@@ -114,7 +121,7 @@ int main(int argc, char* argv[])
     }
 
     // Publish target pointcloud map
-    if (++loop_count >= 50) {
+    if (++loop_count >= 10) {
       loop_count = 0;
       vllm_ros::publishPointcloud(target_pc_publisher, map->getTargetCloud());
     }

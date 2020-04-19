@@ -8,13 +8,14 @@
 #include <opencv2/opencv.hpp>
 #include <popl.hpp>
 #include <ros/ros.h>
+#include <std_msgs/Float32MultiArray.h>
 #include <tf/transform_broadcaster.h>
 #include <visualization_msgs/Marker.h>
 
 int main(int argc, char* argv[])
 {
   // Initialzie ROS & subscriber
-  ros::init(argc, argv, "vllm_node");
+  ros::init(argc, argv, "vslam_node");
 
   // Analyze arugments
   popl::OptionParser op("Allowed options");
@@ -35,22 +36,24 @@ int main(int argc, char* argv[])
   ros::NodeHandle nh;
   image_transport::ImageTransport it(nh);
   cv::Mat subscribed_image;
+  // TODO: the topic name varis depending on user data.
   image_transport::Subscriber image_subscriber = it.subscribe("camera/color/image_raw", 1, vllm_ros::imageCallbackGenerator(subscribed_image));
 
   // Setup publisher
-  ros::Publisher points_publisher = nh.advertise<pcl::PointCloud<pcl::PointXYZ>>("vllm/source_points", 1);
-  ros::Publisher normals_publisher = nh.advertise<pcl::PointCloud<pcl::Normal>>("vllm/source_normals", 1);
-  image_transport::Publisher image_publisher = it.advertise("vllm/image", 1);
+  ros::Publisher vslam_publisher = nh.advertise<pcl::PointCloud<pcl::PointXYZINormal>>("vllm/vslam_data", 1);
+  image_transport::Publisher image_publisher = it.advertise("vllm/processed_image", 1);
 
   // Initialize config
   vllm::Config config(config_file_path->value());
 
   // Setup for OpenVSLAM
+  vllm::BridgeOpenVSLAM bridge;
+  bridge.setup(config);
+  // output data
   vllm::pcXYZ::Ptr vslam_points(new vllm::pcXYZ);
   vllm::pcNormal::Ptr vslam_normals(new vllm::pcNormal);
   std::vector<float> vslam_weights;
-  vllm::BridgeOpenVSLAM bridge;
-  bridge.setup(config);
+  pcl::PointCloud<pcl::PointXYZINormal>::Ptr vslam_data(new pcl::PointCloud<pcl::PointXYZINormal>);
 
   ros::Rate loop_10Hz(10);
   float accuracy = 0.5f;
@@ -65,14 +68,33 @@ int main(int argc, char* argv[])
       bridge.getLandmarksAndNormals(vslam_points, vslam_normals, vslam_weights);
       subscribed_image = cv::Mat();  // Reset input
 
+      // TODO: accuracy depends on alignment_node
       // Update threshold to adjust the number of points
       if (vslam_points->size() < 300 && accuracy > 0.10) accuracy -= 0.01f;
       if (vslam_points->size() > 500 && accuracy < 0.90) accuracy += 0.01f;
 
+      vslam_data->clear();
+      for (int i = 0; i < vslam_points->size(); i++) {
+        pcl::PointXYZINormal p;
+        p.x = vslam_points->at(i).x;
+        p.y = vslam_points->at(i).y;
+        p.z = vslam_points->at(i).z;
+        p.normal_x = vslam_normals->at(i).normal_x;
+        p.normal_y = vslam_normals->at(i).normal_y;
+        p.normal_z = vslam_normals->at(i).normal_z;
+        p.intensity = vslam_weights.at(i);
+        vslam_data->push_back(p);
+      }
+
+      vllm_ros::publishPose(bridge.getCameraPose().inverse(), "vllm/vslam_pose");
       vllm_ros::publishImage(image_publisher, bridge.getFrame());
-      // vllm_ros::publishPointcloud(source_pc_publisher, publication.cloud);
-      // vllm_ros::publishPose(publication.offset_camera, "vslam_pose");
-      ROS_INFO("kusa");
+      {
+        pcl_conversions::toPCL(ros::Time::now(), vslam_data->header.stamp);
+        vslam_data->header.frame_id = "world";
+        vslam_publisher.publish(vslam_data);
+      }
+
+      ROS_INFO("vslam update");
     }
 
     // Spin and wait

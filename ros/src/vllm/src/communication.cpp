@@ -88,6 +88,17 @@ void publishCorrespondences(ros::Publisher& publisher,
   publisher.publish(line_strip);
 }
 
+// void publishWeights(ros::Publisher& publisher, const std::vector<float>& weights)
+// {
+//   std_msgs::Float32MultiArray array;
+//   array.data.reserve(weights.size());
+
+//   for (const float& w : weights)
+//     array.data.push_back(w);
+
+//   publisher.publish(array);
+// }
+
 void publishTrajectory(ros::Publisher& publisher,
     const std::vector<Eigen::Vector3f, Eigen::aligned_allocator<Eigen::Vector3f>>& trajectory, int color)
 {
