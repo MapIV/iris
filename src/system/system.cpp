@@ -52,13 +52,8 @@ System::System(const Config& config_, const std::shared_ptr<map::Map>& map_)
     vllm_history.push_front(T_world);
 }
 
-int System::execute(int vslam_state, const Eigen::Matrix4f& T_vslam, const pcXYZ::Ptr& vslam_points,
-    const pcNormal::Ptr& vslam_normals, const std::vector<float>& vslam_weights)
+int System::execute(int vslam_state, const Eigen::Matrix4f& T_vslam, const pcXYZIN::Ptr& vslam_data)
 {
-  KeypointsWithNormal vslam_keypoints;
-  vslam_keypoints.cloud = vslam_points;
-  vslam_keypoints.normals = vslam_normals;
-
   // ====================
   if (vllm_state == VllmState::Inittializing) {
     // NOTE: "2" means openvslam::tracking_state_t::Tracking
@@ -89,13 +84,9 @@ int System::execute(int vslam_state, const Eigen::Matrix4f& T_vslam, const pcXYZ
               << T_align << std::endl;
 
     optimize::Outcome outcome = optimizer.optimize(
-        map, vslam_keypoints, T_vslam, estimator, T_initial_align, vllm_history, vslam_weights);
-
-    // Retrieve outcome
+        map, vslam_data, T_vslam, estimator, T_initial_align, vllm_history);
     correspondences = outcome.correspondences;
-    // ######################
     T_align = outcome.T_align;
-    // ######################
   }
 
   // update the pose in the world
@@ -104,8 +95,9 @@ int System::execute(int vslam_state, const Eigen::Matrix4f& T_vslam, const pcXYZ
   // Update local map
   map->informCurrentPose(T_world);
   map::Info new_localmap_info = map->getLocalmapInfo();
+
+  // Reinitialize correspondencesEstimator
   if (localmap_info != new_localmap_info) {
-    // Reinitialize correspondencesEstimator
     localmap_info = new_localmap_info;
     correspondences->clear();
     estimator.setInputTarget(map->getTargetCloud());
@@ -121,7 +113,7 @@ int System::execute(int vslam_state, const Eigen::Matrix4f& T_vslam, const pcXYZ
   offset_trajectory.push_back((config.T_init * T_vslam).topRightCorner(3, 1));
   publisher.push(
       T_align, T_world, config.T_init * T_vslam,
-      vslam_keypoints, vllm_trajectory,
+      vslam_data, vllm_trajectory,
       offset_trajectory, correspondences, localmap_info);
 
   last_T_vslam = T_vslam;

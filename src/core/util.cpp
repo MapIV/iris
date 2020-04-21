@@ -146,6 +146,25 @@ void transformNormals(const pcNormal& source, pcNormal& target, const Eigen::Mat
   return;
 }
 
+void transformXYZINormal(const pcXYZIN::Ptr& all, const pcXYZ::Ptr& points, const pcNormal::Ptr& normals, const Eigen::Matrix4f& T)
+{
+  points->clear();
+  normals->clear();
+
+  Eigen::Matrix3f sR = T.topLeftCorner(3, 3);
+  Eigen::Matrix3f R = normalizeRotation(T);
+  Eigen::Vector3f t = T.topRightCorner(3, 1);
+
+  for (const xyzin& a : *all) {
+    Eigen::Vector3f _p = sR * a.getVector3fMap() + t;
+    Eigen::Vector3f _n = R * a.getNormalVector3fMap();
+
+    points->push_back({_p.x(), _p.y(), _p.z()});
+    normals->push_back({_n.x(), _n.y(), _n.z()});
+  }
+  return;
+}
+
 Eigen::Matrix3f randomRotation()
 {
   return Eigen::Quaternionf::UnitRandom().toRotationMatrix();

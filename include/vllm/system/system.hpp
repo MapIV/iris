@@ -27,8 +27,7 @@ public:
   // ===== for Main ====
   System(const Config& config_, const std::shared_ptr<map::Map>& map_);
 
-  int execute(int vslam_state, const Eigen::Matrix4f& T_vslam, const pcXYZ::Ptr& vslam_points,
-      const pcNormal::Ptr& vslam_normals, const std::vector<float>& vslam_weights);
+  int execute(int vslam_state, const Eigen::Matrix4f& T_vslam, const pcXYZIN::Ptr& vslam_data);
 
 public:
   Eigen::Matrix4f getT() const
@@ -56,16 +55,12 @@ public:
     return publisher.pop(p);
   }
 
-  void updateOptimizeGain()
-  {
-    std::lock_guard<std::mutex> lock(optimize_gain_mutex);
-    optimize_config.gain = thread_safe_optimize_gain;
-  }
   optimize::Gain getOptimizeGain() const
   {
     std::lock_guard<std::mutex> lock(optimize_gain_mutex);
     return thread_safe_optimize_gain;
   }
+
   void setOptimizeGain(const optimize::Gain& gain_)
   {
     std::lock_guard<std::mutex> lock(optimize_gain_mutex);
@@ -76,10 +71,12 @@ public:
   {
     return recollection.load();
   }
+
   void setRecollection(unsigned int recollection_)
   {
     recollection.store(recollection_);
   }
+
   Eigen::Matrix4f getTWorld() const
   {
     return T_world;
@@ -108,6 +105,12 @@ public:
   }
 
 private:
+  void updateOptimizeGain()
+  {
+    std::lock_guard<std::mutex> lock(optimize_gain_mutex);
+    optimize_config.gain = thread_safe_optimize_gain;
+  }
+
   // ==== private member ====
   optimize::Gain thread_safe_optimize_gain;
   optimize::Config optimize_config;

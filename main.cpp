@@ -36,9 +36,7 @@ int main(int argc, char* argv[])
   cv::namedWindow(WIN_NAME, cv::WINDOW_AUTOSIZE);
 
   // Setup for OpenVSLAM
-  vllm::pcXYZ::Ptr vslam_points(new vllm::pcXYZ);
-  vllm::pcNormal::Ptr vslam_normals(new vllm::pcNormal);
-  std::vector<float> vslam_weights;
+  vllm::pcXYZIN::Ptr vslam_data(new vllm::pcXYZIN);
   vllm::BridgeOpenVSLAM bridge;
   bridge.setup(config);
 
@@ -65,14 +63,12 @@ int main(int argc, char* argv[])
       // process OpenVSLAM
       bridge.execute(frame);
       bridge.setCriteria(30, accuracy);
-      bridge.getLandmarksAndNormals(vslam_points, vslam_normals, vslam_weights);
+      bridge.getLandmarksAndNormals(vslam_data);
       // Update threshold to adjust the number of points
-      if (vslam_points->size() < 300 && accuracy > 0.10f) accuracy -= 0.01f;
-      if (vslam_points->size() > 500 && accuracy < 0.90f) accuracy += 0.01f;
+      if (vslam_data->size() < 300 && accuracy > 0.10f) accuracy -= 0.01f;
+      if (vslam_data->size() > 500 && accuracy < 0.90f) accuracy += 0.01f;
 
-
-      int vllm_state = system->execute(bridge.getState(), bridge.getCameraPose().inverse(), vslam_points, vslam_normals, vslam_weights);
-
+      int vllm_state = system->execute(bridge.getState(), bridge.getCameraPose().inverse(), vslam_data);
 
       // stop timer
       std::cout << "time= \033[35m"

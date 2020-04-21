@@ -64,7 +64,7 @@ unsigned int BridgeOpenVSLAM::getPeriodFromInitialId() const
 }
 
 
-void BridgeOpenVSLAM::getLandmarksAndNormals(pcXYZ::Ptr& local_cloud, pcNormal::Ptr& normals, std::vector<float>& weights) const
+void BridgeOpenVSLAM::getLandmarksAndNormals(pcXYZIN::Ptr& vslam_data) const
 {
   if (recollection == 0 || accuracy < 0) {
     std::cerr << "ERROR: recollection & accuracy are not set" << std::endl;
@@ -75,9 +75,7 @@ void BridgeOpenVSLAM::getLandmarksAndNormals(pcXYZ::Ptr& local_cloud, pcNormal::
   std::set<openvslam::data::landmark*> local_landmarks;
   SLAM_ptr->get_map_publisher()->get_landmarks(landmarks, local_landmarks);
 
-  local_cloud->clear();
-  normals->clear();
-  weights.clear();
+  vslam_data->clear();
 
   if (local_landmarks.empty()) return;
 
@@ -95,26 +93,22 @@ void BridgeOpenVSLAM::getLandmarksAndNormals(pcXYZ::Ptr& local_cloud, pcNormal::
     float weight = 1.0;
     // NOTE:OBSL: Newly observed points have priority
     // weight = static_cast<float>(recollection - (max_id - first_observed_id)) / static_cast<float>(recollection);
-
     if (weight < 0.1f) weight = 0.1f;
     if (weight > 1.0f) weight = 1.0f;
-    weights.push_back(weight);
 
-    pcl::PointXYZ p(
-        static_cast<float>(pos.x()),
-        static_cast<float>(pos.y()),
-        static_cast<float>(pos.z()));
-    local_cloud->push_back(p);
-
-    pcl::Normal n(
-        static_cast<float>(normal.x()),
-        static_cast<float>(normal.y()),
-        static_cast<float>(normal.z()));
-    normals->push_back(n);
+    pcl::PointXYZINormal p;
+    p.x = static_cast<float>(pos.x());
+    p.y = static_cast<float>(pos.y());
+    p.z = static_cast<float>(pos.z());
+    p.normal_x = static_cast<float>(normal.x());
+    p.normal_y = static_cast<float>(normal.y());
+    p.normal_z = static_cast<float>(normal.z());
+    p.intensity = weight;
+    vslam_data->push_back(p);
   }
 
   std::cout
-      << "landmark ratio \033[34m" << local_cloud->size()
+      << "landmark ratio \033[34m" << vslam_data->size()
       << "\033[m / \033[34m" << local_landmarks.size()
       << "\033[m" << std::endl;
   return;

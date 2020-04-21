@@ -8,6 +8,8 @@ namespace vllm
 {
 using pcXYZ = pcl::PointCloud<pcl::PointXYZ>;
 using pcNormal = pcl::PointCloud<pcl::Normal>;
+using pcXYZIN = pcl::PointCloud<pcl::PointXYZINormal>;
+using xyzin = pcl::PointXYZINormal;
 using crrspEstimator = vllm::pcl_::CorrespondenceEstimationBackProjection<pcl::PointXYZ, pcl::PointXYZ, pcl::Normal>;
 using crrspRejector = pcl::registration::CorrespondenceRejectorDistance;
 

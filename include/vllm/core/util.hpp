@@ -17,8 +17,6 @@ Eigen::Matrix4f normalizePose(const Eigen::Matrix4f& T);
 Eigen::Matrix4f make3DPoseFrom2DPose(float x, float y, float nx, float ny);
 
 // load
-// pcl::PointCloud<pcl::PointXYZ>::Ptr loadPointCloud(const std::string& pcd_file);
-// pcl::PointCloud<pcl::PointXYZ>::Ptr loadMapPointCloud(const std::string& pcd_file, float leaf = -1.0f);
 void loadMap(
     const std::string& pcd_file,
     pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud,
@@ -27,6 +25,7 @@ void loadMap(
 
 // normal
 void transformNormals(const pcNormal& source, pcNormal& target, const Eigen::Matrix4f& T);
+void transformXYZINormal(const pcXYZIN::Ptr& all, const pcXYZ::Ptr& points, const pcNormal::Ptr& normals, const Eigen::Matrix4f& T);
 
 // randomize
 Eigen::Matrix3f randomRotation();

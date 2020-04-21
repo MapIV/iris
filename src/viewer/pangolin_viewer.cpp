@@ -185,7 +185,7 @@ void PangolinViewer::drawPoses(const std::vector<Eigen::Matrix4f, Eigen::aligned
   glBegin(GL_LINES);
   glLineWidth(1.0);
   int c = 0;
-  for (int i = 0; i < poses.size(); i += 10) {
+  for (size_t i = 0; i < poses.size(); i += 10) {
     const Eigen::Matrix4f& pose = poses.at(i);
     glColor3fv(convertRGB(Eigen::Vector3f(static_cast<float>(c++ % 360), 1.f, 1.f)).data());
 

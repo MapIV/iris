@@ -17,14 +17,12 @@ namespace optimize
 {
 Eigen::Matrix4f Aligner::estimate7DoF(
     Eigen::Matrix4f& T,
-    const pcl::PointCloud<pcl::PointXYZ>::Ptr& source,
+    const pcXYZIN::Ptr& source_clouds,
     const pcl::PointCloud<pcl::PointXYZ>::Ptr& target,
     const pcl::CorrespondencesPtr& correspondances,
     const Eigen::Matrix4f& offset_camera,
     const std::list<Eigen::Matrix4f, Eigen::aligned_allocator<Eigen::Matrix4f>>& history,
-    const std::vector<float>& weights,
     const double ref_scale,
-    const pcl::PointCloud<pcl::Normal>::Ptr& source_normals,
     const pcl::PointCloud<pcl::Normal>::Ptr& target_normals)
 {
   g2o::SparseOptimizer optimizer;
@@ -33,7 +31,7 @@ Eigen::Matrix4f Aligner::estimate7DoF(
   optimizer.setAlgorithm(solver);
 
   setVertexSim3(optimizer, T);
-  setEdge7DoFGICP(optimizer, source, target, correspondances, weights, offset_camera.topRightCorner(3, 1), target_normals, source_normals);
+  setEdge7DoFGICP(optimizer, source_clouds, target, correspondances, offset_camera.topRightCorner(3, 1), target_normals);
   setEdgeRestriction(optimizer, offset_camera, history, ref_scale);
 
   // execute
@@ -75,13 +73,11 @@ void Aligner::setVertexSim3(g2o::SparseOptimizer& optimizer, Eigen::Matrix4f& T)
 
 void Aligner::setEdge7DoFGICP(
     g2o::SparseOptimizer& optimizer,
-    const pcl::PointCloud<pcl::PointXYZ>::Ptr& source,
+    const pcXYZIN::Ptr& source_clouds,
     const pcl::PointCloud<pcl::PointXYZ>::Ptr& target,
     const pcl::CorrespondencesPtr& correspondances,
-    const std::vector<float>& weights,
     const Eigen::Vector3f& camera,
-    const pcl::PointCloud<pcl::Normal>::Ptr& target_normals,
-    const pcl::PointCloud<pcl::Normal>::Ptr& source_normals)
+    const pcl::PointCloud<pcl::Normal>::Ptr& target_normals)
 {
   // get Vertex
   g2o::VertexSim3Expmap* vp0 = dynamic_cast<g2o::VertexSim3Expmap*>(optimizer.vertices().find(0)->second);
@@ -94,9 +90,9 @@ void Aligner::setEdge7DoFGICP(
 
     // calculate the relative 3D position of the point
     Eigen::Vector3f pt0, pt1;
-    pt0 = target->at(cor.index_match).getArray3fMap();
-    pt1 = source->at(cor.index_query).getArray3fMap();
-    // float weight = weights.at(cor.index_query);
+    pt0 = target->at(cor.index_match).getVector3fMap();
+    pt1 = source_clouds->at(cor.index_query).getVector3fMap();
+    // float weight = source_clouds->at(cor.index_query).intensity;
 
     EdgeGICP meas;
     meas.weight = 1.0f / ((camera - pt1).norm() + 1.0f);
@@ -105,29 +101,21 @@ void Aligner::setEdge7DoFGICP(
 
     e->setMeasurement(meas);
     e->information().setIdentity();
-    if (source_normals) {
-      Eigen::Vector3f n0 = target_normals->at(cor.index_match).getNormalVector3fMap();
-      Eigen::Vector3f n1 = source_normals->at(cor.index_query).getNormalVector3fMap();
 
-      // sometime normal0 has NaN
-      if (std::isfinite(n0.x())) {
-        meas.normal0 = n0.cast<double>();
-        e->cov0 = meas.cov0(0.05f);  // target
-      } else {
-        e->cov0 = meas.cov0(1.0f);  // target
-      }
+    Eigen::Vector3f n0 = target_normals->at(cor.index_match).getNormalVector3fMap();
+    Eigen::Vector3f n1 = source_clouds->at(cor.index_query).getNormalVector3fMap();
 
-      meas.normal1 = n1.cast<double>();
-      e->cov1 = meas.cov1(0.50f);  // source
-      e->information() = (e->cov0 + R * e->cov1 * R.transpose()).inverse();
-
-    } else if (target_normals) {
-      Eigen::Vector3f n = target_normals->at(cor.index_match).getNormalVector3fMap();
-      if (std::isfinite(n.x())) {  // sometime n has NaN
-        meas.normal0 = n.cast<double>();
-        e->information() = meas.prec0(0.01f);
-      }
+    // sometime normal0 has NaN
+    if (std::isfinite(n0.x())) {
+      meas.normal0 = n0.cast<double>();
+      e->cov0 = meas.cov0(0.05f);  // target
+    } else {
+      e->cov0 = meas.cov0(1.0f);  // target
     }
+    meas.normal1 = n1.cast<double>();
+    e->cov1 = meas.cov1(0.50f);  // source
+    e->information() = (e->cov0 + R * e->cov1 * R.transpose()).inverse();
+
 
     // set Huber kernel (default delta = 1.0)
     g2o::RobustKernelHuber* rk = new g2o::RobustKernelHuber;
@@ -139,14 +127,10 @@ void Aligner::setEdge7DoFGICP(
 void Aligner::setEdgeRestriction(
     g2o::SparseOptimizer& optimizer,
     const Eigen::Matrix4f& offset_camera,
-    const std::list<Eigen::Matrix4f, Eigen::aligned_allocator<Eigen::Matrix4f>>& history,
+    const std::list<Eigen::Matrix4f, Eigen::aligned_allocator<Eigen::Matrix4f>>&,
     double ref_scale)
 {
   g2o::VertexSim3Expmap* vp0 = dynamic_cast<g2o::VertexSim3Expmap*>(optimizer.vertices().find(0)->second);
-
-  // const unsigned int DT = 2;
-  // auto itr1 = std::next(history.begin(), DT);
-  // auto itr2 = std::next(itr1, DT);
 
   // Add a scale edge
   {

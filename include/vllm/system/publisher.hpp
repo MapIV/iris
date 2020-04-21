@@ -40,7 +40,7 @@ public:
       const Eigen::Matrix4f& T_align,
       const Eigen::Matrix4f& vllm_camera,
       const Eigen::Matrix4f& offset_camera,
-      const KeypointsWithNormal& raw_keypoints,
+      const pcXYZIN::Ptr& raw_data,
       const std::vector<Eigen::Vector3f, Eigen::aligned_allocator<Eigen::Vector3f>>& vllm_trajectory,
       const std::vector<Eigen::Vector3f, Eigen::aligned_allocator<Eigen::Vector3f>>& offset_trajectory,
       const pcl::CorrespondencesPtr& corre,

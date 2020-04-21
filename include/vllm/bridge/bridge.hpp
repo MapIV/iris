@@ -18,7 +18,7 @@ public:
   void execute(const cv::Mat& image);
   void requestReset();
 
-  void getLandmarksAndNormals(pcXYZ::Ptr& local_cloud, pcNormal::Ptr& normal, std::vector<float>& weights) const;
+  void getLandmarksAndNormals(pcXYZIN::Ptr& vslam_data) const;
   void setCriteria(unsigned int recollection_, float accuracy_);
   std::pair<unsigned int, float> getCriteria() const;
 

@@ -20,7 +20,7 @@ void Publisher::push(
     const Eigen::Matrix4f& T_align,
     const Eigen::Matrix4f& vllm_camera,
     const Eigen::Matrix4f& offset_camera,
-    const KeypointsWithNormal& raw_keypoints,
+    const pcXYZIN::Ptr& raw_data,
     const std::vector<Eigen::Vector3f, Eigen::aligned_allocator<Eigen::Vector3f>>& vllm_trajectory,
     const std::vector<Eigen::Vector3f, Eigen::aligned_allocator<Eigen::Vector3f>>& offset_trajectory,
     const pcl::CorrespondencesPtr& corre,
@@ -35,8 +35,7 @@ void Publisher::push(
   tmp.localmap_info = localmap_info;
   *tmp.correspondences = *corre;
 
-  pcl::transformPointCloud(*raw_keypoints.cloud, *tmp.cloud, T_align);
-  util::transformNormals(*raw_keypoints.normals, *tmp.normals, T_align);
+  util::transformXYZINormal(raw_data, tmp.cloud, tmp.normals, T_align);
 
   {
     std::lock_guard<std::mutex> lock(mtx);

@@ -9,12 +9,11 @@ namespace optimize
 {
 Outcome Optimizer::optimize(
     const std::shared_ptr<map::Map>& map_ptr,
-    const KeypointsWithNormal& offset_keypoints,
+    const pcXYZIN::Ptr& vslam_data,
     const Eigen::Matrix4f& offset_camera,
     crrspEstimator& estimator,
     const Eigen::Matrix4f& T_initial_align,
-    const std::list<Eigen::Matrix4f, Eigen::aligned_allocator<Eigen::Matrix4f>>& vllm_history,
-    const std::vector<float>& weights)
+    const std::list<Eigen::Matrix4f, Eigen::aligned_allocator<Eigen::Matrix4f>>& vllm_history)
 {
   pcXYZ::Ptr tmp_cloud(new pcXYZ);
   pcNormal::Ptr tmp_normals(new pcNormal);
@@ -26,10 +25,9 @@ Outcome Optimizer::optimize(
     std::cout << "itration= \033[32m" << itr << "\033[m";
 
     // Initial transform
-    pcl::transformPointCloud(*offset_keypoints.cloud, *tmp_cloud, T_align);
-    util::transformNormals(*offset_keypoints.normals, *tmp_normals, T_align);
+    util::transformXYZINormal(vslam_data, tmp_cloud, tmp_normals, T_align);
 
-    // Get all correspodences
+    // TODO: We should enable the estimator handle the PointXYZINormal
     estimator.setInputSource(tmp_cloud);
     estimator.setSourceNormals(tmp_normals);
     estimator.setCenter(offset_camera.topRightCorner(3, 1));
@@ -50,8 +48,8 @@ Outcome Optimizer::optimize(
     // Align pointclouds
     optimize::Aligner aligner(config.gain.scale, config.gain.latitude, config.gain.altitude, config.gain.smooth);
     T_align = aligner.estimate7DoF(
-        T_align, offset_keypoints.cloud, map_ptr->getTargetCloud(), correspondences,
-        offset_camera, vllm_history, weights, config.ref_scale, offset_keypoints.normals, map_ptr->getTargetNormals());
+        T_align, vslam_data, map_ptr->getTargetCloud(), correspondences,
+        offset_camera, vllm_history, config.ref_scale, map_ptr->getTargetNormals());
 
     // Integrate
     vllm_camera = T_align * offset_camera;
