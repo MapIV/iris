@@ -95,7 +95,7 @@ public:
     auto tmp = util::applyScaling(specified_T_world, scale);
     std::cout << "debug\n"
               << tmp << std::endl;
-    T_align = tmp * vslam_camera.inverse();
+    T_align = tmp * last_T_vslam.inverse();
 
     std::cout << "new T_align\n"
               << T_align << std::endl;
@@ -129,7 +129,7 @@ private:
   Eigen::Matrix4f T_align = Eigen::Matrix4f::Identity();
   Eigen::Matrix4f T_world = Eigen::Matrix4f::Identity();
   Eigen::Matrix4f T_imu = Eigen::Matrix4f::Zero();
-  Eigen::Matrix4f vslam_camera = Eigen::Matrix4f::Identity();
+  Eigen::Matrix4f last_T_vslam = Eigen::Matrix4f::Identity();
 
   pcl::CorrespondencesPtr correspondences;
   crrspEstimator estimator;

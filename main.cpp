@@ -93,12 +93,12 @@ int main(int argc, char* argv[])
 
 Eigen::Matrix4f processRecover(const Eigen::Matrix4f& T_)
 {
-  std::cout << "\033[2J\033[1;1H";
-  std::cout << "current T_world\n"
-            << T_ << std::endl;
-  std::cout << "Please specify pose to recover the localization." << std::endl;
+  std::cout << "\033[2J\033[1;1H";  // new page
+  std::cout << "\033[1m\033[31m current t_world: \033[0m\033[33m" << T_.topRightCorner(3, 1).transpose() << std::endl;
+  std::cout << "\033[0m\033[1m\033[31m Please enter the 2D pose to recover the localization." << std::endl;
   std::cout << "The format is 'x y nx ny', where (nx,ny) is not necesary to be normalized." << std::endl;
-  std::cout << "ex)'2.0  -1.45 -1.5 0.7[Enter]'" << std::endl;
+  std::cout << "ex) 2.0  -1.45 -1.5 0.7[Enter]" << std::endl;
+  std::cout << "\033[m";  // reset font
   float x, y, nx, ny;
   std::cin >> x >> y >> nx >> ny;
   Eigen::Matrix4f T = vllm::util::make3DPoseFrom2DPose(x, y, nx, ny);

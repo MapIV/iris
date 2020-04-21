@@ -55,9 +55,9 @@ VLLM.up_init:  !!opencv-matrix
     cols: 1
     dt: f
     data: [ 0,0,1]
-VLLM.s_init: 2.5
+VLLM.s_init: 2.3
 
-VLLM.pcd_file: "../../vllm-data/kitti_00/kitti_00.pcd"
+VLLM.pcd_file: "../../vllm-data/kitti_00/kitti_00-filt.pcd"
 VLLM.video_file: "../../vllm-data/kitti_00/kitti_00.mp4"
 VLLM.vocab_file: "orb_vocab.dbow2"
 

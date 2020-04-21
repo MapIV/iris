@@ -124,6 +124,8 @@ int System::execute(int vslam_state, const Eigen::Matrix4f& T_vslam, const pcXYZ
       vslam_keypoints, vllm_trajectory,
       offset_trajectory, correspondences, localmap_info);
 
+  last_T_vslam = T_vslam;
+
   return vllm_state;
 }
 }  // namespace vllm
