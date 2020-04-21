@@ -96,7 +96,7 @@ int main(int argc, char* argv[])
   std::shared_ptr<vllm::System> system = std::make_shared<vllm::System>(config, map);
   std::chrono::system_clock::time_point m_start;
 
-  ros::Rate loop_10Hz(10);
+  ros::Rate loop_rate(20);
   int loop_count = 0;
 
   // Main loop
@@ -125,7 +125,7 @@ int main(int argc, char* argv[])
       ss << "processing time= \033[35m"
          << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - m_start).count()
          << "\033[m ms";
-      ROS_INFO("%s", ss.str().c_str());
+      ROS_INFO("VLLM/ALIGN: %s", ss.str().c_str());
     }
 
     // Publish target pointcloud map
@@ -136,7 +136,7 @@ int main(int argc, char* argv[])
 
     // Spin and wait
     ros::spinOnce();
-    loop_10Hz.sleep();
+    loop_rate.sleep();
   }
 
   ROS_INFO("Finalize the system");

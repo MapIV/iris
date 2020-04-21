@@ -52,12 +52,15 @@ int main(int argc, char* argv[])
   // output data
   pcl::PointCloud<pcl::PointXYZINormal>::Ptr vslam_data(new pcl::PointCloud<pcl::PointXYZINormal>);
 
-  ros::Rate loop_10Hz(10);
+  std::chrono::system_clock::time_point m_start;
+  ros::Rate loop_rate(20);
   float accuracy = 0.5f;
+
 
   // Main loop
   while (ros::ok()) {
     if (!subscribed_image.empty()) {
+      m_start = std::chrono::system_clock::now();  // start timer
 
       // process OpenVSLAM
       bridge.execute(subscribed_image);
@@ -67,10 +70,11 @@ int main(int argc, char* argv[])
       // Reset input
       subscribed_image = cv::Mat();
 
-      // TODO: The accuracy should reflect the results of align_node
+      // TODO: The accuracy should be reflected in the results of align_node
       // Update threshold to adjust the number of points
       if (vslam_data->size() < 300 && accuracy > 0.10) accuracy -= 0.01f;
       if (vslam_data->size() > 500 && accuracy < 0.90) accuracy += 0.01f;
+
 
       vllm_ros::publishImage(image_publisher, bridge.getFrame());
       {
@@ -79,13 +83,18 @@ int main(int argc, char* argv[])
         vslam_publisher.publish(vslam_data);
       }
 
-      ROS_INFO("vslam update");
+      // Inform processing time
+      std::stringstream ss;
+      ss << "processing time= \033[35m"
+         << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - m_start).count()
+         << "\033[m ms";
+      ROS_INFO("VLLM/VSLAM: %s", ss.str().c_str());
     }
     vllm_ros::publishPose(bridge.getCameraPose().inverse(), "vllm/vslam_pose");
 
     // Spin and wait
     ros::spinOnce();
-    loop_10Hz.sleep();
+    loop_rate.sleep();
   }
 
   ROS_INFO("Finalize the system");

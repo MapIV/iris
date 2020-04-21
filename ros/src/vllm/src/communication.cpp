@@ -21,20 +21,8 @@ void publishPose(const Eigen::Matrix4f& T, const std::string& child_frame_id)
 {
   static tf::TransformBroadcaster br;
 
-  geometry_msgs::Pose t_pose;
-  t_pose.position.x = T(0, 3);
-  t_pose.position.y = T(1, 3);
-  t_pose.position.z = T(2, 3);
-
-  Eigen::Matrix3f R = T.topLeftCorner(3, 3);
-  Eigen::Quaternionf q(R);
-  t_pose.orientation.w = q.w();
-  t_pose.orientation.x = q.x();
-  t_pose.orientation.y = q.y();
-  t_pose.orientation.z = q.z();
-
   tf::Transform transform;
-  poseMsgToTF(t_pose, transform);
+  transform.setFromOpenGLMatrix(T.cast<double>().eval().data());
   br.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "world", child_frame_id));
 }
 
