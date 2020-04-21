@@ -59,7 +59,7 @@ VLLM.s_init: 2.3
 
 VLLM.pcd_file: "../../vllm-data/kitti_00/kitti_00-filt.pcd"
 VLLM.video_file: "../../vllm-data/kitti_00/kitti_00.mp4"
-VLLM.vocab_file: "orb_vocab.dbow2"
+VLLM.vocab_file: "../data/orb_vocab.dbow2"
 
 VLLM.iteration: 5
 VLLM.frame_skip: 1

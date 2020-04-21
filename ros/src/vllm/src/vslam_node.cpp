@@ -86,7 +86,6 @@ int main(int argc, char* argv[])
         vslam_data->push_back(p);
       }
 
-      vllm_ros::publishPose(bridge.getCameraPose().inverse(), "vllm/vslam_pose");
       vllm_ros::publishImage(image_publisher, bridge.getFrame());
       {
         pcl_conversions::toPCL(ros::Time::now(), vslam_data->header.stamp);
@@ -96,6 +95,7 @@ int main(int argc, char* argv[])
 
       ROS_INFO("vslam update");
     }
+    vllm_ros::publishPose(bridge.getCameraPose().inverse(), "vllm/vslam_pose");
 
     // Spin and wait
     ros::spinOnce();

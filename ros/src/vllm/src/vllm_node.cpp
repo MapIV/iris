@@ -18,10 +18,31 @@
 #include <tf/transform_listener.h>
 #include <visualization_msgs/Marker.h>
 
+// TODO: I don't like the function decleared in global scope like this
 pcl::PointCloud<pcl::PointXYZINormal>::Ptr vslam_data(new pcl::PointCloud<pcl::PointXYZINormal>);
+int vslam_update = 0;
 void callback(const pcl::PointCloud<pcl::PointXYZINormal>::ConstPtr& msg)
 {
-  ROS_INFO("subscribe vslam_data");
+  ROS_INFO("It subscribes vslam_data");
+  *vslam_data = *msg;
+  if (vslam_data->size() > 0)
+    vslam_update = 1;
+}
+
+// TODO: I don't like the function decleared in global scope like this
+Eigen::Matrix4f listenTransform(tf::TransformListener& listener)
+{
+  tf::StampedTransform transform;
+  try {
+    listener.waitForTransform("world", "vllm/vslam_pose", ros::Time(0), ros::Duration(10.0));
+    listener.lookupTransform("world", "vllm/vslam_pose", ros::Time(0), transform);
+  } catch (...) {
+  }
+
+  double data[16];
+  transform.getOpenGLMatrix(data);
+  Eigen::Matrix4d T(data);
+  return T.cast<float>();
 }
 
 int main(int argc, char* argv[])
@@ -29,22 +50,20 @@ int main(int argc, char* argv[])
   // Initialzie ROS & subscriber
   ros::init(argc, argv, "vllm_node");
 
-  // // Analyze arugments
-  // popl::OptionParser op("Allowed options");
-  // auto config_file_path = op.add<popl::Value<std::string>>("c", "config", "config file path");
-  // try {
-  //   op.parse(argc, argv);
-  // } catch (const std::exception& e) {
-  //   std::cerr << e.what() << std::endl;
-  //   exit(EXIT_FAILURE);
-  // }
-  // if (!config_file_path->is_set()) {
-  //   std::cerr << "invalid arguments" << std::endl;
-  //   std::cout << op.help() << std::endl;
-  //   exit(EXIT_FAILURE);
-  // }
-
-  std::string config_file_path = "../data/asano3.yaml";
+  // Analyze arugments
+  popl::OptionParser op("Allowed options");
+  auto config_file_path = op.add<popl::Value<std::string>>("c", "config", "config file path");
+  try {
+    op.parse(argc, argv);
+  } catch (const std::exception& e) {
+    std::cerr << e.what() << std::endl;
+    exit(EXIT_FAILURE);
+  }
+  if (!config_file_path->is_set()) {
+    std::cerr << "invalid arguments" << std::endl;
+    std::cout << op.help() << std::endl;
+    exit(EXIT_FAILURE);
+  }
 
   ros::NodeHandle nh;
 
@@ -66,7 +85,7 @@ int main(int argc, char* argv[])
   vllm::Publication publication;
 
   // Initialize config
-  vllm::Config config(config_file_path);
+  vllm::Config config(config_file_path->value());
 
   // Load LiDAR map
   vllm::map::Parameter map_param(
@@ -83,25 +102,13 @@ int main(int argc, char* argv[])
   // Main loop
   while (ros::ok()) {
 
-    tf::StampedTransform transform;
-    try {
-      listener.waitForTransform("world", "vllm/vslam_pose", ros::Time(0), ros::Duration(10.0));
-      listener.lookupTransform("world", "vllm/vslam_pose", ros::Time(0), transform);
-    } catch (tf::TransformException ex) {
-      ROS_ERROR("%s", ex.what());
-    }
+    Eigen::Matrix4f T_vslam = listenTransform(listener);
 
-    // TODO:
-    if (false) {
+    if (vslam_update & false) {
       m_start = std::chrono::system_clock::now();
 
       // Execution
-      // system->execute(
-      //     bridge.getState(),
-      //     bridge.getCameraPose().inverse(),
-      //     vslam_points,
-      //     vslam_normals,
-      //     vslam_weights);
+      system->execute(2, T_vslam, vslam_data);  // '1' means
 
       // Publish for rviz
       system->popPublication(publication);
