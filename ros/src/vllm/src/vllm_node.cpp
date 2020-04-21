@@ -20,13 +20,13 @@
 
 // TODO: I don't like the function decleared in global scope like this
 pcl::PointCloud<pcl::PointXYZINormal>::Ptr vslam_data(new pcl::PointCloud<pcl::PointXYZINormal>);
-int vslam_update = 0;
+bool vslam_update = false;
 void callback(const pcl::PointCloud<pcl::PointXYZINormal>::ConstPtr& msg)
 {
-  ROS_INFO("It subscribes vslam_data");
+  ROS_INFO("It subscribes vslam_data %lu", msg->size());
   *vslam_data = *msg;
   if (vslam_data->size() > 0)
-    vslam_update = 1;
+    vslam_update = true;
 }
 
 // TODO: I don't like the function decleared in global scope like this
@@ -104,7 +104,8 @@ int main(int argc, char* argv[])
 
     Eigen::Matrix4f T_vslam = listenTransform(listener);
 
-    if (vslam_update & false) {
+    if (vslam_update) {
+      vslam_update = false;
       m_start = std::chrono::system_clock::now();
 
       // Execution
@@ -116,8 +117,8 @@ int main(int argc, char* argv[])
       vllm_ros::publishTrajectory(vllm_trajectory_publisher, publication.vllm_trajectory, 0);
       vllm_ros::publishTrajectory(vslam_trajectory_publisher, publication.offset_trajectory, 1);
       vllm_ros::publishCorrespondences(correspondences_publisher, publication.cloud, map->getTargetCloud(), publication.correspondences);
-      vllm_ros::publishPose(publication.offset_camera, "vslam_pose");
-      vllm_ros::publishPose(publication.vllm_camera, "vllm_pose");
+      vllm_ros::publishPose(publication.offset_camera, "vllm/offseted_vslam_pose");
+      vllm_ros::publishPose(publication.vllm_camera, "vllm/vllm_pose");
 
       // Inform processing time
       std::stringstream ss;

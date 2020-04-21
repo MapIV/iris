@@ -50,9 +50,6 @@ int main(int argc, char* argv[])
   vllm::BridgeOpenVSLAM bridge;
   bridge.setup(config);
   // output data
-  vllm::pcXYZ::Ptr vslam_points(new vllm::pcXYZ);
-  vllm::pcNormal::Ptr vslam_normals(new vllm::pcNormal);
-  std::vector<float> vslam_weights;
   pcl::PointCloud<pcl::PointXYZINormal>::Ptr vslam_data(new pcl::PointCloud<pcl::PointXYZINormal>);
 
   ros::Rate loop_10Hz(10);
@@ -65,26 +62,15 @@ int main(int argc, char* argv[])
       // process OpenVSLAM
       bridge.execute(subscribed_image);
       bridge.setCriteria(30, accuracy);
-      bridge.getLandmarksAndNormals(vslam_points, vslam_normals, vslam_weights);
-      subscribed_image = cv::Mat();  // Reset input
+      bridge.getLandmarksAndNormals(vslam_data);
 
-      // TODO: accuracy depends on alignment_node
+      // Reset input
+      subscribed_image = cv::Mat();
+
+      // TODO: The accuracy should reflect the results of align_node
       // Update threshold to adjust the number of points
-      if (vslam_points->size() < 300 && accuracy > 0.10) accuracy -= 0.01f;
-      if (vslam_points->size() > 500 && accuracy < 0.90) accuracy += 0.01f;
-
-      vslam_data->clear();
-      for (int i = 0; i < vslam_points->size(); i++) {
-        pcl::PointXYZINormal p;
-        p.x = vslam_points->at(i).x;
-        p.y = vslam_points->at(i).y;
-        p.z = vslam_points->at(i).z;
-        p.normal_x = vslam_normals->at(i).normal_x;
-        p.normal_y = vslam_normals->at(i).normal_y;
-        p.normal_z = vslam_normals->at(i).normal_z;
-        p.intensity = vslam_weights.at(i);
-        vslam_data->push_back(p);
-      }
+      if (vslam_data->size() < 300 && accuracy > 0.10) accuracy -= 0.01f;
+      if (vslam_data->size() > 500 && accuracy < 0.90) accuracy += 0.01f;
 
       vllm_ros::publishImage(image_publisher, bridge.getFrame());
       {
