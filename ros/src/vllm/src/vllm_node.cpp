@@ -7,6 +7,7 @@
 #include <chrono>
 #include <cv_bridge/cv_bridge.h>
 #include <fstream>
+#include <geometry_msgs/PoseWithCovarianceStamped.h>
 #include <image_transport/image_transport.h>
 #include <message_filters/subscriber.h>
 #include <message_filters/time_synchronizer.h>
@@ -45,6 +46,28 @@ Eigen::Matrix4f listenTransform(tf::TransformListener& listener)
   return T.cast<float>();
 }
 
+// TODO: I don't like the function decleared in global scope like this
+Eigen::Matrix4f T_recover = Eigen::Matrix4f::Zero();
+void callbackForRecover(const geometry_msgs::PoseWithCovarianceStampedConstPtr& msg)
+{
+  ROS_INFO("It subscribes initial_pose");
+
+  float x = msg->pose.pose.position.x;
+  float y = msg->pose.pose.position.y;
+  float qw = msg->pose.pose.orientation.w;
+  float qz = msg->pose.pose.orientation.z;
+
+  T_recover.setIdentity();
+  T_recover(0, 3) = x;
+  T_recover(1, 3) = y;
+  float theta = std::atan2(qz, qw);
+  T_recover.topLeftCorner(3, 3) = Eigen::AngleAxisf(2 * theta, Eigen::Vector3f::UnitZ()).toRotationMatrix();
+  std::cout << "qw " << qw << " qz " << qz << " theta " << theta << std::endl;
+
+  std::cout << "T_recover\n"
+            << T_recover << std::endl;
+}
+
 int main(int argc, char* argv[])
 {
   // Initialzie ROS & subscriber
@@ -74,6 +97,7 @@ int main(int argc, char* argv[])
 
   // Setup subscriber
   ros::Subscriber vslam_subscriber = nh.subscribe<pcl::PointCloud<pcl::PointXYZINormal>>("vllm/vslam_data", 1, callback);
+  ros::Subscriber recover_pose_subscriber = nh.subscribe<geometry_msgs::PoseWithCovarianceStamped>("/initialpose", 1, callbackForRecover);
   tf::TransformListener listener;
 
   // Setup publisher
@@ -104,9 +128,15 @@ int main(int argc, char* argv[])
 
     Eigen::Matrix4f T_vslam = listenTransform(listener);
 
+    if (!T_recover.isZero()) {
+      system->specifyTWorld(T_recover);
+      T_recover.setZero();
+    }
+
     if (vslam_update) {
       vslam_update = false;
       m_start = std::chrono::system_clock::now();
+
 
       // Execution
       system->execute(2, T_vslam, vslam_data);  // '1' means
