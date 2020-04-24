@@ -92,9 +92,12 @@ void BridgeOpenVSLAM::getLandmarksAndNormals(pcXYZIN::Ptr& vslam_data) const
 
     float weight = 1.0;
     // NOTE:OBSL: Newly observed points have priority
-    // weight = static_cast<float>(recollection - (max_id - first_observed_id)) / static_cast<float>(recollection);
+    // if first_observed_id == max_id                  => weight = 1.0
+    // if first_observed_id == (max_id - recollection) => weight = 0.0
+    weight = static_cast<float>(recollection - max_id + first_observed_id) / static_cast<float>(recollection);
     if (weight < 0.1f) weight = 0.1f;
     if (weight > 1.0f) weight = 1.0f;
+
 
     pcl::PointXYZINormal p;
     p.x = static_cast<float>(pos.x());

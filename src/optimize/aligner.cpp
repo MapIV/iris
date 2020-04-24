@@ -92,10 +92,11 @@ void Aligner::setEdge7DoFGICP(
     Eigen::Vector3f pt0, pt1;
     pt0 = target->at(cor.index_match).getVector3fMap();
     pt1 = source_clouds->at(cor.index_query).getVector3fMap();
-    // float weight = source_clouds->at(cor.index_query).intensity;
+    float weight = source_clouds->at(cor.index_query).intensity;
 
     EdgeGICP meas;
-    meas.weight = 1.0f / ((camera - pt1).norm() + 1.0f);
+    meas.weight = weight;
+    // meas.weight = 1.0f / ((camera - pt1).norm() + 1.0f);
     meas.pos0 = pt0.cast<double>();
     meas.pos1 = pt1.cast<double>();
 
