@@ -92,8 +92,10 @@ private:
 
   std::mutex imu_mtx;
   pcl::PointCloud<pcl::PointXYZ>::Ptr target_cloud;
+  pcl::PointCloud<pcl::PointXYZ>::Ptr target_sparse_cloud;
   pcl::PointCloud<pcl::Normal>::Ptr target_normals;
   pcl::PointCloud<pcl::PointXYZRGBA>::Ptr colored_target_cloud;
+  pcl::PointCloud<pcl::PointXYZRGBA>::Ptr colored_sparse_cloud;
   std::vector<Color> target_normals_color;
 
   std::vector<Eigen::Matrix4f, Eigen::aligned_allocator<Eigen::Matrix4f>> imu_poses;

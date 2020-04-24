@@ -91,7 +91,7 @@ void BridgeOpenVSLAM::getLandmarksAndNormals(pcXYZIN::Ptr& vslam_data) const
     const openvslam::Vec3_t normal = local_lm->get_obs_mean_normal();
 
     float weight = 1.0;
-    // NOTE:OBSL: Newly observed points have priority
+    // Newly observed points have priority
     // if first_observed_id == max_id                  => weight = 1.0
     // if first_observed_id == (max_id - recollection) => weight = 0.0
     weight = static_cast<float>(recollection - max_id + first_observed_id) / static_cast<float>(recollection);

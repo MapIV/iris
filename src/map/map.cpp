@@ -1,6 +1,7 @@
 #include "vllm/map/map.hpp"
 #include "vllm/core/util.hpp"
 #include <pcl/common/common.h>
+#include <pcl/filters/voxel_grid.h>
 #include <pcl/point_cloud.h>
 
 namespace vllm
@@ -18,12 +19,14 @@ Map::Map(const Parameter& parameter)
   if (!recalculation_is_necessary) {
     all_target_cloud = pcXYZ::Ptr(new pcXYZ);
     all_target_normals = pcNormal::Ptr(new pcNormal);
+    all_sparse_cloud = pcXYZ::Ptr(new pcXYZ);
 
     // load cache file
     bool flag1 = (pcl::io::loadPCDFile<pcl::PointXYZ>(cache_cloud_file, *all_target_cloud) != -1);
     bool flag2 = (pcl::io::loadPCDFile<pcl::Normal>(cache_normals_file, *all_target_normals) != -1);
+    bool flag3 = (pcl::io::loadPCDFile<pcl::PointXYZ>(cache_sparse_file, *all_sparse_cloud) != -1);
 
-    if (flag1 && flag2)
+    if (flag1 && flag2 && flag3)
       std::cout << "Because of cache hit, cached target point cloud was loaded" << std::endl;
     else
       recalculation_is_necessary = true;
@@ -35,12 +38,22 @@ Map::Map(const Parameter& parameter)
     std::cout << "start loading pointcloud & esitmating normal with leafsize " << parameter.voxel_grid_leaf << " search_radius " << parameter.normal_search_radius << std::endl;
     all_target_cloud = pcXYZ::Ptr(new pcXYZ);
     all_target_normals = pcNormal::Ptr(new pcNormal);
+    all_sparse_cloud = pcXYZ::Ptr(new pcXYZ);
     util::loadMap(parameter.pcd_file, all_target_cloud, all_target_normals, parameter.voxel_grid_leaf, parameter.normal_search_radius);
+
+    {
+      pcl::VoxelGrid<pcl::PointXYZ> filter;
+      filter.setInputCloud(all_target_cloud);
+      filter.setLeafSize(4 * parameter.voxel_grid_leaf, 4 * parameter.voxel_grid_leaf, 4 * parameter.voxel_grid_leaf);
+      filter.filter(*all_sparse_cloud);
+    }
+
 
     // save as cache file
     std::cout << "save pointcloud with normal" << parameter.normal_search_radius << std::endl;
     pcl::io::savePCDFileBinaryCompressed<pcl::PointXYZ>(cache_cloud_file, *all_target_cloud);
     pcl::io::savePCDFileBinaryCompressed<pcl::Normal>(cache_normals_file, *all_target_normals);
+    pcl::io::savePCDFileBinaryCompressed<pcl::PointXYZ>(cache_sparse_file, *all_sparse_cloud);
 
     // update cache information
     std::ofstream ofs(cache_file);

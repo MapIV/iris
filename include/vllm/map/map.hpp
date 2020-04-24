@@ -38,6 +38,13 @@ public:
   }
 
   // TODO: This function may have conflicts
+  const pcXYZ::Ptr getSparseCloud() const
+  {
+    std::lock_guard lock(localmap_mtx);
+    return all_sparse_cloud;
+  }
+
+  // TODO: This function may have conflicts
   const pcNormal::Ptr getTargetNormals() const
   {
     std::lock_guard lock(localmap_mtx);
@@ -49,10 +56,12 @@ private:
   const Parameter parameter;
   const std::string cache_cloud_file = "vllm_cloud.pcd";
   const std::string cache_normals_file = "vllm_normals.pcd";
+  const std::string cache_sparse_file = "vllm_sparse_cloud.pcd";
 
-  // whole point cloud (too heaby)
+  // whole point cloud
   pcXYZ::Ptr all_target_cloud;
   pcNormal::Ptr all_target_normals;
+  pcXYZ::Ptr all_sparse_cloud;
 
   // valid point cloud
   pcXYZ::Ptr local_target_cloud;
