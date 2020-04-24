@@ -10,8 +10,12 @@ void Edge_Scale_Restriction::computeError()
   double scale = vp0->estimate().scale();
   const double ref_scale = measurement();
 
-  // TODO:
-  _error(0) = gain * (ref_scale - scale);
+  double diff = (ref_scale - scale);
+  double e = 0;
+  if (diff > 0) e = diff;
+  if (diff < 0) e = -diff / (scale + 1e6);
+
+  _error(0) = gain * e;
 }
 
 void Edge_Altitude_Restriction::computeError()
@@ -24,12 +28,25 @@ void Edge_Altitude_Restriction::computeError()
 void Edge_Latitude_Restriction::computeError()
 {
   const VertexSim3Expmap* vp0 = static_cast<const VertexSim3Expmap*>(_vertices[0]);
-  Eigen::Matrix3d R = vp0->estimate().rotation().toRotationMatrix();
-  Eigen::Vector3d ez(0, 0, 1);
 
-  double swing = (R * ez).z();
+  // Because Visual-SLAM hundle the direction in front of camera as the Z-axis,
+  // the alignment transform contains the rotation which converts Z-axis(in front of camera) to X-axis(in front of base_link)
+  Eigen::Matrix3d R = vp0->estimate().rotation().toRotationMatrix();
+  Eigen::Vector3d b(0, -1, 0);
+
+  Eigen::Vector3d Rb = R * b;
+  // Rb get (0,0,1) when the camera doesn't pitch and roll.
+  // If the camera roll,  Rb gets approximately (0, e, 1-e).
+  // If the camera pitch, Rb gets approximately (e, 0, 1-e).
+  // Therefore, 1-Rb.z() means how the camera roll or pitch.
+
+  double swing = 1 - Rb.z();
+
+  // This means that an angle of the camera rolling and pitching larger than acos(0.75) = 41[deg]
   if (swing > 0.25)
-    _error(0) = 1e4;
+    _error(0) = 1e4;  // infinity loss
+
+  // This means that the angle is enough small.
   else
     _error(0) = gain * swing;
 }

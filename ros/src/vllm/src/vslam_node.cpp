@@ -14,7 +14,7 @@
 
 int main(int argc, char* argv[])
 {
-  // Initialzie ROS & subscriber
+  // Initialize ROS
   ros::init(argc, argv, "vslam_node");
 
   // Analyze arugments
