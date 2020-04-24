@@ -85,17 +85,21 @@ public:
   // TODO:NOTE: This is not thread safe
   void specifyTWorld(const Eigen::Matrix4f& specified_T_world)
   {
-    std::cout << "last T_align\n"
-              << T_align << std::endl;
+    // std::cout << "last T_align\n"
+    //           << T_align << std::endl;
+    // std::cout << "last T_world\n"
+    //           << T_world << std::endl;
+    // std::cout << "last T_vslam\n"
+    //           << last_T_vslam << std::endl;
 
     float scale = util::getScale(T_world);
-    auto tmp = util::applyScaling(specified_T_world, scale);
-    std::cout << "debug\n"
-              << tmp << std::endl;
-    T_align = tmp * last_T_vslam.inverse();
+    auto scaled_new_T_world = util::applyScaling(specified_T_world, scale);
+    // std::cout << "scaled_new_T_world\n"
+    //           << scaled_new_T_world << std::endl;
+    T_align = scaled_new_T_world * last_T_vslam.inverse();
 
-    std::cout << "new T_align\n"
-              << T_align << std::endl;
+    // std::cout << "new T_align\n"
+    //           << T_align << std::endl;
   }
 
   // TODO:NOTE: This is not thread safe.

@@ -60,12 +60,12 @@ void callbackForRecover(const geometry_msgs::PoseWithCovarianceStampedConstPtr& 
   T_recover.setIdentity();
   T_recover(0, 3) = x;
   T_recover(1, 3) = y;
-  float theta = std::atan2(qz, qw);
-  T_recover.topLeftCorner(3, 3) = Eigen::AngleAxisf(2 * theta, Eigen::Vector3f::UnitZ()).toRotationMatrix();
-  std::cout << "qw " << qw << " qz " << qz << " theta " << theta << std::endl;
-
-  std::cout << "T_recover\n"
-            << T_recover << std::endl;
+  float theta = 2 * std::atan2(qz, qw);
+  Eigen::Matrix3f R;
+  R << 0, 0, 1,
+      -1, 0, 0,
+      0, -1, 0;
+  T_recover.topLeftCorner(3, 3) = Eigen::AngleAxisf(theta, Eigen::Vector3f::UnitZ()).toRotationMatrix() * R;
 }
 
 int main(int argc, char* argv[])
