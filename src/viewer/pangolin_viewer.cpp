@@ -63,7 +63,6 @@ void PangolinViewer::init()
 
   colored_target_cloud = colorizePointCloud(target_cloud);
   target_normals_color = colorizeNormals(target_normals);
-  colored_sparse_cloud = colorizePointCloud(target_sparse_cloud);
 
   const optimize::Gain& optimize_gain = system_ptr->getOptimizeGain();
   gui_scale_gain = std::make_shared<pangolin::Var<float>>("ui.scale_gain", optimize_gain.scale, 0.0f, 50.0f);
@@ -128,7 +127,7 @@ void PangolinViewer::execute()
   }
 
   drawPointCloud(colored_target_cloud, {0.6f, 0.6f, 0.6f, 1.0f});
-  drawPointCloud(colored_sparse_cloud, {0.6f, 0.6f, 0.6f, 0.5f});
+  drawPointCloud(target_sparse_cloud, {0.9f, 0.0f, 0.0f, 0.5f});
 
   if (*gui_target_normals)
     drawNormals(target_cloud, target_normals, target_normals_color, 20);
@@ -174,7 +173,7 @@ pangolin::OpenGlRenderState PangolinViewer::makeCamera(
 {
   return pangolin::OpenGlRenderState(
       pangolin::ProjectionMatrix(
-          640, 480, 420, 420, 320, 240, 0.2, 300),
+          640, 480, 420, 420, 320, 240, 0.2, 400),
       pangolin::ModelViewLookAt(
           from.x(), from.y(), from.z(), to.x(), to.y(), to.z(), up));
 }
