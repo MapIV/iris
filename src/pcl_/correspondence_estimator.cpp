@@ -46,6 +46,32 @@ namespace vllm
 {
 namespace pcl_
 {
+Eigen::Matrix3f calcInversedCovariance(const Eigen::Vector3f& n, float epsilon = 0.5f)
+{
+  Eigen::Vector3f n0 = n.normalized();
+  Eigen::Vector3f e = Eigen::Vector3f::UnitX();
+  if (e.dot(n0) > 1 - 1e-6) e = Eigen::Vector3f::UnitY();
+
+  Eigen::Vector3f n1 = (e - e.dot(n0) * n0).normalized();
+  Eigen::Vector3f n2 = n0.cross(n1);
+
+  Eigen::Matrix3f R;
+  R.block(0, 0, 1, 3) = n0.transpose();
+  R.block(1, 0, 1, 3) = n1.transpose();
+  R.block(2, 0, 1, 3) = n2.transpose();
+
+  // clang-format off
+  Eigen::Matrix3f inv_cov;
+  inv_cov <<  epsilon,       0,       0,
+                     0,      1,       0,
+                     0,      0,       1;
+  // clang-format on
+
+  return R * inv_cov * R.transpose();
+  // cov = R.transpose() * cov * R;
+}
+
+
 ///////////////////////////////////////////////////////////////////////////////////////////
 template <typename PointSource, typename PointTarget, typename NormalT, typename Scalar>
 bool CorrespondenceEstimationBackProjection<PointSource, PointTarget, NormalT, Scalar>::initCompute()
@@ -78,8 +104,8 @@ void CorrespondenceEstimationBackProjection<PointSource, PointTarget, NormalT, S
   pcl::Correspondence corr;
   unsigned int nr_valid_correspondences = 0;
 
-  constexpr float gain_center[] = {-0.2f, 0.0f, 0.2f};
-  constexpr int gain_K[] = {1, 2, 3};
+  constexpr float gain_center[] = {-0.1f, 0.0f, 0.1f};
+  constexpr int gain_K[] = {1, 1, 1};
 
   // Check if the template types are the same. If true, avoid a copy.
   // Both point types MUST be registered using the POINT_CLOUD_REGISTER_POINT_STRUCT macro!
@@ -89,13 +115,16 @@ void CorrespondenceEstimationBackProjection<PointSource, PointTarget, NormalT, S
     // Iterate over the input set of source indices
     for (std::vector<int>::const_iterator idx_i = indices_->begin(); idx_i != indices_->end(); ++idx_i) {
 
-      Eigen::Vector3f distance_from_center = (input_->points[*idx_i].getVector3fMap() - center_).normalized();
-
+      Eigen::Vector3f distance_from_camera = (input_->points[*idx_i].getVector3fMap() - center_);
       min_dist = std::numeric_limits<float>::max();
+      Eigen::Vector3f input_point = input_->points[*idx_i].getVector3fMap();
+      Eigen::Vector3f input_normal = source_normals_->points[*idx_i].getNormalVector3fMap();
+
+      Eigen::Matrix3f covariance = calcInversedCovariance(distance_from_camera);
 
       for (int k = 0; k < 3; k++) {
-        Eigen::Vector3f offset_center = input_->points[*idx_i].getVector3fMap() + gain_center[k] * distance_from_center;
-        tree_->nearestKSearch(PointSource(offset_center.x(), offset_center.y(), offset_center.z()), k_ * gain_K[k], nn_indices, nn_dists);
+        Eigen::Vector3f offset_point = input_point + gain_center[k] * distance_from_camera;
+        tree_->nearestKSearch(PointSource(offset_point.x(), offset_point.y(), offset_point.z()), k_ * gain_K[k], nn_indices, nn_dists);
 
         // Among the K nearest neighbours find the one with minimum perpendicular distance to the normal
         float tmp_min_dist = std::numeric_limits<float>::max();
@@ -104,8 +133,12 @@ void CorrespondenceEstimationBackProjection<PointSource, PointTarget, NormalT, S
 
         // Find the best correspondence
         for (size_t j = 0; j < nn_indices.size(); j++) {
-          float cos_angle = source_normals_->points[*idx_i].normal_x * target_normals_->points[nn_indices[j]].normal_x + source_normals_->points[*idx_i].normal_y * target_normals_->points[nn_indices[j]].normal_y + source_normals_->points[*idx_i].normal_z * target_normals_->points[nn_indices[j]].normal_z;
-          float dist = nn_dists[j] * (2.0f - cos_angle * cos_angle);
+          Eigen::Vector3f target_point = target_->points[nn_indices[j]].getVector3fMap();
+          Eigen::Vector3f target_normal = target_normals_->points[nn_indices[j]].getNormalVector3fMap();
+
+          Eigen::Vector3f e = target_point - input_point;
+          float cosin = (input_normal.dot(target_normal));
+          float dist = e.dot(covariance * e) * (2 - cosin * cosin);
 
           if (dist < tmp_min_dist) {
             tmp_min_dist = dist;
@@ -124,7 +157,7 @@ void CorrespondenceEstimationBackProjection<PointSource, PointTarget, NormalT, S
         continue;
 
       corr.index_query = *idx_i;
-      corr.index_match = min_index;
+      corr.index_match = min_index;  // NOTE:
       corr.distance = min_output_dist;
       correspondences[nr_valid_correspondences++] = corr;
     }
