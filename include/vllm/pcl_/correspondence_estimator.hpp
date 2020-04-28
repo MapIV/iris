@@ -156,6 +156,8 @@ public:
 
   Eigen::Vector3f center_;
   void setCenter(const Eigen::Vector3f& center) { center_ = center; }
+  int method_;
+  void setMethod(int m) { method_ = m; }
 
   /** \brief Determine the correspondences between input and target cloud.
           * \param[out] correspondences the found correspondences (index of query point, index of target point, distance)

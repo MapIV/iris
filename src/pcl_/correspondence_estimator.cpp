@@ -46,7 +46,7 @@ namespace vllm
 {
 namespace pcl_
 {
-Eigen::Matrix3f calcInversedCovariance(const Eigen::Vector3f& n, float epsilon = 0.5f)
+Eigen::Matrix3f calcInversedCovariance1(const Eigen::Vector3f& n, float epsilon = 0.2f)
 {
   Eigen::Vector3f n0 = n.normalized();
   Eigen::Vector3f e = Eigen::Vector3f::UnitX();
@@ -65,6 +65,30 @@ Eigen::Matrix3f calcInversedCovariance(const Eigen::Vector3f& n, float epsilon =
   inv_cov <<  epsilon,       0,       0,
                      0,      1,       0,
                      0,      0,       1;
+  // clang-format on
+
+  return R * inv_cov * R.transpose();
+  // cov = R.transpose() * cov * R;
+}
+Eigen::Matrix3f calcInversedCovariance2(const Eigen::Vector3f& n, float epsilon = 0.2f)
+{
+  Eigen::Vector3f n0 = n.normalized();
+  Eigen::Vector3f e = Eigen::Vector3f::UnitX();
+  if (e.dot(n0) > 1 - 1e-6) e = Eigen::Vector3f::UnitY();
+
+  Eigen::Vector3f n1 = (e - e.dot(n0) * n0).normalized();
+  Eigen::Vector3f n2 = n0.cross(n1);
+
+  Eigen::Matrix3f R;
+  R.block(0, 0, 1, 3) = n0.transpose();
+  R.block(1, 0, 1, 3) = n1.transpose();
+  R.block(2, 0, 1, 3) = n2.transpose();
+
+  // clang-format off
+  Eigen::Matrix3f inv_cov;
+  inv_cov <<         1,       0,       0,
+                     0, epsilon,       0,
+                     0,       0, epsilon;
   // clang-format on
 
   return R * inv_cov * R.transpose();
@@ -120,7 +144,11 @@ void CorrespondenceEstimationBackProjection<PointSource, PointTarget, NormalT, S
       Eigen::Vector3f input_point = input_->points[*idx_i].getVector3fMap();
       Eigen::Vector3f input_normal = source_normals_->points[*idx_i].getNormalVector3fMap();
 
-      Eigen::Matrix3f covariance = calcInversedCovariance(distance_from_camera);
+      Eigen::Matrix3f covariance;
+      if (method_ == 0)
+        covariance = calcInversedCovariance1(distance_from_camera);
+      else
+        covariance = calcInversedCovariance2(distance_from_camera);
 
       for (int k = 0; k < 3; k++) {
         Eigen::Vector3f offset_point = input_point + gain_center[k] * distance_from_camera;
