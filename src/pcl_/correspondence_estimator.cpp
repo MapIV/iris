@@ -145,19 +145,17 @@ void CorrespondenceEstimationBackProjection<PointSource, PointTarget, NormalT, S
       Eigen::Vector3f input_normal = source_normals_->points[*idx_i].getNormalVector3fMap();
 
       Eigen::Matrix3f covariance;
-      if (method_ == 0)
+      if (method_ == 0) {
         covariance = calcInversedCovariance1(distance_from_camera);
-      else
+      } else {
         covariance = calcInversedCovariance2(distance_from_camera);
+        // rotate offset vector
+        distance_from_camera = (Eigen::Vector3f::UnitZ()).cross(distance_from_camera);
+      }
 
       for (int k = 0; k < 3; k++) {
         Eigen::Vector3f offset_point = input_point + gain_center[k] * distance_from_camera;
         tree_->nearestKSearch(PointSource(offset_point.x(), offset_point.y(), offset_point.z()), k_ * gain_K[k], nn_indices, nn_dists);
-
-        // Among the K nearest neighbours find the one with minimum perpendicular distance to the normal
-        float tmp_min_dist = std::numeric_limits<float>::max();
-        int tmp_min_index = 0;
-        float tmp_output_dist = 0;
 
         // Find the best correspondence
         for (size_t j = 0; j < nn_indices.size(); j++) {
@@ -166,19 +164,13 @@ void CorrespondenceEstimationBackProjection<PointSource, PointTarget, NormalT, S
 
           Eigen::Vector3f e = target_point - input_point;
           float cosin = (input_normal.dot(target_normal));
-          float dist = e.dot(covariance * e) * (2 - cosin * cosin);
+          float dist = e.dot(covariance * e) * (1.5f - cosin * cosin);
 
-          if (dist < tmp_min_dist) {
-            tmp_min_dist = dist;
-            tmp_min_index = nn_indices[j];
-            tmp_output_dist = nn_dists[j];
+          if (dist < min_dist) {
+            min_dist = dist;
+            min_index = nn_indices[j];
+            min_output_dist = nn_dists[j];
           }
-        }
-
-        if (tmp_min_dist < min_dist) {
-          min_dist = tmp_min_dist;
-          min_index = tmp_min_index;
-          min_output_dist = tmp_output_dist;
         }
       }
       if (min_dist > max_distance)
