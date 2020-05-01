@@ -79,6 +79,8 @@ void BridgeOpenVSLAM::getLandmarksAndNormals(pcXYZIN::Ptr& vslam_data) const
 
   if (local_landmarks.empty()) return;
 
+  Eigen::Vector3d t_vslam = SLAM_ptr->get_map_publisher()->get_current_cam_pose().topRightCorner(3, 1);
+
   unsigned int max_id = SLAM_ptr->get_map_publisher()->get_max_keyframe_id();
   for (const auto local_lm : landmarks) {
     unsigned int first_observed_id = local_lm->first_keyfrm_id_;
@@ -90,14 +92,11 @@ void BridgeOpenVSLAM::getLandmarksAndNormals(pcXYZIN::Ptr& vslam_data) const
     const openvslam::Vec3_t pos = local_lm->get_pos_in_world();
     const openvslam::Vec3_t normal = local_lm->get_obs_mean_normal();
 
-    float weight = 1.0;
-    // Newly observed points have priority
-    // if first_observed_id == max_id                  => weight = 1.0
-    // if first_observed_id == (max_id - recollection) => weight = 0.0
-    weight = static_cast<float>(recollection - max_id + first_observed_id) / static_cast<float>(recollection);
+    // when the distance is 5m or more, the weight is minimum.
+    // float weight = static_cast<float>(1.0 - (t_vslam - pos).norm() * 0.2);
+    float weight = 1.0f;
     if (weight < 0.1f) weight = 0.1f;
     if (weight > 1.0f) weight = 1.0f;
-
 
     pcl::PointXYZINormal p;
     p.x = static_cast<float>(pos.x());
@@ -124,7 +123,7 @@ int BridgeOpenVSLAM::getState() const
 
 cv::Mat BridgeOpenVSLAM::getFrame() const
 {
-  return SLAM_ptr->get_frame_publisher()->draw_frame();
+  return SLAM_ptr->get_frame_publisher()->draw_frame(false);
 }
 
 Eigen::Matrix4f BridgeOpenVSLAM::getCameraPose() const

@@ -62,11 +62,11 @@ int main(int argc, char* argv[])
 
       // process OpenVSLAM
       bridge.execute(frame);
-      bridge.setCriteria(30, accuracy);
+      bridge.setCriteria(config.recollection, accuracy);
       bridge.getLandmarksAndNormals(vslam_data);
       // Update threshold to adjust the number of points
-      if (vslam_data->size() < 300 && accuracy > 0.10f) accuracy -= 0.01f;
-      if (vslam_data->size() > 500 && accuracy < 0.90f) accuracy += 0.01f;
+      if (vslam_data->size() < 200 && accuracy > 0.10f) accuracy -= 0.01f;
+      if (vslam_data->size() > 400 && accuracy < 0.90f) accuracy += 0.01f;
 
       int vllm_state = system->execute(bridge.getState(), bridge.getCameraPose().inverse(), vslam_data);
 

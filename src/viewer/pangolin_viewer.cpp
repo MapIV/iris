@@ -173,7 +173,7 @@ pangolin::OpenGlRenderState PangolinViewer::makeCamera(
 {
   return pangolin::OpenGlRenderState(
       pangolin::ProjectionMatrix(
-          640, 480, 420, 420, 320, 240, 0.2, 400),
+          640, 480, 420, 420, 320, 240, 0.2, 500),
       pangolin::ModelViewLookAt(
           from.x(), from.y(), from.z(), to.x(), to.y(), to.z(), up));
 }
@@ -249,7 +249,7 @@ void PangolinViewer::drawGridLine() const
 
   glBegin(GL_LINES);
   constexpr float max = 100;
-  constexpr float interval = 2.0f;
+  constexpr float interval = 5.0f;
 
   constexpr float grid_min = -max * interval;
   constexpr float grid_max = max * interval;

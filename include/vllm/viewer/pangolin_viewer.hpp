@@ -73,7 +73,7 @@ private:
       const Color& color) const;
 
   pangolin::OpenGlRenderState makeCamera(
-      const Eigen::Vector3f& from = Eigen::Vector3f(-10, 0, 10),
+      const Eigen::Vector3f& from = Eigen::Vector3f(-10, 0, 30),
       const Eigen::Vector3f& to = Eigen::Vector3f(0, 0, 0),
       const pangolin::AxisDirection up = pangolin::AxisZ);
 
