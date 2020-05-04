@@ -64,7 +64,7 @@ int main(int argc, char* argv[])
 
       // process OpenVSLAM
       bridge.execute(subscribed_image);
-      bridge.setCriteria(30, accuracy);
+      bridge.setCriteria(config.recollection, accuracy);
       bridge.getLandmarksAndNormals(vslam_data);
 
       // Reset input

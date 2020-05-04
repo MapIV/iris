@@ -66,7 +66,7 @@ VLLM.frame_skip: 1
 VLLM.recollection: 25
 
 VLLM.scale_gain: 20.0
-VLLM.smooth_gain: 1.5
+VLLM.smooth_gain: 0.0
 VLLM.latitude_gain: 10.0
 VLLM.altitude_gain: 0.1
 

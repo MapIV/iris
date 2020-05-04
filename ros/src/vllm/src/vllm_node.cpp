@@ -18,6 +18,7 @@
 #include <tf/transform_broadcaster.h>
 #include <tf/transform_listener.h>
 #include <visualization_msgs/Marker.h>
+#include <visualization_msgs/MarkerArray.h>
 
 // TODO: I don't like the function decleared in global scope like this
 pcl::PointCloud<pcl::PointXYZINormal>::Ptr vslam_data(new pcl::PointCloud<pcl::PointXYZINormal>);
@@ -103,8 +104,8 @@ int main(int argc, char* argv[])
   // Setup publisher
   ros::Publisher target_pc_publisher = nh.advertise<pcl::PointCloud<pcl::PointXYZI>>("vllm/target_pointcloud", 1);
   ros::Publisher source_pc_publisher = nh.advertise<pcl::PointCloud<pcl::PointXYZI>>("vllm/source_pointcloud", 1);
-  ros::Publisher vllm_trajectory_publisher = nh.advertise<visualization_msgs::Marker>("vllm/vllm_trajectory", 1);
-  ros::Publisher vslam_trajectory_publisher = nh.advertise<visualization_msgs::Marker>("vllm/vslam_trajectory", 1);
+  ros::Publisher vllm_trajectory_publisher = nh.advertise<visualization_msgs::MarkerArray>("vllm/vllm_trajectory", 1);
+  ros::Publisher vslam_trajectory_publisher = nh.advertise<visualization_msgs::MarkerArray>("vllm/vslam_trajectory", 1);
   ros::Publisher correspondences_publisher = nh.advertise<visualization_msgs::Marker>("vllm/correspondences", 1);
   vllm::Publication publication;
 
@@ -137,9 +138,8 @@ int main(int argc, char* argv[])
       vslam_update = false;
       m_start = std::chrono::system_clock::now();
 
-
       // Execution
-      system->execute(2, T_vslam, vslam_data);  // '1' means
+      system->execute(2, T_vslam, vslam_data);
 
       // Publish for rviz
       system->popPublication(publication);
@@ -156,6 +156,9 @@ int main(int argc, char* argv[])
          << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - m_start).count()
          << "\033[m ms";
       ROS_INFO("VLLM/ALIGN: %s", ss.str().c_str());
+
+    } else {
+      // Publish for rviz
     }
 
     // Publish target pointcloud map
