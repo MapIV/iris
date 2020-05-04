@@ -121,6 +121,16 @@ int main(int argc, char* argv[])
   std::shared_ptr<vllm::System> system = std::make_shared<vllm::System>(config, map);
   std::chrono::system_clock::time_point m_start;
 
+  // Publish for rviz to clear previous visualization
+  {
+    vllm_ros::publishResetPointcloud(source_pc_publisher);
+    vllm_ros::publishResetTrajectory(vllm_trajectory_publisher);
+    vllm_ros::publishResetTrajectory(vslam_trajectory_publisher);
+    vllm_ros::publishResetCorrespondences(correspondences_publisher);
+    vllm_ros::publishPose(Eigen::Matrix4f::Zero(), "vllm/offseted_vslam_pose");
+    vllm_ros::publishPose(Eigen::Matrix4f::Zero(), "vllm/vllm_pose");
+  }
+
   ros::Rate loop_rate(20);
   int loop_count = 0;
 
@@ -158,7 +168,6 @@ int main(int argc, char* argv[])
       ROS_INFO("VLLM/ALIGN: %s", ss.str().c_str());
 
     } else {
-      // Publish for rviz
     }
 
     // Publish target pointcloud map

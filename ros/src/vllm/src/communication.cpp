@@ -53,7 +53,7 @@ void publishCorrespondences(ros::Publisher& publisher,
   visualization_msgs::Marker line_strip;
   line_strip.header.frame_id = "world";
   line_strip.header.stamp = ros::Time::now();
-  line_strip.ns = "points_and_lines";
+  line_strip.ns = "correspondences";
   line_strip.action = visualization_msgs::Marker::ADD;
   line_strip.pose.orientation.w = 1.0;
   line_strip.id = 0;
@@ -116,6 +116,16 @@ void publishTrajectory(ros::Publisher& publisher,
 {
   visualization_msgs::MarkerArray curve;
 
+  // delte previous line
+  {
+    visualization_msgs::Marker reset_line;
+    reset_line.header.frame_id = "world";
+    reset_line.header.stamp = ros::Time::now();
+    reset_line.ns = "points_and_lines";
+    reset_line.action = visualization_msgs::Marker::DELETEALL;
+    curve.markers.push_back(reset_line);
+  }
+
   for (size_t i = 0, n = trajectory.size(); i < n - 1; i++) {
 
     visualization_msgs::Marker line_strip = makeMarkerAsLine(trajectory.at(i), trajectory.at(i + 1), i);
@@ -148,6 +158,47 @@ std::function<void(const sensor_msgs::ImageConstPtr&)> imageCallbackGenerator(cv
     cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8);
     subscribed_image = cv_ptr->image.clone();
   };
+}
+
+
+void publishResetPointcloud(ros::Publisher& publisher)
+{
+  pcl::PointCloud<pcl::PointXYZ>::Ptr tmp(new pcl::PointCloud<pcl::PointXYZ>);
+  pcl_conversions::toPCL(ros::Time::now(), tmp->header.stamp);
+  tmp->header.frame_id = "world";
+  publisher.publish(tmp);
+}
+
+void publishResetTrajectory(ros::Publisher& publisher)
+{
+  visualization_msgs::MarkerArray curve;
+  {
+    visualization_msgs::Marker reset_line;
+    reset_line.header.frame_id = "world";
+    reset_line.header.stamp = ros::Time::now();
+    reset_line.ns = "points_and_lines";
+    reset_line.action = visualization_msgs::Marker::DELETEALL;
+    curve.markers.push_back(reset_line);
+  }
+  publisher.publish(curve);
+}
+
+void publishResetCorrespondences(ros::Publisher& publisher)
+{
+  visualization_msgs::Marker line_strip;
+  line_strip.header.frame_id = "world";
+  line_strip.header.stamp = ros::Time::now();
+  line_strip.ns = "correspondences";
+  line_strip.action = visualization_msgs::Marker::ADD;
+  line_strip.pose.orientation.w = 1.0;
+  line_strip.id = 0;
+  line_strip.scale.x = 0.3;
+  line_strip.type = visualization_msgs::Marker::LINE_LIST;
+  line_strip.color.r = 1.0;
+  line_strip.color.g = 0.0;
+  line_strip.color.b = 0.0;
+  line_strip.color.a = 1.0;
+  publisher.publish(line_strip);
 }
 
 
