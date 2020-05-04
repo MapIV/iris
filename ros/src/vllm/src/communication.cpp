@@ -114,41 +114,48 @@ visualization_msgs::Marker makeMarkerAsLine(const Eigen::Vector3f& s, const Eige
 void publishTrajectory(ros::Publisher& publisher,
     const std::vector<Eigen::Vector3f, Eigen::aligned_allocator<Eigen::Vector3f>>& trajectory, int color)
 {
-  visualization_msgs::MarkerArray curve;
+  // visualization_msgs::MarkerArray curve;
+  // // delte previous line
+  // {
+  //   visualization_msgs::Marker reset_line;
+  //   reset_line.header.frame_id = "world";
+  //   reset_line.header.stamp = ros::Time::now();
+  //   reset_line.ns = "points_and_lines";
+  //   reset_line.action = visualization_msgs::Marker::DELETEALL;
+  //   curve.markers.push_back(reset_line);
+  // }
 
-  // delte previous line
-  {
-    visualization_msgs::Marker reset_line;
-    reset_line.header.frame_id = "world";
-    reset_line.header.stamp = ros::Time::now();
-    reset_line.ns = "points_and_lines";
-    reset_line.action = visualization_msgs::Marker::DELETEALL;
-    curve.markers.push_back(reset_line);
+  visualization_msgs::Marker line_strip;
+  line_strip.header.frame_id = "world";
+  line_strip.header.stamp = ros::Time::now();
+  line_strip.ns = "points_and_lines";
+  line_strip.action = visualization_msgs::Marker::ADD;
+  line_strip.pose.orientation.w = 1.0;
+  line_strip.id = 0;
+  line_strip.type = visualization_msgs::Marker::LINE_STRIP;
+  line_strip.color.a = 1.0;
+  line_strip.scale.x = 0.5;
+
+  if (color == 0) {
+    line_strip.color.r = 1.0f;
+    line_strip.color.g = 0.0f;
+    line_strip.color.b = 1.0f;
   }
 
-  for (size_t i = 0, n = trajectory.size(); i < n - 1; i++) {
-
-    visualization_msgs::Marker line_strip = makeMarkerAsLine(trajectory.at(i), trajectory.at(i + 1), i);
-
-    if (color == 0) {
-      Eigen::Vector3f rgb = convertRGB({static_cast<float>((2 * i) % 360), 1.0f, 1.0f});
-      line_strip.color.r = rgb(0);
-      line_strip.color.g = rgb(1);
-      line_strip.color.b = rgb(2);
-    }
-
-    if (color == 1) {
-      int tmp = (i % 50);
-      if (tmp > 25) tmp = 50 - tmp;
-      Eigen::Vector3f rgb = convertRGB({0.0f, 0.0f, static_cast<float>(tmp) / 25.0f});
-
-      line_strip.color.r = rgb(0);
-      line_strip.color.g = rgb(1);
-      line_strip.color.b = rgb(2);
-    }
-    curve.markers.push_back(line_strip);
+  if (color == 1) {
+    line_strip.color.r = 0.6f;
+    line_strip.color.g = 0.6f;
+    line_strip.color.b = 0.6f;
   }
-  publisher.publish(curve);
+
+  for (const Eigen::Vector3f& t : trajectory) {
+    geometry_msgs::Point p;
+    p.x = t.x();
+    p.y = t.y();
+    p.z = t.z();
+    line_strip.points.push_back(p);
+  }
+  publisher.publish(line_strip);
 }
 
 std::function<void(const sensor_msgs::ImageConstPtr&)> imageCallbackGenerator(cv::Mat& subscribed_image)
@@ -171,16 +178,12 @@ void publishResetPointcloud(ros::Publisher& publisher)
 
 void publishResetTrajectory(ros::Publisher& publisher)
 {
-  visualization_msgs::MarkerArray curve;
-  {
-    visualization_msgs::Marker reset_line;
-    reset_line.header.frame_id = "world";
-    reset_line.header.stamp = ros::Time::now();
-    reset_line.ns = "points_and_lines";
-    reset_line.action = visualization_msgs::Marker::DELETEALL;
-    curve.markers.push_back(reset_line);
-  }
-  publisher.publish(curve);
+  visualization_msgs::Marker reset_line;
+  reset_line.header.frame_id = "world";
+  reset_line.header.stamp = ros::Time::now();
+  reset_line.ns = "points_and_lines";
+  reset_line.action = visualization_msgs::Marker::DELETEALL;
+  publisher.publish(reset_line);
 }
 
 void publishResetCorrespondences(ros::Publisher& publisher)

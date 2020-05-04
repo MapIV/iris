@@ -103,9 +103,10 @@ int main(int argc, char* argv[])
 
   // Setup publisher
   ros::Publisher target_pc_publisher = nh.advertise<pcl::PointCloud<pcl::PointXYZI>>("vllm/target_pointcloud", 1);
+  ros::Publisher whole_pc_publisher = nh.advertise<pcl::PointCloud<pcl::PointXYZI>>("vllm/whole_pointcloud", 1);
   ros::Publisher source_pc_publisher = nh.advertise<pcl::PointCloud<pcl::PointXYZI>>("vllm/source_pointcloud", 1);
-  ros::Publisher vllm_trajectory_publisher = nh.advertise<visualization_msgs::MarkerArray>("vllm/vllm_trajectory", 1);
-  ros::Publisher vslam_trajectory_publisher = nh.advertise<visualization_msgs::MarkerArray>("vllm/vslam_trajectory", 1);
+  ros::Publisher vllm_trajectory_publisher = nh.advertise<visualization_msgs::Marker>("vllm/vllm_trajectory", 1);
+  ros::Publisher vslam_trajectory_publisher = nh.advertise<visualization_msgs::Marker>("vllm/vslam_trajectory", 1);
   ros::Publisher correspondences_publisher = nh.advertise<visualization_msgs::Marker>("vllm/correspondences", 1);
   vllm::Publication publication;
 
@@ -174,6 +175,7 @@ int main(int argc, char* argv[])
     if (++loop_count >= 10) {
       loop_count = 0;
       vllm_ros::publishPointcloud(target_pc_publisher, map->getTargetCloud());
+      vllm_ros::publishPointcloud(whole_pc_publisher, map->getSparseCloud());
     }
 
     // Spin and wait
