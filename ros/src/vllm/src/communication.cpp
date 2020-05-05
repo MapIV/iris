@@ -57,7 +57,7 @@ void publishCorrespondences(ros::Publisher& publisher,
   line_strip.action = visualization_msgs::Marker::ADD;
   line_strip.pose.orientation.w = 1.0;
   line_strip.id = 0;
-  line_strip.scale.x = 0.3;
+  line_strip.scale.x = 0.15;
   line_strip.type = visualization_msgs::Marker::LINE_LIST;
   line_strip.color.r = 1.0;
   line_strip.color.g = 0.0;
@@ -134,7 +134,7 @@ void publishTrajectory(ros::Publisher& publisher,
   line_strip.id = 0;
   line_strip.type = visualization_msgs::Marker::LINE_STRIP;
   line_strip.color.a = 1.0;
-  line_strip.scale.x = 0.5;
+  line_strip.scale.x = 0.7;
 
   if (color == 0) {
     line_strip.color.r = 1.0f;
