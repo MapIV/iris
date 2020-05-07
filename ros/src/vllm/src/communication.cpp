@@ -134,7 +134,7 @@ void publishTrajectory(ros::Publisher& publisher,
   line_strip.id = 0;
   line_strip.type = visualization_msgs::Marker::LINE_STRIP;
   line_strip.color.a = 1.0;
-  line_strip.scale.x = 0.7;
+  line_strip.scale.x = 0.4;
 
   if (color == 0) {
     line_strip.color.r = 1.0f;
@@ -161,6 +161,15 @@ void publishTrajectory(ros::Publisher& publisher,
 std::function<void(const sensor_msgs::ImageConstPtr&)> imageCallbackGenerator(cv::Mat& subscribed_image)
 {
   return [&subscribed_image](const sensor_msgs::ImageConstPtr& msg) -> void {
+    cv_bridge::CvImagePtr cv_ptr;
+    cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8);
+    subscribed_image = cv_ptr->image.clone();
+  };
+}
+
+std::function<void(const sensor_msgs::CompressedImageConstPtr&)> compressedImageCallbackGenerator(cv::Mat& subscribed_image)
+{
+  return [&subscribed_image](const sensor_msgs::CompressedImageConstPtr& msg) -> void {
     cv_bridge::CvImagePtr cv_ptr;
     cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8);
     subscribed_image = cv_ptr->image.clone();

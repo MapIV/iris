@@ -23,5 +23,6 @@ void publishResetTrajectory(ros::Publisher& publisher);
 void publishResetCorrespondences(ros::Publisher& publisher);
 
 std::function<void(const sensor_msgs::ImageConstPtr&)> imageCallbackGenerator(cv::Mat& subscribed_image);
+std::function<void(const sensor_msgs::CompressedImageConstPtr&)> compressedImageCallbackGenerator(cv::Mat& subscribed_image);
 
 }  // namespace vllm_ros

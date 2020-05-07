@@ -38,7 +38,7 @@ VLLM.t_init:  !!opencv-matrix
     rows: 3
     cols: 1
     dt: f
-    data: [ 10.0, -10.0, 0.0]
+    data: [ 13.0, -13.0, 0.0]
 # normal vector of camera
 VLLM.normal_init:  !!opencv-matrix
     rows: 3
@@ -51,11 +51,11 @@ VLLM.up_init:  !!opencv-matrix
     cols: 1
     dt: f
     data: [ 0,0,1]
-VLLM.s_init: 1.5
+VLLM.s_init: 2.0
 
 VLLM.pcd_file:   "../../vllm-data/hongo-100.pcd"
 VLLM.video_file: "../../vllm-data/hongo-corona/hongo-theta.mp4"
-VLLM.vocab_file: "orb_vocab.dbow2"
+VLLM.vocab_file: "../data/orb_vocab.dbow2"
 
 VLLM.iteration: 5
 VLLM.frame_skip: 2

@@ -12,6 +12,18 @@
 #include <tf/transform_broadcaster.h>
 #include <visualization_msgs/Marker.h>
 
+// cv::Mat subscribed_image;
+// void imageCallback(const sensor_msgs::CompressedImageConstPtr& msg)
+// {
+//   try {
+//     cv_bridge::CvImagePtr cv_ptr;
+//     cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8);
+//     subscribed_image = cv_ptr->image.clone();
+//   } catch (cv_bridge::Exception& e) {
+//     ROS_ERROR("Could not convert to image!");
+//   }
+// }
+
 int main(int argc, char* argv[])
 {
   // Initialize ROS
@@ -37,7 +49,10 @@ int main(int argc, char* argv[])
   image_transport::ImageTransport it(nh);
   cv::Mat subscribed_image;
   // TODO: the topic name varis depending on user data.
-  image_transport::Subscriber image_subscriber = it.subscribe("camera/color/image_raw", 1, vllm_ros::imageCallbackGenerator(subscribed_image));
+  // image_transport::Subscriber image_subscriber = it.subscribe("camera/color/image_raw", 1, vllm_ros::imageCallbackGenerator(subscribed_image));
+  image_transport::TransportHints hints("compressed");
+  image_transport::Subscriber image_subscriber = it.subscribe("camera/color/image_raw", 1, vllm_ros::imageCallbackGenerator(subscribed_image), ros::VoidPtr(), hints);
+  // ros::Subscriber image_subscriber = nh.subscribe("camera/color/image_raw/compressed", 1, imageCallback);
 
   // Setup publisher
   ros::Publisher vslam_publisher = nh.advertise<pcl::PointCloud<pcl::PointXYZINormal>>("vllm/vslam_data", 1);
