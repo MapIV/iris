@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.1)
-project(vllm)
+project(vllm_ros)
 
 if(POLICY CMP0042)
   cmake_policy(SET CMP0042 NEW)
@@ -86,7 +86,14 @@ include_directories(SYSTEM ${EIGEN3_INCLUDE_DIR})
 message(STATUS "Eigen3 version:\n\t${EIGEN3_VERSION_STRING}")
 
 # == Find catkin macros and libraries ==
-find_package(catkin REQUIRED COMPONENTS cv_bridge image_transport tf visualization_msgs)
+# cmake-format: off
+find_package(catkin REQUIRED COMPONENTS 
+  cv_bridge 
+  image_transport 
+  tf 
+  visualization_msgs 
+  dynamic_reconfigure)
+# cmake-format: on
 
 # == popl ==
 set(popl_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../../3rd/openvslam/3rd/popl/include)
@@ -155,10 +162,22 @@ else()
   endif()
 endif()
 
+##################
+# dynamic_config #
+##################
+generate_dynamic_reconfigure_options(cfg/dynamic.cfg)
+
 #################################
 # catkin specific configuration #
 #################################
-catkin_package(CATKIN_DEPENDS cv_bridge image_transport tf visualization_msgs)
+# cmake-format: off
+catkin_package(CATKIN_DEPENDS 
+  cv_bridge 
+  image_transport 
+  tf 
+  visualization_msgs 
+  dynamic_reconfigure)
+# cmake-format: on
 
 # == UNKNOWN==
 set(USE_SANITIZER OFF)

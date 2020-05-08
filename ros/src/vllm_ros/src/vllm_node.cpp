@@ -6,6 +6,7 @@
 #include "vllm_ros/communication.hpp"
 #include <chrono>
 #include <cv_bridge/cv_bridge.h>
+#include <dynamic_reconfigure/server.h>
 #include <fstream>
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
 #include <image_transport/image_transport.h>
@@ -19,6 +20,12 @@
 #include <tf/transform_listener.h>
 #include <visualization_msgs/Marker.h>
 #include <visualization_msgs/MarkerArray.h>
+#include <vllm_ros/dynamicConfig.h>
+
+void dynamicConfigCallback(vllm_ros::dynamicConfig& config, uint32_t level)
+{
+  std::cout << "Reconfigure Request:" << config.adjust_scale << " " << config.recollection << std::endl;
+}
 
 // TODO: I don't like the function decleared in global scope like this
 pcl::PointCloud<pcl::PointXYZINormal>::Ptr vslam_data(new pcl::PointCloud<pcl::PointXYZINormal>);
@@ -36,7 +43,7 @@ Eigen::Matrix4f listenTransform(tf::TransformListener& listener)
 {
   tf::StampedTransform transform;
   try {
-    listener.waitForTransform("world", "vllm/vslam_pose", ros::Time(0), ros::Duration(10.0));
+    // listener.waitForTransform("world", "vllm/vslam_pose", ros::Time(0), ros::Duration(10.0));
     listener.lookupTransform("world", "vllm/vslam_pose", ros::Time(0), transform);
   } catch (...) {
   }
@@ -109,6 +116,12 @@ int main(int argc, char* argv[])
   ros::Publisher vslam_trajectory_publisher = nh.advertise<visualization_msgs::Marker>("vllm/vslam_trajectory", 1);
   ros::Publisher correspondences_publisher = nh.advertise<visualization_msgs::Marker>("vllm/correspondences", 1);
   vllm::Publication publication;
+
+  // dynamic config
+  dynamic_reconfigure::Server<vllm_ros::dynamicConfig> server;
+  dynamic_reconfigure::Server<vllm_ros::dynamicConfig>::CallbackType f;
+  f = boost::bind(&dynamicConfigCallback, _1, _2);
+  server.setCallback(f);
 
   // Initialize config
   vllm::Config config(config_file_path->value());
