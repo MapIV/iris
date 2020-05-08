@@ -25,7 +25,7 @@ if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE "RELEASE")
 endif()
 string(TOUPPER ${CMAKE_BUILD_TYPE} CMAKE_BUILD_TYPE)
-message("Build Type:\n\t${CMAKE_BUILD_TYPE}")
+message(STATUS "Build Type:\n\t${CMAKE_BUILD_TYPE}")
 
 # == Clear "CMAKE_CXX_FLAGS" ==
 set(CMAKE_CXX_FLAGS "")
@@ -75,6 +75,7 @@ else()
 endif()
 
 # == OpenCV ==
+# specify OpenCV directory because my PC has two OpenCV
 find_package(OpenCV 3 REQUIRED)
 message(STATUS "OpenCV version:\n\t${OpenCV_VERSION}")
 include_directories(${OpenCV_INCLUDE_DIRS})
@@ -96,8 +97,7 @@ set(json_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../../3rd/openvslam/3rd/json
 include_directories(${json_INCLUDE_DIR})
 
 # == spdlog ==
-set(spdlog_INCLUDE_DIR
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../../3rd/openvslam/3rd/spdlog/include)
+set(spdlog_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../../3rd/openvslam/3rd/spdlog/include)
 include_directories(${spdlog_INCLUDE_DIR})
 
 # == Pangolin ==
@@ -139,18 +139,20 @@ message(STATUS "g2o version:\n\t${g2o_VERSION}")
 
 # Check first if CSparse is built from g2o
 if(TARGET g2o::csparse)
-    set(${CXSPARSE_LIBRARIES} g2o::csparse)
+  set(${CXSPARSE_LIBRARIES} g2o::csparse)
 else()
-    # CXSparse for g2o
-    find_package(CXSparse)
-    if(CXSPARSE_FOUND)
-        include_directories(${CXSPARSE_INCLUDE_DIRS})
-    endif()
-    # SuiteSparse for g2o
-    find_package(SuiteSparse)
-    if(SUITESPARSE_FOUND)
-        include_directories(${SUITESPARSE_INCLUDE_DIRS})
-    endif()
+  # CXSparse for g2o
+  set(CXSparse_DIR "/usr/lib/x86_64-linux-gnu")
+  find_package(CXSparse)
+  if(CXSPARSE_FOUND)
+    include_directories(${CXSPARSE_INCLUDE_DIRS})
+  endif()
+  # SuiteSparse for g2o
+  set(SuiteSparse_DIR "/usr/lib/x86_64-linux-gnu")
+  find_package(SuiteSparse)
+  if(SUITESPARSE_FOUND)
+    include_directories(${SUITESPARSE_INCLUDE_DIRS})
+  endif()
 endif()
 
 #################################
@@ -158,17 +160,13 @@ endif()
 #################################
 catkin_package(CATKIN_DEPENDS cv_bridge image_transport tf visualization_msgs)
 
-message(STATUS "BEFORE_CMAKE_CXX_FLAGS \n\t${CMAKE_CXX_FLAGS}")
-
 # == UNKNOWN==
 set(USE_SANITIZER OFF)
 if(USE_SANITIZER)
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fno-omit-frame-pointer -fsanitize=address")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-omit-frame-pointer -fsanitize=address")
-  set(CMAKE_EXE_LINKER_FLAGS
-      "${CMAKE_EXE_LINKER_FLAGS} -fno-omit-frame-pointer -fsanitize=address")
-  set(CMAKE_SHARED_LINKER_FLAGS
-      "${CMAKE_SHARED_LINKER_FLAGS} -fno-omit-frame-pointer -fsanitize=address")
+  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fno-omit-frame-pointer -fsanitize=address")
+  set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -fno-omit-frame-pointer -fsanitize=address")
   message(STATUS "Address/Memory sanitizer: ENABLED")
 else()
   message(STATUS "Address/Memory sanitizer: DISABLED")
@@ -179,14 +177,11 @@ endif()
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra")
 
-
 set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -Og")
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Og")
 
-
-set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -O3 -ffast-math")
-set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -ffast-math")
-
+set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -Ofast -ffast-math")
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -Ofast -ffast-math")
 
 # set(BUILD_WITH_MARCH_NATIVE
 #     OFF
@@ -200,7 +195,6 @@ set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -ffast-math")
 #   set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -mtune=native")
 #   message(STATUS "Architecture-aware optimization (-march=native): DISABLED")
 # endif()
-
 
 set(USE_SSE_ORB
     OFF
@@ -229,7 +223,6 @@ endif()
 # Check C++11 support #
 #######################
 
-
 include(CheckCXXCompilerFlag)
 check_cxx_compiler_flag("-std=c++17" COMPILER_SUPPORTS_CXX17)
 check_cxx_compiler_flag("-std=c++14" COMPILER_SUPPORTS_CXX14)
@@ -248,10 +241,7 @@ elseif(COMPILER_SUPPORTS_CXX0X)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
   message(STATUS "C++11 support: OK (-std=c++0x)")
 else()
-  message(
-    FATAL_ERROR
-      "The compiler ${CMAKE_CXX_COMPILER} has no C++11 support. Please use a different C++ compiler."
-  )
+  message(FATAL_ERROR "The compiler ${CMAKE_CXX_COMPILER} has no C++11 support. Please use a different C++ compiler.")
 endif()
 
 #########
@@ -299,8 +289,7 @@ target_link_libraries(
   ${G2O_LIBS}
   ${CXSPARSE_LIBRARIES}
   ${SUITESPARSE_LIBRARIES}
-  ${LAPACK_LIBRARIES}
-)
+  ${LAPACK_LIBRARIES})
 
 # === VSLAM_NODE ===
 add_executable(vslam_node src/vslam_node.cpp src/communication.cpp)
@@ -316,5 +305,4 @@ target_link_libraries(
   ${G2O_LIBS}
   ${CXSPARSE_LIBRARIES}
   ${SUITESPARSE_LIBRARIES}
-  ${LAPACK_LIBRARIES}
-)
+  ${LAPACK_LIBRARIES})

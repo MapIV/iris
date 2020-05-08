@@ -97,8 +97,8 @@ int main(int argc, char* argv[])
   std::vector<float> vslam_weights;
 
   // Setup subscriber
-  ros::Subscriber vslam_subscriber = nh.subscribe<pcl::PointCloud<pcl::PointXYZINormal>>("vllm/vslam_data", 1, callback);
-  ros::Subscriber recover_pose_subscriber = nh.subscribe<geometry_msgs::PoseWithCovarianceStamped>("/initialpose", 1, callbackForRecover);
+  ros::Subscriber vslam_subscriber = nh.subscribe<pcl::PointCloud<pcl::PointXYZINormal>>("vllm/vslam_data", 5, callback);
+  ros::Subscriber recover_pose_subscriber = nh.subscribe<geometry_msgs::PoseWithCovarianceStamped>("/initialpose", 5, callbackForRecover);
   tf::TransformListener listener;
 
   // Setup publisher
@@ -128,11 +128,11 @@ int main(int argc, char* argv[])
     vllm_ros::publishResetTrajectory(vllm_trajectory_publisher);
     vllm_ros::publishResetTrajectory(vslam_trajectory_publisher);
     vllm_ros::publishResetCorrespondences(correspondences_publisher);
-    vllm_ros::publishPose(Eigen::Matrix4f::Zero(), "vllm/offseted_vslam_pose");
-    vllm_ros::publishPose(Eigen::Matrix4f::Zero(), "vllm/vllm_pose");
+    vllm_ros::publishPose(Eigen::Matrix4f::Identity(), "vllm/offseted_vslam_pose");
+    vllm_ros::publishPose(Eigen::Matrix4f::Identity(), "vllm/vllm_pose");
   }
 
-  ros::Rate loop_rate(20);
+  ros::Rate loop_rate(10);
   int loop_count = 0;
 
   // Main loop
@@ -155,8 +155,8 @@ int main(int argc, char* argv[])
       // Publish for rviz
       system->popPublication(publication);
       vllm_ros::publishPointcloud(source_pc_publisher, publication.cloud);
-      vllm_ros::publishTrajectory(vllm_trajectory_publisher, publication.vllm_trajectory, 0);
-      vllm_ros::publishTrajectory(vslam_trajectory_publisher, publication.offset_trajectory, 1);
+      vllm_ros::publishTrajectory(vllm_trajectory_publisher, publication.vllm_trajectory, {1.0f, 0.0f, 1.0f});
+      vllm_ros::publishTrajectory(vslam_trajectory_publisher, publication.offset_trajectory, {0.6f, 0.6f, 0.6f});
       vllm_ros::publishCorrespondences(correspondences_publisher, publication.cloud, map->getTargetCloud(), publication.correspondences);
       vllm_ros::publishPose(publication.offset_camera, "vllm/offseted_vslam_pose");
       vllm_ros::publishPose(publication.vllm_camera, "vllm/vllm_pose");

@@ -24,7 +24,7 @@ message("Build Type:\n\t${CMAKE_BUILD_TYPE}")
 
 # == Clear "CMAKE_CXX_FLAGS" ==
 set(CMAKE_CXX_FLAGS "")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pipe -fopenmp -O3 -lstdc++fs")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pipe -fopenmp -Ofast -lstdc++fs -mfpmath=both")
 # set(CMAKE_CXX_FLAGS
 #     "${CMAKE_CXX_FLAGS} -pipe -fopenmp -Ofast -lstdc++fs -mtune=native -march=native -mfpmath=both"
 # )

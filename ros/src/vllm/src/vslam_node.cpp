@@ -51,12 +51,12 @@ int main(int argc, char* argv[])
   // TODO: the topic name varis depending on user data.
   // image_transport::Subscriber image_subscriber = it.subscribe("camera/color/image_raw", 1, vllm_ros::imageCallbackGenerator(subscribed_image));
   image_transport::TransportHints hints("compressed");
-  image_transport::Subscriber image_subscriber = it.subscribe("camera/color/image_raw", 1, vllm_ros::imageCallbackGenerator(subscribed_image), ros::VoidPtr(), hints);
+  image_transport::Subscriber image_subscriber = it.subscribe("camera/color/image_raw", 5, vllm_ros::imageCallbackGenerator(subscribed_image), ros::VoidPtr(), hints);
   // ros::Subscriber image_subscriber = nh.subscribe("camera/color/image_raw/compressed", 1, imageCallback);
 
   // Setup publisher
   ros::Publisher vslam_publisher = nh.advertise<pcl::PointCloud<pcl::PointXYZINormal>>("vllm/vslam_data", 1);
-  image_transport::Publisher image_publisher = it.advertise("vllm/processed_image", 1);
+  image_transport::Publisher image_publisher = it.advertise("vllm/processed_image", 5);
 
   // Initialize config
   vllm::Config config(config_file_path->value());
@@ -68,7 +68,7 @@ int main(int argc, char* argv[])
   pcl::PointCloud<pcl::PointXYZINormal>::Ptr vslam_data(new pcl::PointCloud<pcl::PointXYZINormal>);
 
   std::chrono::system_clock::time_point m_start;
-  ros::Rate loop_rate(20);
+  ros::Rate loop_rate(10);
   float accuracy = 0.5f;
 
 
