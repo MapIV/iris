@@ -22,9 +22,14 @@
 #include <visualization_msgs/MarkerArray.h>
 #include <vllm_ros/dynamicConfig.h>
 
-void dynamicConfigCallback(vllm_ros::dynamicConfig& config, uint32_t level)
+// TODO: I don't like the function decleared in global scope like this
+bool adjust_scale_update = false;
+float adjust_scale;
+void dynamicConfigCallback(vllm_ros::dynamicConfig& config, uint32_t)
 {
   std::cout << "Reconfigure Request:" << config.adjust_scale << " " << config.recollection << std::endl;
+  adjust_scale = static_cast<float>(config.adjust_scale);
+  adjust_scale_update = true;
 }
 
 // TODO: I don't like the function decleared in global scope like this
@@ -118,10 +123,8 @@ int main(int argc, char* argv[])
   vllm::Publication publication;
 
   // dynamic config
-  dynamic_reconfigure::Server<vllm_ros::dynamicConfig> server;
-  dynamic_reconfigure::Server<vllm_ros::dynamicConfig>::CallbackType f;
-  f = boost::bind(&dynamicConfigCallback, _1, _2);
-  server.setCallback(f);
+  dynamic_reconfigure::Server<vllm_ros::dynamicConfig> reconfigure_server;
+  reconfigure_server.setCallback(boost::bind(&dynamicConfigCallback, _1, _2));
 
   // Initialize config
   vllm::Config config(config_file_path->value());
@@ -156,6 +159,11 @@ int main(int argc, char* argv[])
     if (!T_recover.isZero()) {
       system->specifyTWorld(T_recover);
       T_recover.setZero();
+    }
+
+    if (adjust_scale_update) {
+      adjust_scale_update = false;
+      system->specifyScale(adjust_scale);
     }
 
     if (vslam_update) {
