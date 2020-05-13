@@ -10,8 +10,6 @@
 #include <fstream>
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
 #include <image_transport/image_transport.h>
-#include <message_filters/subscriber.h>
-#include <message_filters/time_synchronizer.h>
 #include <opencv2/opencv.hpp>
 #include <popl.hpp>
 #include <ros/ros.h>
@@ -83,7 +81,6 @@ void callbackForRecover(const geometry_msgs::PoseWithCovarianceStampedConstPtr& 
 
 int main(int argc, char* argv[])
 {
-  // Initialzie ROS & subscriber
   ros::init(argc, argv, "vllm_node");
 
   // Analyze arugments

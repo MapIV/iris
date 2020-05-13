@@ -26,7 +26,6 @@
 
 int main(int argc, char* argv[])
 {
-  // Initialize ROS
   ros::init(argc, argv, "vslam_node");
 
   // Analyze arugments
