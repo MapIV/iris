@@ -4,9 +4,14 @@ project(vllm_ros)
 if(POLICY CMP0042)
   cmake_policy(SET CMP0042 NEW)
 endif()
+if(POLICY CMP0072)
+  cmake_policy(SET CMP0072 OLD)
+endif()
 if(POLICY CMP0074)
   cmake_policy(SET CMP0074 OLD)
 endif()
+
+list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
 # == Check C++17 ==
 include(CheckCXXCompilerFlag)
@@ -29,7 +34,7 @@ message(STATUS "Build Type:\n\t${CMAKE_BUILD_TYPE}")
 
 # == Clear "CMAKE_CXX_FLAGS" ==
 set(CMAKE_CXX_FLAGS "")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pipe -fopenmp -Ofast -lstdc++fs")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pipe -fopenmp -Ofast -lstdc++fs -mfpmath=both -mtune=native")
 
 # # == Set warning flags ==
 # set(CXX_WARNING_FLAGS
@@ -131,6 +136,31 @@ find_package(
              g2o::solver_csparse
              g2o::csparse_extension
   OPTIONAL_COMPONENTS g2o::csparse)
+
+# Check first if CSparse is built from g2o
+if(TARGET g2o::csparse)
+  set(${CXSPARSE_LIBRARIES} g2o::csparse)
+else()
+  # CXSparse for g2o
+  set(CXSPARSE_INCLUDE_DIR "/usr/include/suitesparse")
+  set(CXSPARSE_LIBRARY "/usr/lib/x86_64-linux-gnu/libcxsparse.so")
+  # find_package(CXSparse)
+  # if(CXSPARSE_FOUND)
+  include_directories(${CXSPARSE_INCLUDE_DIRS})
+  # endif()
+  # SuiteSparse for g2o
+  set(SuiteSparse_DIR "/usr/lib/x86_64-linux-gnu")
+  find_package(SuiteSparse)
+  if(SUITESPARSE_FOUND)
+    include_directories(${SUITESPARSE_INCLUDE_DIRS})
+  endif()
+endif()
+
+message(STATUS "SUITESPARSE_CONFIG_INCLUDE_DIR: ${SUITESPARSE_CONFIG_INCLUDE_DIR}")
+message(STATUS "SUITESPARSE_CONFIG_LIBRARY: ${SUITESPARSE_CONFIG_LIBRARY}")
+message(STATUS "CXSPARSE_INCLUDE_DIR: ${CXSPARSE_INCLUDE_DIR}")
+message(STATUS "CXSPARSE_LIBRARY: ${CXSPARSE_LIBRARY}")
+
 set(G2O_LIBS
     g2o::core
     g2o::stuff
@@ -143,24 +173,6 @@ set(G2O_LIBS
     ${CXSPARSE_LIBRARIES}
     ${SUITESPARSE_LIBRARIES})
 message(STATUS "g2o version:\n\t${g2o_VERSION}")
-
-# Check first if CSparse is built from g2o
-if(TARGET g2o::csparse)
-  set(${CXSPARSE_LIBRARIES} g2o::csparse)
-else()
-  # CXSparse for g2o
-  set(CXSparse_DIR "/usr/lib/x86_64-linux-gnu")
-  find_package(CXSparse)
-  if(CXSPARSE_FOUND)
-    include_directories(${CXSPARSE_INCLUDE_DIRS})
-  endif()
-  # SuiteSparse for g2o
-  set(SuiteSparse_DIR "/usr/lib/x86_64-linux-gnu")
-  find_package(SuiteSparse)
-  if(SUITESPARSE_FOUND)
-    include_directories(${SUITESPARSE_INCLUDE_DIRS})
-  endif()
-endif()
 
 ##################
 # dynamic_config #

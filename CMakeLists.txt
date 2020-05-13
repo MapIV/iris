@@ -24,7 +24,7 @@ message("Build Type:\n\t${CMAKE_BUILD_TYPE}")
 
 # == Clear "CMAKE_CXX_FLAGS" ==
 set(CMAKE_CXX_FLAGS "")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pipe -fopenmp -Ofast -lstdc++fs -mfpmath=both")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pipe -fopenmp -Ofast -lstdc++fs -mfpmath=both -mtune=native")
 # set(CMAKE_CXX_FLAGS
 #     "${CMAKE_CXX_FLAGS} -pipe -fopenmp -Ofast -lstdc++fs -mtune=native -march=native -mfpmath=both"
 # )
@@ -110,14 +110,9 @@ file(GLOB SOURCES src/**/*.cpp)
 add_library(${PROJECT_NAME} SHARED ${SOURCES})
 target_compile_definitions(${PROJECT_NAME} PUBLIC USE_DBOW2)
 target_include_directories(
-  ${PROJECT_NAME} SYSTEM
-  PUBLIC ${PROJECT_SOURCE_DIR}/3rd/openvslam/src/
-         ${PROJECT_SOURCE_DIR}/3rd/openvslam/3rd/json/include
-         ${PROJECT_SOURCE_DIR}/3rd/openvslam/3rd/popl/include
-         ${PROJECT_SOURCE_DIR}/3rd/openvslam/3rd/spdlog/include)
-set_target_properties(
-  ${PROJECT_NAME} PROPERTIES OUTPUT_NAME vllm LIBRARY_OUTPUT_DIRECTORY
-                                              ${PROJECT_BINARY_DIR}/lib)
+  ${PROJECT_NAME} SYSTEM PUBLIC ${PROJECT_SOURCE_DIR}/3rd/openvslam/src/ ${PROJECT_SOURCE_DIR}/3rd/openvslam/3rd/json/include
+                                ${PROJECT_SOURCE_DIR}/3rd/openvslam/3rd/popl/include ${PROJECT_SOURCE_DIR}/3rd/openvslam/3rd/spdlog/include)
+set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME vllm LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib)
 target_link_libraries(${PROJECT_NAME} PUBLIC ${OpenCV_LIBS} ${G2O_LIBS} openvslam pangolin)
 
 # == Executable ==

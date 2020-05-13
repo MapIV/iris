@@ -68,10 +68,16 @@ int main(int argc, char* argv[])
       if (vslam_data->size() < 200 && accuracy > 0.10f) accuracy -= 0.01f;
       if (vslam_data->size() > 400 && accuracy < 0.90f) accuracy += 0.01f;
 
+      // stop timer
+      std::cout << "openvslam time= \033[35m"
+                << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - m_start).count()
+                << "\033[m ms" << std::endl;
+      m_start = std::chrono::system_clock::now();  // start timer
+
       int vllm_state = system->execute(bridge.getState(), bridge.getCameraPose().inverse(), vslam_data);
 
       // stop timer
-      std::cout << "time= \033[35m"
+      std::cout << "vllm time= \033[35m"
                 << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - m_start).count()
                 << "\033[m ms" << std::endl;
 
