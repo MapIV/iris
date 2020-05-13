@@ -96,6 +96,7 @@ find_package(catkin REQUIRED COMPONENTS
   cv_bridge 
   image_transport 
   tf 
+  sensor_msgs
   visualization_msgs 
   dynamic_reconfigure)
 # cmake-format: on
@@ -337,3 +338,14 @@ target_link_libraries(
   ${CXSPARSE_LIBRARIES}
   ${SUITESPARSE_LIBRARIES}
   ${LAPACK_LIBRARIES})
+
+# === BRIDGE_NODE ===
+add_executable(bridge_node src/vins_vllm_bridge_node.cpp)
+target_link_libraries(
+  bridge_node
+  ${catkin_LIBRARIES}
+  ${OpenCV_LIBS}
+  ${PCL_LIBRARIES}
+  pthread
+  ${VLLM_LIB}
+  ${VSLAM_LIB})
