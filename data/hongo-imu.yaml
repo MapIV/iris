@@ -42,33 +42,33 @@ VLLM.t_init:  !!opencv-matrix
     rows: 3
     cols: 1
     dt: f
-    data: [ 20.0, -5.0, 0.0]
+    data: [ 15.0, -15.0, 0.0]
 # normal vector of camera
 VLLM.normal_init:  !!opencv-matrix
     rows: 3
     cols: 1
     dt: f
-    data: [ 1,-0.15,0]
+    data: [ 0,0,-1]
 # up vector of camera
 VLLM.up_init:  !!opencv-matrix
     rows: 3
     cols: 1
     dt: f
     data: [ 0,0,1]
-VLLM.s_init: 8.0
+VLLM.s_init: 1.0
 
-VLLM.pcd_file: "../../vllm-data/hongo-250.pcd"
+VLLM.pcd_file: "../../vllm-data/hongo/hongo-filt.pcd"
 VLLM.video_file: "../../vllm-data/debug.mp4"
-VLLM.vocab_file: "orb_vocab.dbow2"
+VLLM.vocab_file: "../data/orb_vocab.dbow2"
 
 VLLM.iteration: 5
 VLLM.frame_skip: 2
 VLLM.recollection: 30
 
-VLLM.scale_gain: 50.0
+VLLM.scale_gain: 30.0
 VLLM.smooth_gain: 0.0
-VLLM.latitude_gain: 20.0
-VLLM.altitude_gain: 2.0
+VLLM.latitude_gain: 0.0
+VLLM.altitude_gain: 0.1
 
 VLLM.distance_min: 0.5
 VLLM.distance_max: 4.0
@@ -76,7 +76,7 @@ VLLM.distance_max: 4.0
 VLLM.converge_translation: 0.1
 VLLM.converge_rotation: 0.1
 
-Map.voxel_grid_leaf: 0.400
-Map.submap_grid_leaf: 50
-Map.normal_search_leaf: 0.8
+Map.voxel_grid_leaf: 0.800
+Map.submap_grid_leaf: 60
+Map.normal_search_leaf: 1.2
 

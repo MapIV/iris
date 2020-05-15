@@ -38,7 +38,7 @@ int main(int argc, char* argv[])
   sync.registerCallback(boost::bind(&callback, _1, _2));
 
   // Setup publisher
-  tf::TransformBroadcaster br;
+  tf::TransformBroadcaster tf_broadcaster;
   ros::Publisher source_pc_publisher = nh.advertise<pcl::PointCloud<pcl::PointXYZINormal>>("vllm/vslam_data", 1);
   ros::Rate loop_rate(20);
 
@@ -47,25 +47,27 @@ int main(int argc, char* argv[])
   // Main loop
   while (ros::ok()) {
     Eigen::Matrix4f T = listenTransform(listener);
-    std::cout << T << std::endl;
+    vins_pointcloud->clear();
 
     if (vins_update) {
+      std::cout << T << std::endl;
       vins_update = false;
 
-      vins_pointcloud->clear();
       const Eigen::Vector3f camera_pos = T.topRightCorner(3, 1);
       pushbackPointXYZINormal(vins_pointcloud, tmp_msg1, camera_pos);
       pushbackPointXYZINormal(vins_pointcloud, tmp_msg2, camera_pos);
 
+      // Publish
       pcl_conversions::toPCL(ros::Time::now(), vins_pointcloud->header.stamp);
       vins_pointcloud->header.frame_id = "world";
       source_pc_publisher.publish(vins_pointcloud);
     }
 
-    // Publish
+
+    // Publish TF
     tf::StampedTransform transform;
     transform.setFromOpenGLMatrix(T.cast<double>().eval().data());
-    br.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "world", "vllm/vslam_pose"));
+    tf_broadcaster.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "world", "vllm/vslam_pose"));
 
 
     // Spin and wait
@@ -94,7 +96,7 @@ Eigen::Matrix4f listenTransform(tf::TransformListener& listener)
 void pushbackPointXYZINormal(pcl::PointCloud<pcl::PointXYZINormal>::Ptr& cloud, const sensor_msgs::PointCloudConstPtr& msg, const Eigen::Vector3f& camera_pos)
 {
   for (size_t i = 0; i < msg->points.size(); i++) {
-    const geometry_msgs::Point32& g_p = tmp_msg1->points.at(i);
+    const geometry_msgs::Point32& g_p = msg->points.at(i);
     pcl::PointXYZINormal point;
     point.x = g_p.x;
     point.y = g_p.y;

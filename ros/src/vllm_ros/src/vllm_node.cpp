@@ -125,6 +125,8 @@ int main(int argc, char* argv[])
 
   // Initialize config
   vllm::Config config(config_file_path->value());
+  config.T_init.topLeftCorner(3, 3) = Eigen::AngleAxisf(-130.0 / 180.0 * 3.14, Eigen::Vector3f::UnitZ()).toRotationMatrix();
+
 
   // Load LiDAR map
   vllm::map::Parameter map_param(
