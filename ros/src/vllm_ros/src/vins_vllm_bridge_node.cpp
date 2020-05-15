@@ -1,4 +1,5 @@
 #include <chrono>
+#include <list>
 #include <message_filters/subscriber.h>
 #include <message_filters/time_synchronizer.h>
 #include <opencv2/opencv.hpp>
@@ -22,7 +23,7 @@ void callback(const sensor_msgs::PointCloudConstPtr& pointcloud_msg, const senso
 }
 
 Eigen::Matrix4f listenTransform(tf::TransformListener& listener);
-void pushbackPointXYZINormal(pcl::PointCloud<pcl::PointXYZINormal>::Ptr& cloud, const sensor_msgs::PointCloudConstPtr& msg, const Eigen::Vector3f& camera_pos);
+pcl::PointCloud<pcl::PointXYZINormal>::Ptr pushbackPointXYZINormal(const sensor_msgs::PointCloudConstPtr& msg, const Eigen::Vector3f& camera_pos);
 
 int main(int argc, char* argv[])
 {
@@ -43,19 +44,32 @@ int main(int argc, char* argv[])
   ros::Rate loop_rate(20);
 
   pcl::PointCloud<pcl::PointXYZINormal>::Ptr vins_pointcloud(new pcl::PointCloud<pcl::PointXYZINormal>);
+  std::list<pcl::PointCloud<pcl::PointXYZINormal>::Ptr> pointcloud_history;
 
   // Main loop
   while (ros::ok()) {
     Eigen::Matrix4f T = listenTransform(listener);
-    vins_pointcloud->clear();
 
     if (vins_update) {
-      std::cout << T << std::endl;
       vins_update = false;
 
       const Eigen::Vector3f camera_pos = T.topRightCorner(3, 1);
-      pushbackPointXYZINormal(vins_pointcloud, tmp_msg1, camera_pos);
-      pushbackPointXYZINormal(vins_pointcloud, tmp_msg2, camera_pos);
+      pcl::PointCloud<pcl::PointXYZINormal>::Ptr active_cloud = pushbackPointXYZINormal(tmp_msg1, camera_pos);
+      pcl::PointCloud<pcl::PointXYZINormal>::Ptr inactive_cloud = pushbackPointXYZINormal(tmp_msg2, camera_pos);
+      pointcloud_history.push_back(inactive_cloud);
+
+      if (pointcloud_history.size() > 300)
+        pointcloud_history.pop_front();
+
+
+      vins_pointcloud->clear();
+      *vins_pointcloud += *active_cloud;
+      for (auto itr = pointcloud_history.cbegin(); itr != pointcloud_history.cend();) {
+        *vins_pointcloud += **itr;
+        std::advance(itr, 10);
+        if (vins_pointcloud->size() > 500) break;
+      }
+      std::cout << "vins_cloud size= " << vins_pointcloud->size() << ", active_cloud size= " << active_cloud->size() << std::endl;
 
       // Publish
       pcl_conversions::toPCL(ros::Time::now(), vins_pointcloud->header.stamp);
@@ -93,8 +107,10 @@ Eigen::Matrix4f listenTransform(tf::TransformListener& listener)
   return T.cast<float>();
 }
 
-void pushbackPointXYZINormal(pcl::PointCloud<pcl::PointXYZINormal>::Ptr& cloud, const sensor_msgs::PointCloudConstPtr& msg, const Eigen::Vector3f& camera_pos)
+pcl::PointCloud<pcl::PointXYZINormal>::Ptr pushbackPointXYZINormal(const sensor_msgs::PointCloudConstPtr& msg, const Eigen::Vector3f& camera_pos)
 {
+  pcl::PointCloud<pcl::PointXYZINormal>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZINormal>);
+
   for (size_t i = 0; i < msg->points.size(); i++) {
     const geometry_msgs::Point32& g_p = msg->points.at(i);
     pcl::PointXYZINormal point;
@@ -112,4 +128,6 @@ void pushbackPointXYZINormal(pcl::PointCloud<pcl::PointXYZINormal>::Ptr& cloud, 
     point.normal_z = normal.z();
     cloud->push_back(point);
   }
+
+  return cloud;
 }
