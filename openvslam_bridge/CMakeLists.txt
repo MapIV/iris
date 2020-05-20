@@ -11,7 +11,7 @@ if(NOT ${COMPILER_SUPPORTS_CXX17})
   message(FATAL_ERROR "${CMAKE_CXX_COMPILER} doesn't support C++17\n")
 endif()
 
-# == C++17 ==
+# == Use C++17 ==
 set(CMAKE_CXX_STANDARD 17)
 message("Compiler:\n\t${CMAKE_CXX_COMPILER} (using C++17)")
 
@@ -71,14 +71,15 @@ set(USE_PANGOLIN_VIEWER OFF) # disbale buidling viewer
 add_subdirectory(3rd/openvslam)
 
 # == Headers and sources ==
-include_directories(${catkin_INCLUDE_DIRS} ${CMAKE_CURRENT_LIST_DIR}/src)
+include_directories(${CMAKE_CURRENT_LIST_DIR}/src)
 # cmake-format: off
 include_directories(SYSTEM 
+    PRIVATE ${catkin_INCLUDE_DIRS}
     PRIVATE ${CMAKE_CURRENT_LIST_DIR}/3rd/openvslam/src 
     PRIVATE ${CMAKE_CURRENT_LIST_DIR}/3rd/spdlog/include)
 # cmake-format: on
 
 # == Executable ==
 add_executable(bridge_node src/bridge_node.cpp src/bridge.cpp)
-target_compile_definitions(bridge_node PUBLIC USE_DBOW2)
+# target_compile_definitions(bridge_node PUBLIC USE_DBOW2)
 target_link_libraries(bridge_node ${catkin_LIBRARIES} ${OpenCV_LIBS} openvslam)
