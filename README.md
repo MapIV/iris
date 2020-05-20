@@ -1,7 +1,10 @@
+割と全体的にObsolete
+
 # VLLM
 ## Outline
-* Visual Localization in 3D LiDAR Map
+* Visual Localization in 3D LiDAR Maps
 * It tracks the pose of monocular camera with respect to a given 3D LiDAR map
+
 
 ## Dependency
 ### can install with apt
