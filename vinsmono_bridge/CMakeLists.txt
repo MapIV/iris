@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.10)
 
 # == Project ==
-project(openvslam_bridge)
+project(vinsmono_bridge)
 
 # == Check C++17 ==
 include(CheckCXXCompilerFlag)
@@ -65,20 +65,10 @@ message(STATUS "Eigen3 version:\n\t${EIGEN3_VERSION_STRING}")
 find_package(catkin REQUIRED COMPONENTS cv_bridge image_transport tf)
 catkin_package(CATKIN_DEPENDS cv_bridge image_transport tf)
 
-# == Openvslam ==
-set(BUILD_EXAMPLES OFF) # disable building examples
-set(USE_PANGOLIN_VIEWER OFF) # disbale buidling viewer
-add_subdirectory(3rd/openvslam)
-
 # == Headers and sources ==
+include_directories(SYSTEM ${catkin_INCLUDE_DIRS})
 include_directories(${CMAKE_CURRENT_LIST_DIR}/src)
-# cmake-format: off
-include_directories(
-  SYSTEM ${catkin_INCLUDE_DIRS}
-  ${CMAKE_CURRENT_LIST_DIR}/3rd/openvslam/src 
-  ${CMAKE_CURRENT_LIST_DIR}/3rd/spdlog/include)
-# cmake-format: on
 
 # == Executable ==
-add_executable(openvslam_bridge_node src/bridge_node.cpp src/bridge.cpp)
-target_link_libraries(openvslam_bridge_node ${catkin_LIBRARIES} ${OpenCV_LIBS} openvslam)
+add_executable(vinsmono_bridge_node src/bridge_node.cpp)
+target_link_libraries(vinsmono_bridge_node ${catkin_LIBRARIES} ${OpenCV_LIBS})
