@@ -1,7 +1,7 @@
 #pragma once
-#include "vllm/core/keypoints_with_normal.hpp"
-#include "vllm/core/util.hpp"
-#include "vllm/map/info.hpp"
+#include "core/keypoints_with_normal.hpp"
+#include "core/util.hpp"
+#include "map/info.hpp"
 #include <Eigen/Dense>
 #include <mutex>
 #include <vector>

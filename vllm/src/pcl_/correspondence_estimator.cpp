@@ -39,7 +39,7 @@
 #ifndef PCL_REGISTRATION_IMPL_CORRESPONDENCE_ESTIMATION_BACK_PROJECTION_HPP_
 #define PCL_REGISTRATION_IMPL_CORRESPONDENCE_ESTIMATION_BACK_PROJECTION_HPP_
 
-#include "vllm/pcl_/correspondence_estimator.hpp"
+#include "pcl_/correspondence_estimator.hpp"
 #include <pcl/common/copy_point.h>
 
 namespace vllm
@@ -130,7 +130,6 @@ void CorrespondenceEstimationBackProjection<PointSource, PointTarget, NormalT, S
 
   constexpr float gain_center[] = {-0.3f, 0.0f, 0.3f};
   constexpr int gain_K[] = {1, 1, 1};
-  int debug_cout = 0;
 
   // Check if the template types are the same. If true, avoid a copy.
   // Both point types MUST be registered using the POINT_CLOUD_REGISTER_POINT_STRUCT macro!
@@ -144,13 +143,6 @@ void CorrespondenceEstimationBackProjection<PointSource, PointTarget, NormalT, S
       Eigen::Vector3f input_point = input_->points[*idx_i].getVector3fMap();
       Eigen::Vector3f input_normal = source_normals_->points[*idx_i].getNormalVector3fMap();
       Eigen::Vector3f distance_from_camera = (input_point - center_);
-
-      // if (debug_cout < 5) {
-      //   debug_cout++;
-      //   std::cout << input_point.transpose() << " " << distance_from_camera.transpose() << std::endl;
-      // }
-      // input_point += distance_from_camera * 0.001f;  // NOTE: trick
-
 
       Eigen::Matrix3f covariance;
       if (method_ == 0) {

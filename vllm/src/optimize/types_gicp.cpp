@@ -1,4 +1,4 @@
-#include "vllm/optimize/types_gicp.hpp"
+#include "optimize/types_gicp.hpp"
 
 namespace vllm
 {

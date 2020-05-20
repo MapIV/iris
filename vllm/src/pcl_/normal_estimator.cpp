@@ -41,8 +41,7 @@
 #ifndef PCL_FEATURES_IMPL_NORMAL_3D_H_
 #define PCL_FEATURES_IMPL_NORMAL_3D_H_
 
-#include "vllm/pcl_/normal_estimator.hpp"
-// #include "vllm/pcl_/normal_estimator.hpp"
+#include "pcl_/normal_estimator.hpp"
 
 namespace vllm
 {

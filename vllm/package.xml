@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package format="2">
-    <name>vllm_tools</name>
+    <name>vllm</name>
     <version>0.0.0</version>
     <description>The ROS package for VLLM</description>
 
@@ -31,3 +31,5 @@
     <exec_depend>visualization_msgs</exec_depend>
     <exec_depend>tf</exec_depend>
 </package>
+
+

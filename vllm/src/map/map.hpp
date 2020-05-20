@@ -1,8 +1,8 @@
 #pragma once
-#include "vllm/core/types.hpp"
-#include "vllm/core/util.hpp"
-#include "vllm/map/info.hpp"
-#include "vllm/map/parameter.hpp"
+#include "core/types.hpp"
+#include "core/util.hpp"
+#include "map/info.hpp"
+#include "map/parameter.hpp"
 #include <atomic>
 #include <fstream>
 #include <mutex>

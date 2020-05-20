@@ -1,5 +1,4 @@
 #pragma once
-#include "vllm/imu/kfparam.hpp"
 #include <Eigen/Dense>
 #include <iostream>
 #include <opencv2/core/eigen.hpp>
@@ -17,8 +16,6 @@ struct Config {
 
   void init(const std::string& yaml_file)
   {
-    self_path = yaml_file;
-
     cv::FileStorage fs(yaml_file, cv::FileStorage::READ);
     if (!fs.isOpened()) {
       std::cout << "can not open " << yaml_file << std::endl;
@@ -52,29 +49,6 @@ struct Config {
       std::cout << T << std::endl;
     }
 
-    fs["Map.normal_search_leaf"] >> normal_search_leaf;
-    fs["Map.voxel_grid_leaf"] >> voxel_grid_leaf;
-    fs["Map.submap_grid_leaf"] >> submap_grid_leaf;
-
-    fs["IMU.topic_file"] >> topic_file;
-    fs["IMU.imu_file"] >> imu_file;
-
-    fs["KF.initial_cov_p"] >> param.initial_cov_p;
-    fs["KF.initial_cov_v"] >> param.initial_cov_v;
-    fs["KF.initial_cov_theta"] >> param.initial_cov_theta;
-    fs["KF.initial_cov_grad"] >> param.initial_cov_grad;
-    fs["KF.initial_cov_bias"] >> param.initial_cov_bias;
-
-    fs["KF.drive_cov_v"] >> param.drive_cov_v;
-    fs["KF.drive_cov_theta"] >> param.drive_cov_theta;
-    fs["KF.drive_cov_bias"] >> param.drive_cov_bias;
-    fs["KF.observe_cov_p"] >> param.observe_cov_p;
-    fs["KF.observe_cov_theta"] >> param.observe_cov_theta;
-
-    fs["VLLM.pcd_file"] >> pcd_file;
-    fs["VLLM.video_file"] >> video_file;
-    fs["VLLM.vocab_file"] >> vocab_file;
-
     fs["VLLM.iteration"] >> iteration;
     fs["VLLM.frame_skip"] >> frame_skip;
     fs["VLLM.recollection"] >> recollection;
@@ -89,9 +63,11 @@ struct Config {
 
     fs["VLLM.converge_translation"] >> converge_translation;
     fs["VLLM.converge_rotation"] >> converge_rotation;
-  }
 
-  KFParam param;
+    fs["Map.normal_search_leaf"] >> normal_search_leaf;
+    fs["Map.voxel_grid_leaf"] >> voxel_grid_leaf;
+    fs["Map.submap_grid_leaf"] >> submap_grid_leaf;
+  }
 
   float distance_min, distance_max;
   float scale_gain, latitude_gain, smooth_gain, altitude_gain;
@@ -106,12 +82,6 @@ struct Config {
   float voxel_grid_leaf;
   float submap_grid_leaf;
 
-  std::string self_path;
-  std::string pcd_file;
-  std::string video_file;
-  std::string vocab_file;
-  std::string imu_file;
-  std::string topic_file;
   Eigen::Matrix4f T_init;
 };
 }  // namespace vllm

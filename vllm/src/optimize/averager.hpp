@@ -1,6 +1,6 @@
 #pragma once
-#include "vllm/core/math.hpp"
-#include "vllm/core/util.hpp"
+#include "core/math.hpp"
+#include "core/util.hpp"
 
 namespace vllm
 {

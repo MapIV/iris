@@ -1,6 +1,6 @@
-#include "vllm/optimize/optimizer.hpp"
-#include "vllm/core/util.hpp"
-#include "vllm/optimize/aligner.hpp"
+#include "optimize/optimizer.hpp"
+#include "core/util.hpp"
+#include "optimize/aligner.hpp"
 #include <iostream>
 
 namespace vllm

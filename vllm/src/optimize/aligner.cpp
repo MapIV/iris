@@ -1,7 +1,7 @@
-#include "vllm/optimize/aligner.hpp"
-#include "vllm/core/util.hpp"
-#include "vllm/optimize/types_gicp.hpp"
-#include "vllm/optimize/types_restriction.hpp"
+#include "optimize/aligner.hpp"
+#include "core/util.hpp"
+#include "optimize/types_gicp.hpp"
+#include "optimize/types_restriction.hpp"
 #include <g2o/core/block_solver.h>
 #include <g2o/core/optimization_algorithm_levenberg.h>
 #include <g2o/core/robust_kernel_impl.h>
@@ -76,7 +76,7 @@ void Aligner::setEdge7DoFGICP(
     const pcXYZIN::Ptr& source_clouds,
     const pcl::PointCloud<pcl::PointXYZ>::Ptr& target,
     const pcl::CorrespondencesPtr& correspondances,
-    const Eigen::Vector3f& camera,
+    const Eigen::Vector3f&,
     const pcl::PointCloud<pcl::Normal>::Ptr& target_normals)
 {
   // get Vertex

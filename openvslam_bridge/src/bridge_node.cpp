@@ -27,7 +27,6 @@ void publishPose(const Eigen::Matrix4f& T, const std::string& child_frame_id)
 
 int main(int argc, char* argv[])
 {
-  ros::init(argc, argv, "openvslam_bridge_node");
   // TODO:
   // We must set the values of the following parameters using rosparam
   // - bool: is_image_comspressed
@@ -37,6 +36,8 @@ int main(int argc, char* argv[])
   // - int: upper_threshold_of_pointcloud
   // - int: lower_threshold_of_pointcloud
   // - string: image_topic_name
+
+  ros::init(argc, argv, "openvslam_bridge_node");
 
   // Setup subscriber
   ros::NodeHandle nh;
