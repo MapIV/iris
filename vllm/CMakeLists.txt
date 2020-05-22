@@ -87,6 +87,7 @@ catkin_package(CATKIN_DEPENDS cv_bridge image_transport tf)
 include_directories(SYSTEM ${catkin_INCLUDE_DIRS})
 include_directories(${CMAKE_CURRENT_LIST_DIR}/src)
 file(GLOB SOURCES src/**/*.cpp)
+message(STATUS "${SOURCES}")
 
 # == Executable ==
 add_executable(vllm_node src/vllm_node.cpp ${SOURCES})

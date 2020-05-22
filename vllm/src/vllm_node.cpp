@@ -1,18 +1,16 @@
 #include "core/types.hpp"
 #include "map/map.hpp"
+#include "publish/publish.hpp"
 #include "system/system.hpp"
 #include <chrono>
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
 #include <image_transport/image_transport.h>
 #include <pcl_ros/point_cloud.h>
 #include <ros/ros.h>
-#include <std_msgs/Float32MultiArray.h>
 #include <tf/transform_broadcaster.h>
 #include <tf/transform_listener.h>
 #include <visualization_msgs/Marker.h>
 #include <visualization_msgs/MarkerArray.h>
-
-#include <opencv2/opencv.hpp>
 
 // TODO: I don't like the function decleared in global scope like this
 pcl::PointCloud<pcl::PointXYZINormal>::Ptr vslam_data(new pcl::PointCloud<pcl::PointXYZINormal>);
@@ -23,6 +21,22 @@ void callback(const pcl::PointCloud<pcl::PointXYZINormal>::ConstPtr& msg)
   *vslam_data = *msg;
   if (vslam_data->size() > 0)
     vslam_update = true;
+}
+
+// TODO: I don't like the function decleared in global scope like this
+Eigen::Matrix4f listenTransform(tf::TransformListener& listener)
+{
+  tf::StampedTransform transform;
+  try {
+    // listener.waitForTransform("world", "vllm/vslam_pose", ros::Time(0), ros::Duration(10.0));
+    listener.lookupTransform("world", "vllm/vslam_pose", ros::Time(0), transform);
+  } catch (...) {
+  }
+
+  double data[16];
+  transform.getOpenGLMatrix(data);
+  Eigen::Matrix4d T(data);
+  return T.cast<float>();
 }
 
 // TODO: I don't like the function decleared in global scope like this
@@ -54,9 +68,6 @@ int main(int argc, char* argv[])
   // - string: config_path
   // - string: pcd_path
 
-  vllm::Config config("src/vllm/config/hongo.yaml");
-
-  return 0;
   ros::init(argc, argv, "vllm_node");
   ros::NodeHandle nh;
 
@@ -81,27 +92,63 @@ int main(int argc, char* argv[])
 
 
   // Initialize config
-  // vllm::Config config("src/vllm/config/hongo.yaml");
-  // vllm::Config config("hongo.yaml");
-  // config.T_init.topLeftCorner(3, 3) = Eigen::AngleAxisf(-130.0 / 180.0 * 3.14, Eigen::Vector3f::UnitZ()).toRotationMatrix();
-  // std::cout << "T_init\n"
-  //           << config.T_init << std::endl;
+  vllm::Config config("src/vllm/config/hongo.yaml");
+  std::cout << "T_init\n"
+            << config.T_init << std::endl;
 
   // Load LiDAR map
-  // vllm::map::Parameter map_param(
-  //     "hongo.pcd", config.voxel_grid_leaf, config.normal_search_leaf, config.submap_grid_leaf);
-  // std::shared_ptr<vllm::map::Map> map = std::make_shared<vllm::map::Map>(map_param);
+  vllm::map::Parameter map_param(
+      "hongo.pcd", config.voxel_grid_leaf, config.normal_search_leaf, config.submap_grid_leaf);
+  std::shared_ptr<vllm::map::Map> map = std::make_shared<vllm::map::Map>(map_param);
 
   // Initialize system
-  // std::shared_ptr<vllm::System> system = std::make_shared<vllm::System>(config, map);
+  std::shared_ptr<vllm::System> system = std::make_shared<vllm::System>(config, map);
   std::chrono::system_clock::time_point m_start;
 
   ros::Rate loop_rate(10);
   int loop_count = 0;
 
+  ROS_INFO("start main loop.");
   // Main loop
   while (ros::ok()) {
-    ROS_INFO("LOOP");
+
+    Eigen::Matrix4f T_vslam = listenTransform(listener);
+
+    if (!T_recover.isZero()) {
+      system->specifyTWorld(T_recover);
+      T_recover.setZero();
+    }
+
+    if (vslam_update) {
+      vslam_update = false;
+      m_start = std::chrono::system_clock::now();
+
+      // Execution
+      system->execute(2, T_vslam, vslam_data);
+
+      // Publish for rviz
+      system->popPublication(publication);
+      vllm::publishPointcloud(source_pc_publisher, publication.cloud);
+      vllm::publishTrajectory(vllm_trajectory_publisher, publication.vllm_trajectory, {1.0f, 0.0f, 1.0f});
+      vllm::publishTrajectory(vslam_trajectory_publisher, publication.offset_trajectory, {0.6f, 0.6f, 0.6f});
+      vllm::publishCorrespondences(correspondences_publisher, publication.cloud, map->getTargetCloud(), publication.correspondences);
+      vllm::publishPose(publication.offset_camera, "vllm/offseted_vslam_pose");
+      vllm::publishPose(publication.vllm_camera, "vllm/vllm_pose");
+
+      // Inform processing time
+      std::stringstream ss;
+      ss << "processing time= \033[35m"
+         << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - m_start).count()
+         << "\033[m ms";
+      ROS_INFO("VLLM/ALIGN: %s", ss.str().c_str());
+    }
+
+    // Publish target pointcloud map at long intervals
+    if (++loop_count >= 10) {
+      loop_count = 0;
+      vllm::publishPointcloud(target_pc_publisher, map->getTargetCloud());
+      vllm::publishPointcloud(whole_pc_publisher, map->getSparseCloud());
+    }
 
     // Spin and wait
     ros::spinOnce();

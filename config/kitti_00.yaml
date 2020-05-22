@@ -55,15 +55,15 @@ VLLM.up_init:  !!opencv-matrix
     cols: 1
     dt: f
     data: [ 0,0,1]
-VLLM.s_init: 2.2
+VLLM.s_init: 2.0
 
-VLLM.pcd_file: "../../vllm-data/kitti_00/kitti_00-filt.pcd"
+VLLM.pcd_file:   "../../vllm-data/kitti_00/kitti_00-filt.pcd"
 VLLM.video_file: "../../vllm-data/kitti_00/kitti_00.mp4"
 VLLM.vocab_file: "../data/orb_vocab.dbow2"
 
 VLLM.iteration: 5
 VLLM.frame_skip: 1
-VLLM.recollection: 25
+VLLM.recollection: 20
 
 VLLM.scale_gain: 20.0
 VLLM.smooth_gain: 0.0

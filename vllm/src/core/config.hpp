@@ -42,7 +42,6 @@ struct Config {
       T.topLeftCorner(3, 3) = s * R.transpose();
       T.topRightCorner(3, 1) = t;
       T_init = T;
-      std::cout << T << std::endl;
     }
 
     // clang-format off
@@ -51,28 +50,24 @@ struct Config {
     latitude_gain = node["VLLM.latitude_gain"].as<float>();
     altitude_gain = node["VLLM.altitude_gain"].as<float>();
     smooth_gain =   node["VLLM.smooth_gain"].as<float>();
-    // clang-format on
 
-    distance_min = node["VLLM.distance_min"].as<float>();
-    distance_max = node["VLLM.distance_max"].as<float>();
+    distance_min =         node["VLLM.distance_min"].as<float>();
+    distance_max =         node["VLLM.distance_max"].as<float>();
     converge_translation = node["VLLM.converge_translation"].as<float>();
-    converge_rotation = node["VLLM.converge_rotation"].as<float>();
+    converge_rotation =    node["VLLM.converge_rotation"].as<float>();
 
     normal_search_leaf = node["Map.normal_search_leaf"].as<float>();
-    voxel_grid_leaf = node["Map.voxel_grid_leaf"].as<float>();
-    submap_grid_leaf = node["Map.submap_grid_leaf"].as<float>();
+    voxel_grid_leaf =    node["Map.voxel_grid_leaf"].as<float>();
+    submap_grid_leaf =   node["Map.submap_grid_leaf"].as<float>();
+    // clang-format on
   }
 
   float distance_min, distance_max;
   float scale_gain, latitude_gain, smooth_gain, altitude_gain;
   int iteration;
 
-  float converge_translation;
-  float converge_rotation;
-
-  float normal_search_leaf;
-  float voxel_grid_leaf;
-  float submap_grid_leaf;
+  float converge_translation, converge_rotation;
+  float normal_search_leaf, voxel_grid_leaf, submap_grid_leaf;
 
   Eigen::Matrix4f T_init;
 };
