@@ -44,9 +44,9 @@ int main(int argc, char* argv[])
   image_transport::ImageTransport it(nh);
   cv::Mat subscribed_image;
   image_transport::TransportHints hints("raw");
-  if (true /* is_compsressed*/) hints = image_transport::TransportHints("compressed");
+  if (true /* is_image_compsressed*/) hints = image_transport::TransportHints("compressed");
   auto callback = imageCallbackGenerator(subscribed_image);
-  image_transport::Subscriber image_subscriber = it.subscribe("camera/color/image_raw", 5, callback, ros::VoidPtr(), hints);
+  image_transport::Subscriber image_subscriber = it.subscribe("camera/color/image_raw" /*image_topic_name*/, 5, callback, ros::VoidPtr(), hints);
 
   // Setup publisher
   ros::Publisher vslam_publisher = nh.advertise<pcl::PointCloud<pcl::PointXYZINormal>>("vllm/vslam_data", 1);
@@ -54,7 +54,7 @@ int main(int argc, char* argv[])
 
   // Setup for OpenVSLAM
   vllm::BridgeOpenVSLAM bridge;
-  bridge.setup("src/vllm/config/openvslam.yaml", "src/vllm/config/orb_vocab.dbow2");
+  bridge.setup("src/vllm/config/openvslam.yaml" /*config_path*/, "src/vllm/config/orb_vocab.dbow2" /*vocab_path*/);
 
   std::chrono::system_clock::time_point m_start;
   ros::Rate loop_rate(10);
@@ -69,16 +69,16 @@ int main(int argc, char* argv[])
 
       // process OpenVSLAM
       bridge.execute(subscribed_image);
-      // bridge.setCriteria(config.recollection, accuracy);
-      // bridge.getLandmarksAndNormals(vslam_data);
+      bridge.setCriteria(30 /*recollection*/, accuracy);
+      bridge.getLandmarksAndNormals(vslam_data);
 
       // Reset input
       subscribed_image = cv::Mat();
 
       // TODO: The accuracy should be reflected in the results of align_node
       // Update threshold to adjust the number of points
-      if (vslam_data->size() < 300 && accuracy > 0.10) accuracy -= 0.01f;
-      if (vslam_data->size() > 500 && accuracy < 0.90) accuracy += 0.01f;
+      if (vslam_data->size() < 300 /*lower_threshold_of_pointcloud*/ && accuracy > 0.10) accuracy -= 0.01f;
+      if (vslam_data->size() > 500 /*upper_threshold_of_pointcloud*/ && accuracy < 0.90) accuracy += 0.01f;
 
       {
         sensor_msgs::ImagePtr msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", bridge.getFrame()).toImageMsg();
@@ -95,7 +95,7 @@ int main(int argc, char* argv[])
       ss << "processing time= \033[35m"
          << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - m_start).count()
          << "\033[m ms";
-      ROS_INFO("VLLM/VSLAM: %s", ss.str().c_str());
+      ROS_INFO("%s", ss.str().c_str());
     }
     publishPose(bridge.getCameraPose().inverse(), "vllm/vslam_pose");
 
