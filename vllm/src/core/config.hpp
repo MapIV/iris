@@ -1,7 +1,7 @@
 #pragma once
 #include <Eigen/Dense>
 #include <iostream>
-#include <opencv2/core/eigen.hpp>
+#include <yaml-cpp/yaml.h>
 
 namespace vllm
 {
@@ -16,26 +16,22 @@ struct Config {
 
   void init(const std::string& yaml_file)
   {
-    cv::FileStorage fs(yaml_file, cv::FileStorage::READ);
-    if (!fs.isOpened()) {
+    YAML::Node node;
+    try {
+      node = YAML::LoadFile(yaml_file);
+    } catch (YAML::ParserException& e) {
+      std::cout << e.what() << "\n";
       std::cout << "can not open " << yaml_file << std::endl;
       exit(1);
     }
 
     {
-      cv::Mat trans, normal, up;
-      float s;
-      fs["VLLM.t_init"] >> trans;
-      fs["VLLM.normal_init"] >> normal;
-      fs["VLLM.up_init"] >> up;
-      fs["VLLM.s_init"] >> s;
+      Eigen::Vector3f t(node["Init.transform"].as<std::vector<float>>().data());
+      Eigen::Vector3f n(node["Init.normal"].as<std::vector<float>>().data());
+      Eigen::Vector3f u(node["Init.upper"].as<std::vector<float>>().data());
+      float s = node["Init.scale"].as<float>();
 
-      Eigen::Vector3f n, u, t;
-      Eigen::Matrix3f R = Eigen::Matrix3f::Zero();
-      cv::cv2eigen(normal, n);
-      cv::cv2eigen(up, u);
-      cv::cv2eigen(trans, t);
-
+      Eigen::Matrix3f R;
       n.normalize();
       u.normalize();
       R.row(2) = n;
@@ -49,31 +45,27 @@ struct Config {
       std::cout << T << std::endl;
     }
 
-    fs["VLLM.iteration"] >> iteration;
-    fs["VLLM.frame_skip"] >> frame_skip;
-    fs["VLLM.recollection"] >> recollection;
+    // clang-format off
+    iteration =     node["VLLM.iteration"].as<int>();
+    scale_gain =    node["VLLM.scale_gain"].as<float>();
+    latitude_gain = node["VLLM.latitude_gain"].as<float>();
+    altitude_gain = node["VLLM.altitude_gain"].as<float>();
+    smooth_gain =   node["VLLM.smooth_gain"].as<float>();
+    // clang-format on
 
-    fs["VLLM.scale_gain"] >> scale_gain;
-    fs["VLLM.smooth_gain"] >> smooth_gain;
-    fs["VLLM.latitude_gain"] >> latitude_gain;
-    fs["VLLM.altitude_gain"] >> altitude_gain;
+    distance_min = node["VLLM.distance_min"].as<float>();
+    distance_max = node["VLLM.distance_max"].as<float>();
+    converge_translation = node["VLLM.converge_translation"].as<float>();
+    converge_rotation = node["VLLM.converge_rotation"].as<float>();
 
-    fs["VLLM.distance_min"] >> distance_min;
-    fs["VLLM.distance_max"] >> distance_max;
-
-    fs["VLLM.converge_translation"] >> converge_translation;
-    fs["VLLM.converge_rotation"] >> converge_rotation;
-
-    fs["Map.normal_search_leaf"] >> normal_search_leaf;
-    fs["Map.voxel_grid_leaf"] >> voxel_grid_leaf;
-    fs["Map.submap_grid_leaf"] >> submap_grid_leaf;
+    normal_search_leaf = node["Map.normal_search_leaf"].as<float>();
+    voxel_grid_leaf = node["Map.voxel_grid_leaf"].as<float>();
+    submap_grid_leaf = node["Map.submap_grid_leaf"].as<float>();
   }
 
   float distance_min, distance_max;
   float scale_gain, latitude_gain, smooth_gain, altitude_gain;
-  int frame_skip;
   int iteration;
-  int recollection;
 
   float converge_translation;
   float converge_rotation;

@@ -1,29 +1,12 @@
-%YAML:1.0
-#=================#
-# VLLM parameters #
-#=================#
-VLLM.t_init:  !!opencv-matrix
-    rows: 3
-    cols: 1
-    dt: f
-    data: [ 8.0, 0.0, 0.0]
+# transform of camera 
+Init.transform: [ 8.0, 0.0, 0.0]
 # normal vector of camera
-VLLM.normal_init:  !!opencv-matrix
-    rows: 3
-    cols: 1
-    dt: f
-    data: [ 1,0.2,0]
-# up vector of camera
-VLLM.up_init:  !!opencv-matrix
-    rows: 3
-    cols: 1
-    dt: f
-    data: [ 0,0,1]
-VLLM.s_init: 1.5
+Init.normal: [ 1, 0.2, 0]
+# upper vector of camera
+Init.upper: [ 0, 0, 1]
+# scale
+Init.scale: 1.5
 
-VLLM.iteration: 5
-VLLM.frame_skip: 2
-VLLM.recollection: 50
 
 VLLM.scale_gain: 30.0
 VLLM.smooth_gain: 02.0
@@ -33,6 +16,7 @@ VLLM.altitude_gain: 2.0
 VLLM.distance_min: 0.5
 VLLM.distance_max: 3.0
 
+VLLM.iteration: 5
 VLLM.converge_translation: 0.10
 VLLM.converge_rotation: 0.3
 

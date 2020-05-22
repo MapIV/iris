@@ -12,6 +12,8 @@
 #include <visualization_msgs/Marker.h>
 #include <visualization_msgs/MarkerArray.h>
 
+#include <opencv2/opencv.hpp>
+
 // TODO: I don't like the function decleared in global scope like this
 pcl::PointCloud<pcl::PointXYZINormal>::Ptr vslam_data(new pcl::PointCloud<pcl::PointXYZINormal>);
 bool vslam_update = false;
@@ -51,6 +53,10 @@ int main(int argc, char* argv[])
   // We must set the values of the following parameters using rosparam
   // - string: config_path
   // - string: pcd_path
+
+  vllm::Config config("src/vllm/config/hongo.yaml");
+
+  return 0;
   ros::init(argc, argv, "vllm_node");
   ros::NodeHandle nh;
 

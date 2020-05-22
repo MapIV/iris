@@ -66,16 +66,6 @@ public:
     thread_safe_optimize_gain = gain_;
   }
 
-  unsigned int getRecollection() const
-  {
-    return recollection.load();
-  }
-
-  void setRecollection(unsigned int recollection_)
-  {
-    recollection.store(recollection_);
-  }
-
   Eigen::Matrix4f getTWorld() const
   {
     return T_world;
@@ -125,7 +115,6 @@ private:
 
   VllmState vllm_state;
 
-  std::atomic<unsigned int> recollection;
 
   std::atomic<bool> reset_requested = false;
 

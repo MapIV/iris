@@ -24,7 +24,6 @@ System::System(const Config& config_, const std::shared_ptr<map::Map>& map_)
 
   localmap_info = map->getLocalmapInfo();
 
-  recollection.store(config.recollection);
 
   T_world = config.T_init;
   T_align.setIdentity();

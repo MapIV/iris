@@ -61,6 +61,9 @@ find_package(Eigen3 REQUIRED)
 include_directories(SYSTEM ${EIGEN3_INCLUDE_DIR})
 message(STATUS "Eigen3 version:\n\t${EIGEN3_VERSION_STRING}")
 
+# yaml-cpp
+find_package(yaml-cpp REQUIRED)
+
 # == g2o ==
 find_package(g2o REQUIRED)
 set(G2O_LIBS
@@ -88,4 +91,4 @@ file(GLOB SOURCES src/**/*.cpp)
 # == Executable ==
 add_executable(vllm_node src/vllm_node.cpp ${SOURCES})
 target_link_libraries(vllm_node ${catkin_LIBRARIES} ${OpenCV_LIBS} ${G2O_LIBS}
-                      ${PCL_LIBRARIES})
+                      ${PCL_LIBRARIES} ${YAML_CPP_LIBRARIES})
