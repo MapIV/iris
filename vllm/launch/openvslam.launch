@@ -1,0 +1,14 @@
+<launch>
+    <arg name="vllm_config_path" default = "$(find vllm)/../config/hongo.yaml" /> 
+    <arg name="openvslam_config_path" default = "$(find vllm)/../config/openvslam.yaml" />
+    
+    <node name="vllm_node" pkg="vllm" type="vllm_node" output="screen">
+        <!-- <param name="config_file" type="string" value="$(arg config_path)" /> -->
+    </node>
+
+     <!-- <node name="openvslam_bridge_node" pkg="openvslam_bridge" type="openvslam_brdige_node" output="screen">
+       <param name="config_file" type="string" value="$(arg config_path)" />
+    </node>  -->
+
+    <!-- <node name="rvizvisualisation" pkg="rviz" type="rviz" output="log" args="-d $(find vllm)/../config/vllm.rviz" /> -->
+</launch>
