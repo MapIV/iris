@@ -12,7 +12,6 @@
 
 bool vins_update = false;
 sensor_msgs::PointCloudConstPtr tmp_msg1, tmp_msg2;
-
 void callback(const sensor_msgs::PointCloudConstPtr& pointcloud_msg, const sensor_msgs::PointCloudConstPtr& historycloud_msg)
 {
   ROS_INFO("visible: %lu, unvisible:%lu ", pointcloud_msg->points.size(), historycloud_msg->points.size());
@@ -28,7 +27,6 @@ pcl::PointCloud<pcl::PointXYZINormal>::Ptr pushbackPointXYZINormal(const sensor_
 int main(int argc, char* argv[])
 {
   ros::init(argc, argv, "vins_vllm_bridge_node");
-
   ros::NodeHandle nh;
 
   // Setup subscriber
@@ -46,8 +44,8 @@ int main(int argc, char* argv[])
   pcl::PointCloud<pcl::PointXYZINormal>::Ptr vins_pointcloud(new pcl::PointCloud<pcl::PointXYZINormal>);
   std::list<pcl::PointCloud<pcl::PointXYZINormal>::Ptr> pointcloud_history;
 
+  // Start main loop
   ROS_INFO("start main loop.");
-  // Main loop
   while (ros::ok()) {
     Eigen::Matrix4f T = listenTransform(listener);
 
@@ -78,12 +76,10 @@ int main(int argc, char* argv[])
       source_pc_publisher.publish(vins_pointcloud);
     }
 
-
     // Publish TF
     tf::StampedTransform transform;
     transform.setFromOpenGLMatrix(T.cast<double>().eval().data());
     tf_broadcaster.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "world", "vllm/vslam_pose"));
-
 
     // Spin and wait
     ros::spinOnce();

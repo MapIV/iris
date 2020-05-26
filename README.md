@@ -35,10 +35,27 @@ catkin_make
 
 ## How to Run
 ### with OpenVSLAM
-* **TODO**
-
+```bash
+roslaunch vllm openvslam.launch
+```
 ### with VINS-mono
-* **TODO**
+#### install VINS-mono
+```bash
+mkdir -p catkin_ws/src
+cd catkin_ws/src
+git clone 
+cd ..
+catkin_make
+```
+
+#### run with VINS-mono
+```bash
+roslaunch vllm vinsmono.launch
+roslaunch vins_estimator *something*.launch
+```
+
+## Run with sample data
+**TODO**
 
 ## References
 * [Monocular Camera Localization in 3D LiDAR Maps](http://www.lifelong-navigation.eu/files/caselitz16iros.pdf)

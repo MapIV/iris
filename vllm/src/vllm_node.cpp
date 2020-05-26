@@ -63,11 +63,6 @@ void callbackForRecover(const geometry_msgs::PoseWithCovarianceStampedConstPtr& 
 
 int main(int argc, char* argv[])
 {
-  // TODO:
-  // We must set the values of the following parameters using rosparam
-  // - string: config_path
-  // - string: pcd_path
-
   ros::init(argc, argv, "vllm_node");
   ros::NodeHandle nh;
 
@@ -90,6 +85,7 @@ int main(int argc, char* argv[])
   ros::Publisher correspondences_publisher = nh.advertise<visualization_msgs::Marker>("vllm/correspondences", 1);
   vllm::Publication publication;
 
+  // Get rosparams
   ros::NodeHandle pnh("~");
   std::string config_path, pcd_path;
   pnh.getParam("vllm_config_path", config_path);
@@ -111,8 +107,8 @@ int main(int argc, char* argv[])
   ros::Rate loop_rate(10);
   int loop_count = 0;
 
+  // Start main loop
   ROS_INFO("start main loop.");
-  // Main loop
   while (ros::ok()) {
 
     Eigen::Matrix4f T_vslam = listenTransform(listener);

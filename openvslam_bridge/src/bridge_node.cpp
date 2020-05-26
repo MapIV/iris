@@ -28,13 +28,14 @@ void publishPose(const Eigen::Matrix4f& T, const std::string& child_frame_id)
 int main(int argc, char* argv[])
 {
   // TODO:
-  // We must set the values of the following parameters using rosparam
+  // We should set the values of the following parameters using rosparam
   // - int: recollection
   // - int: upper_threshold_of_pointcloud
   // - int: lower_threshold_of_pointcloud
 
   ros::init(argc, argv, "openvslam_bridge_node");
 
+  // Get rosparams
   ros::NodeHandle pnh("~");
   bool is_image_compressed;
   std::string vocab_path, vslam_config_path, image_topic_name;
@@ -67,8 +68,8 @@ int main(int argc, char* argv[])
   float accuracy = 0.5f;
   pcl::PointCloud<pcl::PointXYZINormal>::Ptr vslam_data(new pcl::PointCloud<pcl::PointXYZINormal>);
 
+  // Start main loop
   ROS_INFO("start main loop.");
-  // Main loop
   while (ros::ok()) {
     if (!subscribed_image.empty()) {
       m_start = std::chrono::system_clock::now();  // start timer
