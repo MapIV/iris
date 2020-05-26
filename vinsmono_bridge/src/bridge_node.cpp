@@ -3,6 +3,7 @@
 #include <message_filters/subscriber.h>
 #include <message_filters/time_synchronizer.h>
 #include <opencv2/opencv.hpp>
+#include <pcl/common/transforms.h>
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 #include <pcl_ros/point_cloud.h>
@@ -44,10 +45,17 @@ int main(int argc, char* argv[])
   pcl::PointCloud<pcl::PointXYZINormal>::Ptr vins_pointcloud(new pcl::PointCloud<pcl::PointXYZINormal>);
   std::list<pcl::PointCloud<pcl::PointXYZINormal>::Ptr> pointcloud_history;
 
+  // Conversion of the camera's direction of travel to the z-axis
+  Eigen::Matrix4f T_align;
+  T_align << 1, 0, 0, 0,
+      0, 0, -1, 0,
+      0, 1, 0, 0,
+      0, 0, 0, 1;
+
   // Start main loop
   ROS_INFO("start main loop.");
   while (ros::ok()) {
-    Eigen::Matrix4f T = listenTransform(listener);
+    Eigen::Matrix4f T = T_align * listenTransform(listener);
 
     if (vins_update) {
       vins_update = false;
@@ -125,6 +133,15 @@ pcl::PointCloud<pcl::PointXYZINormal>::Ptr pushbackPointXYZINormal(const sensor_
     point.normal_z = normal.z();
     cloud->push_back(point);
   }
+
+  // Conversion of the camera's direction of travel to the z-axis
+  Eigen::Matrix4f T_align;
+  T_align << 1, 0, 0, 0,
+      0, 0, -1, 0,
+      0, 1, 0, 0,
+      0, 0, 0, 1;
+
+  pcl::transformPointCloud(*cloud, *cloud, T_align);
 
   return cloud;
 }

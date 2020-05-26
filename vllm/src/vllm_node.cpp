@@ -102,17 +102,19 @@ int main(int argc, char* argv[])
 
   // Initialize system
   std::shared_ptr<vllm::System> system = std::make_shared<vllm::System>(config, map);
-  std::chrono::system_clock::time_point m_start;
 
+  std::chrono::system_clock::time_point m_start;
   ros::Rate loop_rate(10);
   int loop_count = 0;
+
+  Eigen::Matrix4f offseted_vslam_pose = config.T_init;
+  Eigen::Matrix4f vllm_pose = config.T_init;
 
   // Start main loop
   ROS_INFO("start main loop.");
   while (ros::ok()) {
 
     Eigen::Matrix4f T_vslam = listenTransform(listener);
-
     if (!T_recover.isZero()) {
       system->specifyTWorld(T_recover);
       T_recover.setZero();
@@ -131,8 +133,8 @@ int main(int argc, char* argv[])
       vllm::publishTrajectory(vllm_trajectory_publisher, publication.vllm_trajectory, {1.0f, 0.0f, 1.0f});
       vllm::publishTrajectory(vslam_trajectory_publisher, publication.offset_trajectory, {0.6f, 0.6f, 0.6f});
       vllm::publishCorrespondences(correspondences_publisher, publication.cloud, map->getTargetCloud(), publication.correspondences);
-      vllm::publishPose(publication.offset_camera, "vllm/offseted_vslam_pose");
-      vllm::publishPose(publication.vllm_camera, "vllm/vllm_pose");
+      offseted_vslam_pose = publication.offset_camera;
+      vllm_pose = publication.vllm_camera;
 
       // Inform processing time
       std::stringstream ss;
@@ -141,6 +143,9 @@ int main(int argc, char* argv[])
          << "\033[m ms";
       ROS_INFO("VLLM/ALIGN: %s", ss.str().c_str());
     }
+
+    vllm::publishPose(offseted_vslam_pose, "vllm/offseted_vslam_pose");
+    vllm::publishPose(vllm_pose, "vllm/vllm_pose");
 
     // Publish target pointcloud map at long intervals
     if (++loop_count >= 10) {

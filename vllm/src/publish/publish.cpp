@@ -1,4 +1,5 @@
 #include "publish/publish.hpp"
+#include "core/util.hpp"
 #include <visualization_msgs/Marker.h>
 #include <visualization_msgs/MarkerArray.h>
 
@@ -26,8 +27,9 @@ void publishPose(const Eigen::Matrix4f& T, const std::string& child_frame_id)
 {
   static tf::TransformBroadcaster br;
 
+
   tf::Transform transform;
-  transform.setFromOpenGLMatrix(T.cast<double>().eval().data());
+  transform.setFromOpenGLMatrix(util::normalizePose(T).cast<double>().eval().data());
   br.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "world", child_frame_id));
 }
 

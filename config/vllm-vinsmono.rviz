@@ -7,7 +7,6 @@ Panels:
         - /target_points1/Autocompute Value Bounds1
         - /TF1/Frames1
         - /correspondences1/Namespaces1
-        - /Image1
       Splitter Ratio: 0.3891128897666931
     Tree Height: 581
   - Class: rviz/Selection
@@ -28,7 +27,7 @@ Panels:
     Experimental: false
     Name: Time
     SyncMode: 0
-    SyncSource: Image
+    SyncSource: target_points
 Preferences:
   PromptSaveOnExit: true
 Toolbars:
@@ -149,16 +148,12 @@ Visualization Manager:
       Frame Timeout: 15
       Frames:
         All Enabled: false
-        body:
-          Value: true
-        camera:
-          Value: true
         vllm/offseted_vslam_pose:
           Value: true
         vllm/vllm_pose:
           Value: true
         vllm/vslam_pose:
-          Value: true
+          Value: false
         world:
           Value: true
       Marker Scale: 10
@@ -168,9 +163,6 @@ Visualization Manager:
       Show Names: true
       Tree:
         world:
-          body:
-            camera:
-              {}
           vllm/offseted_vslam_pose:
             {}
           vllm/vllm_pose:
@@ -184,7 +176,7 @@ Visualization Manager:
       Marker Topic: /vllm/vslam_trajectory
       Name: vslam_trajectory
       Namespaces:
-        points_and_lines: true
+        {}
       Queue Size: 100
       Value: true
     - Class: rviz/Marker
@@ -192,7 +184,7 @@ Visualization Manager:
       Marker Topic: /vllm/vllm_trajectory
       Name: vllm_trajectory
       Namespaces:
-        points_and_lines: true
+        {}
       Queue Size: 100
       Value: true
     - Class: rviz/Marker
@@ -200,7 +192,7 @@ Visualization Manager:
       Marker Topic: /vllm/correspondences
       Name: correspondences
       Namespaces:
-        correspondences: true
+        {}
       Queue Size: 100
       Value: true
     - Class: rviz/Image
@@ -243,7 +235,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 135.46412658691406
+      Distance: 89.06632995605469
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -258,10 +250,10 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 1.5697963237762451
+      Pitch: 1.3453969955444336
       Target Frame: vllm/vllm_pose
       Value: Orbit (rviz)
-      Yaw: 0.8153981566429138
+      Yaw: 3.1303980350494385
     Saved: ~
 Window Geometry:
   Displays:
