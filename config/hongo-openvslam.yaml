@@ -1,0 +1,25 @@
+# transform of camera 
+Init.transform: [ 8.0, 0.0, 0.0]
+# normal vector of camera
+Init.normal: [ 1.0, 0.0, 0.0]
+# upper vector of camera
+Init.upper: [ 0, 0, 1]
+# scale
+Init.scale: 1.8
+
+VLLM.scale_gain: 20.0
+VLLM.smooth_gain: 0.0
+VLLM.latitude_gain: 10.0
+VLLM.altitude_gain: 0.2
+
+VLLM.distance_min: 0.5
+VLLM.distance_max: 3.0
+
+VLLM.iteration: 5
+VLLM.converge_translation: 0.10
+VLLM.converge_rotation: 0.3
+
+# Map Parameter
+Map.voxel_grid_leaf: 0.400
+Map.submap_grid_leaf: 50
+Map.normal_search_leaf: 0.6

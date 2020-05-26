@@ -1,10 +1,7 @@
-%YAML:1.0
 # Equirectangular model for RICOH THETA S
-
 #==============#
 # Camera Model #
 #==============#
-
 Camera.name: "Theta S"
 Camera.setup: "monocular"
 Camera.model: "equirectangular"
@@ -19,13 +16,11 @@ Camera.p1: 0.0
 Camera.p2: 0.0
 Camera.k3: 0.0
 
-
 Camera.color_order: "RGB"
 
 #================#
 # ORB Parameters #
 #================#
-
 Feature.max_num_keypoints: 2000
 Feature.scale_factor: 1.2
 Feature.num_levels: 8
