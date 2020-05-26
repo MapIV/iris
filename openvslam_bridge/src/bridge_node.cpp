@@ -29,24 +29,30 @@ int main(int argc, char* argv[])
 {
   // TODO:
   // We must set the values of the following parameters using rosparam
-  // - bool: is_image_comspressed
-  // - string: config_path
-  // - string: vocab_path
   // - int: recollection
   // - int: upper_threshold_of_pointcloud
   // - int: lower_threshold_of_pointcloud
-  // - string: image_topic_name
 
   ros::init(argc, argv, "openvslam_bridge_node");
+
+  ros::NodeHandle pnh("~");
+  bool is_image_compressed;
+  std::string vocab_path, vslam_config_path, image_topic_name;
+  pnh.getParam("vocab_path", vocab_path);
+  pnh.getParam("vslam_config_path", vslam_config_path);
+  pnh.getParam("image_topic_name", image_topic_name);
+  pnh.getParam("is_image_compressed", is_image_compressed);
+  ROS_INFO("vocab_path: %s, vslam_config_path: %s, image_topic_name: %s, is_image_compressed: %d",
+      vocab_path.c_str(), vslam_config_path.c_str(), image_topic_name.c_str(), is_image_compressed);
 
   // Setup subscriber
   ros::NodeHandle nh;
   image_transport::ImageTransport it(nh);
   cv::Mat subscribed_image;
   image_transport::TransportHints hints("raw");
-  if (true /* is_image_compsressed*/) hints = image_transport::TransportHints("compressed");
+  if (is_image_compressed) hints = image_transport::TransportHints("compressed");
   auto callback = imageCallbackGenerator(subscribed_image);
-  image_transport::Subscriber image_subscriber = it.subscribe("camera/color/image_raw" /*image_topic_name*/, 5, callback, ros::VoidPtr(), hints);
+  image_transport::Subscriber image_subscriber = it.subscribe(image_topic_name, 5, callback, ros::VoidPtr(), hints);
 
   // Setup publisher
   ros::Publisher vslam_publisher = nh.advertise<pcl::PointCloud<pcl::PointXYZINormal>>("vllm/vslam_data", 1);
@@ -54,7 +60,7 @@ int main(int argc, char* argv[])
 
   // Setup for OpenVSLAM
   vllm::BridgeOpenVSLAM bridge;
-  bridge.setup("src/vllm/config/openvslam.yaml" /*config_path*/, "src/vllm/config/orb_vocab.dbow2" /*vocab_path*/);
+  bridge.setup(vslam_config_path, vocab_path);
 
   std::chrono::system_clock::time_point m_start;
   ros::Rate loop_rate(10);

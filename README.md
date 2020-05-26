@@ -3,7 +3,7 @@
 * Visual Localization in prior LiDAR Maps
 * It tracks the pose of monocular camera with respect to a given 3D LiDAR map
 * **OpenVSLAM** and **VINS-mono**  can be used depending on the sensor configuration.
-* <span style="color: red;">**TODO**</span>
+* **TODO**
 
 ## ThirdParty
 * [Open-V-SLAM](https://github.com/xdspacelab/openvslam)
@@ -35,10 +35,10 @@ catkin_make
 
 ## How to Run
 ### with OpenVSLAM
-* <span style="color: red;">**TODO**</span>
+* **TODO**
 
 ### with VINS-mono
-* <span style="color: red;">**TODO**</span>
+* **TODO**
 
 ## References
 * [Monocular Camera Localization in 3D LiDAR Maps](http://www.lifelong-navigation.eu/files/caselitz16iros.pdf)

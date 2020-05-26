@@ -90,15 +90,18 @@ int main(int argc, char* argv[])
   ros::Publisher correspondences_publisher = nh.advertise<visualization_msgs::Marker>("vllm/correspondences", 1);
   vllm::Publication publication;
 
+  ros::NodeHandle pnh("~");
+  std::string config_path, pcd_path;
+  pnh.getParam("vllm_config_path", config_path);
+  pnh.getParam("pcd_path", pcd_path);
+  ROS_INFO("config_path: %s, pcd_path: %s", config_path.c_str(), pcd_path.c_str());
 
   // Initialize config
-  vllm::Config config("src/vllm/config/hongo.yaml");
-  std::cout << "T_init\n"
-            << config.T_init << std::endl;
+  vllm::Config config(config_path);
 
   // Load LiDAR map
   vllm::map::Parameter map_param(
-      "hongo.pcd", config.voxel_grid_leaf, config.normal_search_leaf, config.submap_grid_leaf);
+      pcd_path, config.voxel_grid_leaf, config.normal_search_leaf, config.submap_grid_leaf);
   std::shared_ptr<vllm::map::Map> map = std::make_shared<vllm::map::Map>(map_param);
 
   // Initialize system
