@@ -4,7 +4,7 @@
     <arg name="pcd_path" default = "$(find vllm)/../../../hongo.pcd" /> 
 
     <arg name="vslam_config_path" default = "$(find vllm)/../config/openvslam-theta.yaml" />
-    <arg name="vocab_file" default = "$(find vllm)/../config/orb_vocab.dbow2" />
+    <arg name="vocab_file" default = "$(find vllm)/../../../orb_vocab.dbow2" />
     <arg name="image_topic_name" default = "/camera/color/image_raw" />
     <arg name="is_image_compressed" default = "true"/>
     
