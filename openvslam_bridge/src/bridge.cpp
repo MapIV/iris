@@ -13,7 +13,7 @@
 #include <opencv2/videoio.hpp>
 #include <spdlog/spdlog.h>
 
-namespace vllm
+namespace iris
 {
 BridgeOpenVSLAM::~BridgeOpenVSLAM()
 {
@@ -153,4 +153,4 @@ std::pair<unsigned int, float> BridgeOpenVSLAM::getCriteria() const
   return {recollection, accuracy};
 }
 
-}  // namespace vllm
+}  // namespace iris

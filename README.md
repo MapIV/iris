@@ -1,6 +1,6 @@
-# *VLLM*
+# *Iris*
 ## Outline
-* Visual Localization in prior LiDAR Maps
+* visual localization in prior LiDAR maps
 * It tracks the pose of monocular camera with respect to a given 3D LiDAR map
 * **OpenVSLAM** and **VINS-mono**  can be used depending on the sensor configuration.
 
@@ -20,7 +20,7 @@ please check [openvslam document](https://openvslam.readthedocs.io/en/master/ins
 ```bash
 mkdir -p catkin_ws/src
 cd catkin_ws/src
-git clone --recursive https://gitlab.com/MapIV/vllm.git
+git clone --recursive https://gitlab.com/MapIV/iris.git
 cd ..
 catkin_make
 ```
@@ -28,7 +28,7 @@ catkin_make
 ## How to Run
 ### with OpenVSLAM
 ```bash
-roslaunch vllm openvslam.launch
+roslaunch iris openvslam.launch
 ```
 ### with VINS-mono
 install VINS-mono
@@ -42,24 +42,24 @@ catkin_make
 
 run with VINS-mono
 ```bash
-roslaunch vllm vinsmono.launch
+roslaunch iris vinsmono.launch
 roslaunch vins_estimator *something*.launch
 ```
 
 ## Run with sample data
 ### with OpenVSLAM
 ```bash
-roscd vllm/../../../
+roscd iris/../../../
 # download sample data (hongo.pcd, orb_vocab.dbow2, honog-theta.bag)
-roslaunch vllm openvslam.launch
+roslaunch iris openvslam.launch
 rosbag play hongo-theta.bag # (on another terminal)
 ```
 
 ### with VINS-mono
 ```bash
-roscd vllm/../../../
+roscd iris/../../../
 # download sample data (hongo.pcd, orb_vocab.dbow2, honog-imu.bag)
-roslaunch vllm vinsmono.launch
+roslaunch iris vinsmono.launch
 roslaunch vins_estimator realsense_color.launch # (on another terminal)
 rosbag play hongo-imu.bag # (on another terminal)
 ```

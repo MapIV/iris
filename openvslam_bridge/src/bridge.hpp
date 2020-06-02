@@ -4,7 +4,7 @@
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 
-namespace vllm
+namespace iris
 {
 class BridgeOpenVSLAM
 {
@@ -33,4 +33,4 @@ private:
 
   std::shared_ptr<openvslam::system> SLAM_ptr = nullptr;
 };
-}  // namespace vllm
+}  // namespace iris

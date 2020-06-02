@@ -27,7 +27,7 @@ pcl::PointCloud<pcl::PointXYZINormal>::Ptr pushbackPointXYZINormal(const sensor_
 
 int main(int argc, char* argv[])
 {
-  ros::init(argc, argv, "vins_vllm_bridge_node");
+  ros::init(argc, argv, "vinsmono_bridge_node");
   ros::NodeHandle nh;
 
   // Setup subscriber
@@ -39,7 +39,7 @@ int main(int argc, char* argv[])
 
   // Setup publisher
   tf::TransformBroadcaster tf_broadcaster;
-  ros::Publisher source_pc_publisher = nh.advertise<pcl::PointCloud<pcl::PointXYZINormal>>("vllm/vslam_data", 1);
+  ros::Publisher source_pc_publisher = nh.advertise<pcl::PointCloud<pcl::PointXYZINormal>>("iris/vslam_data", 1);
   ros::Rate loop_rate(20);
 
   pcl::PointCloud<pcl::PointXYZINormal>::Ptr vins_pointcloud(new pcl::PointCloud<pcl::PointXYZINormal>);
@@ -87,7 +87,7 @@ int main(int argc, char* argv[])
     // Publish TF
     tf::StampedTransform transform;
     transform.setFromOpenGLMatrix(T.cast<double>().eval().data());
-    tf_broadcaster.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "world", "vllm/vslam_pose"));
+    tf_broadcaster.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "world", "iris/vslam_pose"));
 
     // Spin and wait
     ros::spinOnce();

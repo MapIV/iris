@@ -7,17 +7,17 @@ Init.upper: [ 0, 0, 1]
 # scale
 Init.scale: 1.8
 
-VLLM.scale_gain: 20.0
-VLLM.smooth_gain: 0.0
-VLLM.latitude_gain: 10.0
-VLLM.altitude_gain: 0.2
+Iris.scale_gain: 20.0
+Iris.smooth_gain: 0.0
+Iris.latitude_gain: 10.0
+Iris.altitude_gain: 0.2
 
-VLLM.distance_min: 0.5
-VLLM.distance_max: 3.0
+Iris.distance_min: 0.5
+Iris.distance_max: 3.0
 
-VLLM.iteration: 5
-VLLM.converge_translation: 0.10
-VLLM.converge_rotation: 0.3
+Iris.iteration: 5
+Iris.converge_translation: 0.10
+Iris.converge_rotation: 0.3
 
 # Map Parameter
 Map.voxel_grid_leaf: 0.400

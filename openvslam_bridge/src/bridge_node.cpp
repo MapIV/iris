@@ -56,11 +56,11 @@ int main(int argc, char* argv[])
   image_transport::Subscriber image_subscriber = it.subscribe(image_topic_name, 5, callback, ros::VoidPtr(), hints);
 
   // Setup publisher
-  ros::Publisher vslam_publisher = nh.advertise<pcl::PointCloud<pcl::PointXYZINormal>>("vllm/vslam_data", 1);
-  image_transport::Publisher image_publisher = it.advertise("vllm/processed_image", 5);
+  ros::Publisher vslam_publisher = nh.advertise<pcl::PointCloud<pcl::PointXYZINormal>>("iris/vslam_data", 1);
+  image_transport::Publisher image_publisher = it.advertise("iris/processed_image", 5);
 
   // Setup for OpenVSLAM
-  vllm::BridgeOpenVSLAM bridge;
+  iris::BridgeOpenVSLAM bridge;
   bridge.setup(vslam_config_path, vocab_path);
 
   std::chrono::system_clock::time_point m_start;
@@ -104,7 +104,7 @@ int main(int argc, char* argv[])
          << "\033[m ms";
       ROS_INFO("%s", ss.str().c_str());
     }
-    publishPose(bridge.getCameraPose().inverse(), "vllm/vslam_pose");
+    publishPose(bridge.getCameraPose().inverse(), "iris/vslam_pose");
 
     // Spin and wait
     loop_rate.sleep();
