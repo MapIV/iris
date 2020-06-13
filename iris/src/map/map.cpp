@@ -3,6 +3,7 @@
 #include <pcl/common/common.h>
 #include <pcl/filters/voxel_grid.h>
 #include <pcl/point_cloud.h>
+#include <utility>
 
 namespace iris
 {
@@ -63,48 +64,22 @@ Map::Map(const Parameter& parameter)
 
   // Calculate the number of submap and its size
   std::cout << "It starts making submaps. This may take few seconds." << std::endl;
-  const float L = parameter.submap_grid_leaf;
-  pcl::PointXYZ minimum, maximum;
-  pcl::getMinMax3D(*all_target_cloud, minimum, maximum);
-  max_corner_point = maximum.getArray3fMap();
-  min_corner_point = minimum.getArray3fMap();
-
-  grid_x_num = static_cast<int>((maximum.x - minimum.x) / L) + 1;
-  grid_y_num = static_cast<int>((maximum.y - minimum.y) / L) + 1;
-  if (grid_x_num < 3) grid_x_num = 3;
-  if (grid_y_num < 3) grid_y_num = 3;
-
-  grid_box_unit << L, L, maximum.z - minimum.z;
-
-  pcl::CropBox<pcl::PointXYZ> crop;
-  crop.setInputCloud(all_target_cloud);
-
-  Eigen::Vector3f Ly, Lx;
-  Lx << L, 0, 0;
-  Ly << 0, L, 0;
+  int L = static_cast<int>(parameter.submap_grid_leaf);
+  if (L < 1) {
+    L = 1;
+    std::cout << "please set positive number for parameter.submap_grid_leaf" << std::endl;
+  }
 
   // Make submaps
-  for (int i = 0; i < grid_x_num; i++) {
-    for (int j = 0; j < grid_y_num; j++) {
+  for (size_t i = 0; i < all_target_cloud->size(); i++) {
+    pcl::PointXYZ p = all_target_cloud->at(i);
+    pcl::Normal n = all_target_normals->at(i);
 
-      Eigen::Vector4f min4 = Eigen::Vector4f::Ones();
-      Eigen::Vector4f max4 = Eigen::Vector4f::Ones();
-      min4.topRows(3) = min_corner_point + i * Lx + j * Ly;
-      max4.topRows(3) = min4.topRows(4) + grid_box_unit;
+    int id_x = static_cast<int>(p.x) / L;
+    int id_y = static_cast<int>(p.y) / L;
 
-      std::vector<int> indices;
-      crop.setMin(min4);
-      crop.setMax(max4);
-      crop.filter(indices);
-
-      pcXYZ cropped_cloud;
-      pcNormal cropped_normals;
-      pcl::copyPointCloud(*all_target_cloud, indices, cropped_cloud);
-      pcl::copyPointCloud(*all_target_normals, indices, cropped_normals);
-
-      submap_cloud.push_back(std::move(cropped_cloud));
-      submap_normals.push_back(std::move(cropped_normals));
-    }
+    submap_cloud[std::make_pair(id_x, id_y)].push_back(p);
+    submap_normals[std::make_pair(id_x, id_y)].push_back(n);
   }
 
   // Construct local map
@@ -143,16 +118,12 @@ bool Map::isUpdateNecessary(const Eigen::Matrix4f& T) const
 
   // (1) Condition about the location
   float distance = (T.topRightCorner(2, 1) - localmap_info.xy()).cwiseAbs().maxCoeff();
-  // std::cout << "distance-condition: " << distance
-  //           << " self " << T.topRightCorner(2, 1).transpose()
-  //           << " info" << localmap_info.xy().transpose() << std::endl;
   if (distance > 0.75 * parameter.submap_grid_leaf) {
     return true;
   }
 
   // (2) Condition about the location
   float yaw = yawFromPose(T);
-  // std::cout << "angle-condition: " << yaw << " " << localmap_info.theta << std::endl;
   if (subtractAngles(yaw, localmap_info.theta) > 60.f / 180.f * 3.14f) {
     return true;
   }
@@ -167,38 +138,36 @@ void Map::updateLocalmap(const Eigen::Matrix4f& T)
   std::cout << "Update Localmap" << std::endl;
   std::cout << "###############" << std::endl;
 
-  Eigen::Vector3f dP = (T.topRightCorner(3, 1) - min_corner_point);
-  const float L = parameter.submap_grid_leaf;
-  int cx = static_cast<int>(dP.x() / L);
-  int cy = static_cast<int>(dP.y() / L);
-  std::cout << "cx " << cx << " cy " << cy << std::endl;
+  Eigen::Vector3f t = T.topRightCorner(3, 1);
+  const int L = static_cast<int>(parameter.submap_grid_leaf);
+  int id_x = static_cast<int>(t.x()) / L;
+  int id_y = static_cast<int>(t.y()) / L;
+  std::cout << "id_x " << id_x << " id_y " << id_y << std::endl;
 
-  // TODO:
   int pattern = static_cast<int>(yawFromPose(T) / (3.14f / 4.0f));
-  // int pattern = 0;
   int x_min, y_min, dx, dy;
   float new_info_theta;
   switch (pattern) {
   case 0:
   case 7:
-    x_min = cx - 1;
-    y_min = cy - 1;
+    x_min = id_x - 1;
+    y_min = id_y - 1;
     dx = 4;
     dy = 3;
     new_info_theta = 0;
     break;
   case 1:
   case 2:
-    x_min = cx - 1;
-    y_min = cy - 1;
+    x_min = id_x - 1;
+    y_min = id_y - 1;
     dx = 3;
     dy = 4;
     new_info_theta = 3.1415f * 0.5f;
     break;
   case 3:
   case 4:
-    x_min = cx - 2;
-    y_min = cy - 1;
+    x_min = id_x - 2;
+    y_min = id_y - 1;
     dx = 4;
     dy = 3;
     new_info_theta = 3.1415f;
@@ -206,8 +175,8 @@ void Map::updateLocalmap(const Eigen::Matrix4f& T)
   case 5:
   case 6:
   default:
-    x_min = cx - 1;
-    y_min = cy - 2;
+    x_min = id_x - 1;
+    y_min = id_y - 2;
     dx = 3;
     dy = 4;
     new_info_theta = 3.1415f * 1.5f;
@@ -222,30 +191,25 @@ void Map::updateLocalmap(const Eigen::Matrix4f& T)
     local_target_normals->clear();
 
     for (int i = 0; i < dx; i++) {
-      if (i + x_min < 0) continue;
-      if (i + x_min == grid_x_num) continue;
-
       for (int j = 0; j < dy; j++) {
-        if (j + y_min < 0) continue;
-        if (j + y_min == grid_y_num) continue;
+        std::pair<int, int> key = std::make_pair(dx, dy);
+        if (submap_cloud.count(key) == 0) continue;
 
-        int tmp = (j + y_min) + grid_y_num * (i + x_min);
-        *local_target_cloud += submap_cloud.at(tmp);
-        *local_target_normals += submap_normals.at(tmp);
+        *local_target_cloud += submap_cloud[key];
+        *local_target_normals += submap_normals[key];
       }
     }
   }
   {
     std::lock_guard lock(info_mtx);
-    localmap_info.x = min_corner_point.x() + (cx + 0.5f) * L,
-    localmap_info.y = min_corner_point.y() + (cy + 0.5f) * L,
+    localmap_info.x = (id_x + 0.5f) * L,
+    localmap_info.y = (id_y + 0.5f) * L,
     localmap_info.theta = new_info_theta;
   }
   std::cout << "new-info"
             << localmap_info.x << " "
             << localmap_info.y << " "
             << localmap_info.theta << " ,min "
-            << min_corner_point.transpose() << " L="
             << L << std::endl;
   // Critical section until here
 }

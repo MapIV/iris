@@ -9,11 +9,28 @@
 #include <pcl/filters/crop_box.h>
 #include <pcl/io/pcd_io.h>
 #include <sstream>
+#include <unordered_map>
 
 namespace iris
 {
 namespace map
 {
+
+struct HashForPair {
+  template <typename T1, typename T2>
+  size_t operator()(const std::pair<T1, T2>& p) const
+  {
+    auto hash1 = std::hash<T1>{}(p.first);
+    auto hash2 = std::hash<T2>{}(p.second);
+
+    // https://stackoverflow.com/questions/4948780/magic-number-in-boosthash-combine
+    size_t seed = 0;
+    seed ^= hash1 + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+    seed ^= hash2 + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+    return seed;
+  }
+};
+
 class Map
 {
 public:
@@ -68,8 +85,8 @@ private:
   pcNormal::Ptr local_target_normals;
 
   // divided point cloud
-  std::vector<pcXYZ> submap_cloud;
-  std::vector<pcNormal> submap_normals;
+  std::unordered_map<std::pair<int, int>, pcXYZ, HashForPair> submap_cloud;
+  std::unordered_map<std::pair<int, int>, pcNormal, HashForPair> submap_normals;
 
   // [x,y,theta]
   Eigen::Vector3f last_grid_center;
@@ -77,14 +94,6 @@ private:
 
   mutable std::mutex localmap_mtx;
   mutable std::mutex info_mtx;
-
-
-  int grid_x_num;
-  int grid_y_num;
-
-  Eigen::Vector3f min_corner_point;
-  Eigen::Vector3f max_corner_point;
-  Eigen::Vector3f grid_box_unit;
 
   bool isRecalculationNecessary() const;
   bool isUpdateNecessary(const Eigen::Matrix4f& T) const;
