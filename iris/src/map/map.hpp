@@ -35,7 +35,7 @@ class Map
 {
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-  explicit Map(const Parameter& parameter);
+  Map(const Parameter& parameter, const Eigen::Matrix4f& T_init);
 
   // If the map updates then return true.
   bool informCurrentPose(const Eigen::Matrix4f& T);
@@ -71,9 +71,9 @@ public:
 private:
   const std::string cache_file;
   const Parameter parameter;
-  const std::string cache_cloud_file = "vllm_cloud.pcd";
-  const std::string cache_normals_file = "vllm_normals.pcd";
-  const std::string cache_sparse_file = "vllm_sparse_cloud.pcd";
+  const std::string cache_cloud_file = "iris_cloud.pcd";
+  const std::string cache_normals_file = "iris_normals.pcd";
+  const std::string cache_sparse_file = "iris_sparse_cloud.pcd";
 
   // whole point cloud
   pcXYZ::Ptr all_target_cloud;

@@ -10,7 +10,7 @@ namespace iris
 
 namespace map
 {
-Map::Map(const Parameter& parameter)
+Map::Map(const Parameter& parameter, const Eigen::Matrix4f& T_init)
     : cache_file("iris.cache"), parameter(parameter),
       local_target_cloud(new pcXYZ),
       local_target_normals(new pcNormal)
@@ -51,7 +51,7 @@ Map::Map(const Parameter& parameter)
 
 
     // save as cache file
-    std::cout << "save pointcloud with normal" << parameter.normal_search_radius << std::endl;
+    std::cout << "save pointcloud" << std::endl;
     pcl::io::savePCDFileBinaryCompressed<pcl::PointXYZ>(cache_cloud_file, *all_target_cloud);
     pcl::io::savePCDFileBinaryCompressed<pcl::Normal>(cache_normals_file, *all_target_normals);
     pcl::io::savePCDFileBinaryCompressed<pcl::PointXYZ>(cache_sparse_file, *all_sparse_cloud);
@@ -78,12 +78,13 @@ Map::Map(const Parameter& parameter)
     int id_x = static_cast<int>(p.x) / L;
     int id_y = static_cast<int>(p.y) / L;
 
-    submap_cloud[std::make_pair(id_x, id_y)].push_back(p);
-    submap_normals[std::make_pair(id_x, id_y)].push_back(n);
+    std::pair key = std::make_pair(id_x, id_y);
+    submap_cloud[key].push_back(p);
+    submap_normals[key].push_back(n);
   }
 
   // Construct local map
-  updateLocalmap(Eigen::Matrix4f::Identity());
+  updateLocalmap(T_init);
 }
 
 bool Map::isRecalculationNecessary() const
@@ -139,6 +140,8 @@ void Map::updateLocalmap(const Eigen::Matrix4f& T)
   std::cout << "###############" << std::endl;
 
   Eigen::Vector3f t = T.topRightCorner(3, 1);
+  std::cout << "T_init\n"
+            << T << std::endl;
   const int L = static_cast<int>(parameter.submap_grid_leaf);
   int id_x = static_cast<int>(t.x()) / L;
   int id_y = static_cast<int>(t.y()) / L;
@@ -182,7 +185,6 @@ void Map::updateLocalmap(const Eigen::Matrix4f& T)
     new_info_theta = 3.1415f * 1.5f;
     break;
   }
-  std::cout << "pattern " << pattern << " " << x_min << " " << y_min << std::endl;
 
   // Critical section from here
   {
@@ -192,9 +194,12 @@ void Map::updateLocalmap(const Eigen::Matrix4f& T)
 
     for (int i = 0; i < dx; i++) {
       for (int j = 0; j < dy; j++) {
-        std::pair<int, int> key = std::make_pair(dx, dy);
-        if (submap_cloud.count(key) == 0) continue;
-
+        std::pair<int, int> key = std::make_pair(x_min + i, y_min + j);
+        if (submap_cloud.count(key) == 0) {
+          std::cout << "skip " << x_min + i << " " << y_min + j << " because the pointcloud is empty" << std::endl;
+          continue;
+        }
+        std::cout << "load" << x_min + dx << " " << y_min + dy << std::endl;
         *local_target_cloud += submap_cloud[key];
         *local_target_normals += submap_normals[key];
       }
@@ -206,11 +211,11 @@ void Map::updateLocalmap(const Eigen::Matrix4f& T)
     localmap_info.y = (id_y + 0.5f) * L,
     localmap_info.theta = new_info_theta;
   }
-  std::cout << "new-info"
-            << localmap_info.x << " "
-            << localmap_info.y << " "
-            << localmap_info.theta << " ,min "
-            << L << std::endl;
+  std::cout << "new-info: "
+            << localmap_info.x << ", "
+            << localmap_info.y << ", "
+            << localmap_info.theta
+            << std::endl;
   // Critical section until here
 }
 

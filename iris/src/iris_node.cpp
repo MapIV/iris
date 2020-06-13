@@ -97,7 +97,7 @@ int main(int argc, char* argv[])
   // Load LiDAR map
   iris::map::Parameter map_param(
       pcd_path, config.voxel_grid_leaf, config.normal_search_leaf, config.submap_grid_leaf);
-  std::shared_ptr<iris::map::Map> map = std::make_shared<iris::map::Map>(map_param);
+  std::shared_ptr<iris::map::Map> map = std::make_shared<iris::map::Map>(map_param, config.T_init);
 
   // Initialize system
   std::shared_ptr<iris::System> system = std::make_shared<iris::System>(config, map);
