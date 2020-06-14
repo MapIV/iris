@@ -196,10 +196,8 @@ void Map::updateLocalmap(const Eigen::Matrix4f& T)
       for (int j = 0; j < dy; j++) {
         std::pair<int, int> key = std::make_pair(x_min + i, y_min + j);
         if (submap_cloud.count(key) == 0) {
-          std::cout << "skip " << x_min + i << " " << y_min + j << " because the pointcloud is empty" << std::endl;
           continue;
         }
-        std::cout << "load" << x_min + dx << " " << y_min + dy << std::endl;
         *local_target_cloud += submap_cloud[key];
         *local_target_normals += submap_normals[key];
       }

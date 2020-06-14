@@ -63,17 +63,20 @@ int main(int argc, char* argv[])
       const Eigen::Vector3f camera_pos = T.topRightCorner(3, 1);
       pcl::PointCloud<pcl::PointXYZINormal>::Ptr active_cloud = pushbackPointXYZINormal(tmp_msg1, camera_pos);
       pcl::PointCloud<pcl::PointXYZINormal>::Ptr inactive_cloud = pushbackPointXYZINormal(tmp_msg2, camera_pos);
-      pointcloud_history.push_back(inactive_cloud);
+      pointcloud_history.push_front(inactive_cloud);
 
       if (pointcloud_history.size() > 300)
-        pointcloud_history.pop_front();
+        pointcloud_history.pop_back();
 
 
       vins_pointcloud->clear();
       *vins_pointcloud += *active_cloud;
-      for (auto itr = pointcloud_history.cbegin(); itr != pointcloud_history.cend();) {
+      for (auto itr = pointcloud_history.begin(); itr != pointcloud_history.end();) {
         *vins_pointcloud += **itr;
-        std::advance(itr, 10);
+        for (int i = 0; i < 10; i++) {
+          if (itr != pointcloud_history.end())
+            itr++;
+        }
         if (vins_pointcloud->size() > 500) break;
       }
       std::cout << "vins_cloud size= " << vins_pointcloud->size() << ", active_cloud size= " << active_cloud->size() << std::endl;
