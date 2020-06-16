@@ -148,28 +148,21 @@ Visualization Manager:
       Frame Timeout: 15
       Frames:
         All Enabled: false
-        body:
-          Value: true
-        camera:
-          Value: true
         iris/iris_pose:
           Value: true
         iris/offseted_vslam_pose:
           Value: true
         iris/vslam_pose:
-          Value: true
+          Value: false
         world:
           Value: true
-      Marker Scale: 10
+      Marker Scale: 30
       Name: TF
       Show Arrows: true
       Show Axes: true
       Show Names: true
       Tree:
         world:
-          body:
-            camera:
-              {}
           iris/iris_pose:
             {}
           iris/offseted_vslam_pose:
@@ -183,7 +176,7 @@ Visualization Manager:
       Marker Topic: /iris/vslam_trajectory
       Name: vslam_trajectory
       Namespaces:
-        points_and_lines: true
+        {}
       Queue Size: 100
       Value: true
     - Class: rviz/Marker
@@ -191,7 +184,7 @@ Visualization Manager:
       Marker Topic: /iris/iris_trajectory
       Name: iris_trajectory
       Namespaces:
-        points_and_lines: true
+        {}
       Queue Size: 100
       Value: true
     - Class: rviz/Marker
@@ -199,7 +192,7 @@ Visualization Manager:
       Marker Topic: /iris/correspondences
       Name: correspondences
       Namespaces:
-        correspondences: true
+        {}
       Queue Size: 100
       Value: true
     - Class: rviz/Image
@@ -241,26 +234,21 @@ Visualization Manager:
   Value: true
   Views:
     Current:
-      Class: rviz/Orbit
-      Distance: 181.3655548095703
+      Angle: 1.179999828338623
+      Class: rviz/TopDownOrtho
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
-      Focal Point:
-        X: 0
-        Y: -5
-        Z: 0
-      Focal Shape Fixed Size: false
-      Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 1.5697963237762451
+      Scale: 6.221555709838867
       Target Frame: iris/iris_pose
-      Value: Orbit (rviz)
-      Yaw: 3.190397262573242
+      Value: TopDownOrtho (rviz)
+      X: -39.338897705078125
+      Y: 6.718478202819824
     Saved: ~
 Window Geometry:
   Displays:

@@ -40,6 +40,7 @@ Eigen::Matrix4f listenTransform(tf::TransformListener& listener)
 
 // TODO: I don't like the function decleared in global scope like this
 Eigen::Matrix4f T_recover = Eigen::Matrix4f::Zero();
+pcl::PointCloud<pcl::PointXYZ>::Ptr current_pointcloud = nullptr;
 void callbackForRecover(const geometry_msgs::PoseWithCovarianceStampedConstPtr& msg)
 {
   ROS_INFO("It subscribes initial_pose");
@@ -49,9 +50,24 @@ void callbackForRecover(const geometry_msgs::PoseWithCovarianceStampedConstPtr& 
   float qw = static_cast<float>(msg->pose.pose.orientation.w);
   float qz = static_cast<float>(msg->pose.pose.orientation.z);
 
+  float z = std::numeric_limits<float>::max();
+
+  if (current_pointcloud != nullptr) {
+    z = 0;
+  } else {
+    for (const pcl::PointXYZ& p : *current_pointcloud) {
+      constexpr float r2 = 2 * 2;  // [m^2]
+      float dx = x - p.x;
+      float dy = y - p.y;
+      if (dx * dx + dy * dy < r2)
+        z = std::min(z, p.z);
+    }
+  }
+
   T_recover.setIdentity();
   T_recover(0, 3) = x;
   T_recover(1, 3) = y;
+  T_recover(2, 3) = z;
   float theta = 2 * std::atan2(qz, qw);
   Eigen::Matrix3f R;
   R << 0, 0, 1,
@@ -134,6 +150,8 @@ int main(int argc, char* argv[])
       iris::publishCorrespondences(correspondences_publisher, publication.cloud, map->getTargetCloud(), publication.correspondences);
       offseted_vslam_pose = publication.offset_camera;
       iris_pose = publication.iris_camera;
+
+      current_pointcloud = publication.cloud;
 
       // Inform processing time
       std::stringstream ss;

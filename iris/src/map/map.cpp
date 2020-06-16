@@ -120,12 +120,14 @@ bool Map::isUpdateNecessary(const Eigen::Matrix4f& T) const
   // (1) Condition about the location
   float distance = (T.topRightCorner(2, 1) - localmap_info.xy()).cwiseAbs().maxCoeff();
   if (distance > 0.75 * parameter.submap_grid_leaf) {
+    std::cout << "because 1" << std::endl;
     return true;
   }
 
   // (2) Condition about the location
   float yaw = yawFromPose(T);
   if (subtractAngles(yaw, localmap_info.theta) > 60.f / 180.f * 3.14f) {
+    std::cout << "because 2" << std::endl;
     return true;
   }
 

@@ -25,8 +25,28 @@ void callback(const sensor_msgs::PointCloudConstPtr& pointcloud_msg, const senso
 Eigen::Matrix4f listenTransform(tf::TransformListener& listener);
 pcl::PointCloud<pcl::PointXYZINormal>::Ptr pushbackPointXYZINormal(const sensor_msgs::PointCloudConstPtr& msg, const Eigen::Vector3f& camera_pos);
 
+Eigen::Matrix4f T_align;
+
 int main(int argc, char* argv[])
 {
+  // clang-format off
+  // T_align<< 
+  //  1, 0, 0, 0,
+  //  0, 0,-1, 0,
+  //  0, 1, 0, 0,
+  //  0, 0, 0, 1;
+  // T_align<< 
+  //  0,-1, 0, 0,
+  //  0, 0,-1, 0,
+  //  1, 0, 0, 0,
+  //  0, 0, 0, 1;
+  T_align<< 
+   0, 0,-1, 0,
+   0, 1, 0, 0,
+   1, 0, 0, 0,
+   0, 0, 0, 1;
+  // clang-format on
+
   ros::init(argc, argv, "vinsmono_bridge_node");
   ros::NodeHandle nh;
 
@@ -45,17 +65,11 @@ int main(int argc, char* argv[])
   pcl::PointCloud<pcl::PointXYZINormal>::Ptr vins_pointcloud(new pcl::PointCloud<pcl::PointXYZINormal>);
   std::list<pcl::PointCloud<pcl::PointXYZINormal>::Ptr> pointcloud_history;
 
-  // Conversion of the camera's direction of travel to the z-axis
-  Eigen::Matrix4f T_align;
-  T_align << 1, 0, 0, 0,
-      0, 0, -1, 0,
-      0, 1, 0, 0,
-      0, 0, 0, 1;
-
   // Start main loop
   ROS_INFO("start main loop.");
   while (ros::ok()) {
-    Eigen::Matrix4f T = T_align * listenTransform(listener);
+    Eigen::Matrix4f T = listenTransform(listener);
+    T = T_align * T;
 
     if (vins_update) {
       vins_update = false;
@@ -77,7 +91,7 @@ int main(int argc, char* argv[])
           if (itr != pointcloud_history.end())
             itr++;
         }
-        if (vins_pointcloud->size() > 500) break;
+        if (vins_pointcloud->size() > 400) break;
       }
       std::cout << "vins_cloud size= " << vins_pointcloud->size() << ", active_cloud size= " << active_cloud->size() << std::endl;
 
@@ -105,7 +119,7 @@ Eigen::Matrix4f listenTransform(tf::TransformListener& listener)
 {
   tf::StampedTransform transform;
   try {
-    listener.lookupTransform("world", "body", ros::Time(0), transform);
+    listener.lookupTransform("world", "camera", ros::Time(0), transform);
   } catch (...) {
     return Eigen::Matrix4f::Identity();
   }
@@ -137,13 +151,8 @@ pcl::PointCloud<pcl::PointXYZINormal>::Ptr pushbackPointXYZINormal(const sensor_
     cloud->push_back(point);
   }
 
+  // TODO: DEBUG:
   // Conversion of the camera's direction of travel to the z-axis
-  Eigen::Matrix4f T_align;
-  T_align << 1, 0, 0, 0,
-      0, 0, -1, 0,
-      0, 1, 0, 0,
-      0, 0, 0, 1;
-
   pcl::transformPointCloud(*cloud, *cloud, T_align);
 
   return cloud;
