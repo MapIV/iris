@@ -64,7 +64,7 @@ Map::Map(const Parameter& parameter, const Eigen::Matrix4f& T_init)
 
   // Calculate the number of submap and its size
   std::cout << "It starts making submaps. This may take few seconds." << std::endl;
-  int L = static_cast<int>(parameter.submap_grid_leaf);
+  float L = parameter.submap_grid_leaf;
   if (L < 1) {
     L = 1;
     std::cout << "please set positive number for parameter.submap_grid_leaf" << std::endl;
@@ -75,8 +75,8 @@ Map::Map(const Parameter& parameter, const Eigen::Matrix4f& T_init)
     pcl::PointXYZ p = all_target_cloud->at(i);
     pcl::Normal n = all_target_normals->at(i);
 
-    int id_x = static_cast<int>(p.x) / L;
-    int id_y = static_cast<int>(p.y) / L;
+    int id_x = std::floor(p.x / L);
+    int id_y = std::floor(p.y / L);
 
     std::pair key = std::make_pair(id_x, id_y);
     submap_cloud[key].push_back(p);
@@ -117,8 +117,14 @@ bool Map::isUpdateNecessary(const Eigen::Matrix4f& T) const
 {
   // NOTE: The boundaries of the submap have overlaps in order not to vibrate
 
+  std::cout << "isUpdateNecessary: " << std::endl;
+  std::cout << T << std::endl;
+  std::cout << localmap_info.xy().transpose() << std::endl;
+  std::cout << localmap_info.theta << std::endl;
+
   // (1) Condition about the location
   float distance = (T.topRightCorner(2, 1) - localmap_info.xy()).cwiseAbs().maxCoeff();
+  std::cout << "distance " << distance << std::endl;
   if (distance > 0.75 * parameter.submap_grid_leaf) {
     std::cout << "because 1" << std::endl;
     return true;
@@ -126,10 +132,12 @@ bool Map::isUpdateNecessary(const Eigen::Matrix4f& T) const
 
   // (2) Condition about the location
   float yaw = yawFromPose(T);
+  std::cout << "yaw " << yaw << std::endl;
   if (subtractAngles(yaw, localmap_info.theta) > 60.f / 180.f * 3.14f) {
     std::cout << "because 2" << std::endl;
     return true;
   }
+
 
   // Then, it need not to update the localmap
   return false;
@@ -144,9 +152,9 @@ void Map::updateLocalmap(const Eigen::Matrix4f& T)
   Eigen::Vector3f t = T.topRightCorner(3, 1);
   std::cout << "T_init\n"
             << T << std::endl;
-  const int L = static_cast<int>(parameter.submap_grid_leaf);
-  int id_x = static_cast<int>(t.x()) / L;
-  int id_y = static_cast<int>(t.y()) / L;
+  const float L = parameter.submap_grid_leaf;
+  int id_x = static_cast<int>(std::floor(t.x() / L));
+  int id_y = static_cast<int>(std::floor(t.y() / L));
   std::cout << "id_x " << id_x << " id_y " << id_y << std::endl;
 
   int pattern = static_cast<int>(yawFromPose(T) / (3.14f / 4.0f));
@@ -196,6 +204,7 @@ void Map::updateLocalmap(const Eigen::Matrix4f& T)
 
     for (int i = 0; i < dx; i++) {
       for (int j = 0; j < dy; j++) {
+        std::cout << "(" << x_min + i << "," << y_min + j << ")";
         std::pair<int, int> key = std::make_pair(x_min + i, y_min + j);
         if (submap_cloud.count(key) == 0) {
           continue;
@@ -207,8 +216,8 @@ void Map::updateLocalmap(const Eigen::Matrix4f& T)
   }
   {
     std::lock_guard lock(info_mtx);
-    localmap_info.x = (id_x + 0.5f) * L,
-    localmap_info.y = (id_y + 0.5f) * L,
+    localmap_info.x = (static_cast<float>(id_x) + 0.5f) * L,
+    localmap_info.y = (static_cast<float>(id_y) + 0.5f) * L,
     localmap_info.theta = new_info_theta;
   }
   std::cout << "new-info: "
