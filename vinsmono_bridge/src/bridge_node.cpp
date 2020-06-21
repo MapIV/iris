@@ -3,6 +3,7 @@
 #include <message_filters/subscriber.h>
 #include <message_filters/time_synchronizer.h>
 #include <opencv2/opencv.hpp>
+#include <pcl/common/common.h>
 #include <pcl/common/transforms.h>
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
@@ -25,21 +26,25 @@ void callback(const sensor_msgs::PointCloudConstPtr& pointcloud_msg, const senso
 Eigen::Matrix4f listenTransform(tf::TransformListener& listener);
 pcl::PointCloud<pcl::PointXYZINormal>::Ptr pushbackPointXYZINormal(const sensor_msgs::PointCloudConstPtr& msg, const Eigen::Vector3f& camera_pos);
 
+Eigen::Vector3f getCentroid(const pcl::PointCloud<pcl::PointXYZINormal>& pc)
+{
+  Eigen::Vector3f c = Eigen::Vector3f::Zero();
+  if (pc.empty())
+    return c;
+
+  for (const auto& p : pc.points) {
+    c.x() += p.x;
+    c.y() += 0;
+    c.z() += p.z;
+  }
+  return c / c.size();
+}
+
 Eigen::Matrix4f T_align;
 
 int main(int argc, char* argv[])
 {
   // clang-format off
-  // T_align<< 
-  //  1, 0, 0, 0,
-  //  0, 0,-1, 0,
-  //  0, 1, 0, 0,
-  //  0, 0, 0, 1;
-  // T_align<< 
-  //  0,-1, 0, 0,
-  //  0, 0,-1, 0,
-  //  1, 0, 0, 0,
-  //  0, 0, 0, 1;
   T_align<< 
    0, 0,-1, 0,
    0, 1, 0, 0,
@@ -63,7 +68,7 @@ int main(int argc, char* argv[])
   ros::Rate loop_rate(20);
 
   pcl::PointCloud<pcl::PointXYZINormal>::Ptr vins_pointcloud(new pcl::PointCloud<pcl::PointXYZINormal>);
-  std::list<pcl::PointCloud<pcl::PointXYZINormal>::Ptr> pointcloud_history;
+  std::list<std::pair<pcl::PointCloud<pcl::PointXYZINormal>::Ptr, Eigen::Vector3f>> pointcloud_history;
 
   // Start main loop
   ROS_INFO("start main loop.");
@@ -77,21 +82,33 @@ int main(int argc, char* argv[])
       const Eigen::Vector3f camera_pos = T.topRightCorner(3, 1);
       pcl::PointCloud<pcl::PointXYZINormal>::Ptr active_cloud = pushbackPointXYZINormal(tmp_msg1, camera_pos);
       pcl::PointCloud<pcl::PointXYZINormal>::Ptr inactive_cloud = pushbackPointXYZINormal(tmp_msg2, camera_pos);
-      pointcloud_history.push_front(inactive_cloud);
+      pointcloud_history.push_front(std::make_pair(inactive_cloud, camera_pos));
 
-      if (pointcloud_history.size() > 300)
+      // if list size get bigger then pop it
+      if (pointcloud_history.size() > 1000) {
         pointcloud_history.pop_back();
+      }
 
 
       vins_pointcloud->clear();
       *vins_pointcloud += *active_cloud;
-      for (auto itr = pointcloud_history.begin(); itr != pointcloud_history.end();) {
-        *vins_pointcloud += **itr;
-        for (int i = 0; i < 10; i++) {
-          if (itr != pointcloud_history.end())
-            itr++;
+      Eigen::Vector3f pre_camera_pos = Eigen::Vector3f::Zero();
+      float accumulated_length = 0;
+
+      for (auto itr = pointcloud_history.begin(); itr != pointcloud_history.end(); itr++) {
+
+        Eigen::Vector3f camera_pos = (itr->second);
+        if (pre_camera_pos.isZero()) pre_camera_pos = camera_pos;
+
+        float length = (camera_pos - pre_camera_pos).norm();
+
+        if (length > 5) {
+          accumulated_length += length;
+          *vins_pointcloud += *(itr->first);
+          pre_camera_pos = camera_pos;
         }
-        if (vins_pointcloud->size() > 400) break;
+        if (accumulated_length > 70) break;
+        if (vins_pointcloud->size() > 600) break;
       }
       std::cout << "vins_cloud size= " << vins_pointcloud->size() << ", active_cloud size= " << active_cloud->size() << std::endl;
 
