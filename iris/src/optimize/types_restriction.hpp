@@ -63,10 +63,12 @@ public:
 class Edge_Latitude_Restriction : public g2o::BaseUnaryEdge<1, double, VertexSim3Expmap>
 {
 private:
+  Eigen::Matrix3d offset_rotation;
   double gain;
 
 public:
-  Edge_Latitude_Restriction(double gain = 1.0) : gain(gain) {}
+  Edge_Latitude_Restriction(const Eigen::Matrix3d& offset_rotation, double gain = 1.0) : offset_rotation(offset_rotation),
+                                                                                         gain(gain) {}
 
   virtual bool read(std::istream&) { return false; }
   virtual bool write(std::ostream&) const { return false; }

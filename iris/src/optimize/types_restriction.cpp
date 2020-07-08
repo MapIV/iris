@@ -31,7 +31,7 @@ void Edge_Latitude_Restriction::computeError()
 
   // Because Visual-SLAM hundle the direction in front of camera as the Z-axis,
   // the alignment transform contains the rotation which converts Z-axis(in front of camera) to X-axis(in front of base_link)
-  Eigen::Matrix3d R = vp0->estimate().rotation().toRotationMatrix();
+  Eigen::Matrix3d R = vp0->estimate().rotation().toRotationMatrix() * offset_rotation;
   Eigen::Vector3d b(0, -1, 0);
 
   Eigen::Vector3d Rb = R * b;
@@ -43,7 +43,7 @@ void Edge_Latitude_Restriction::computeError()
   double swing = 1 - Rb.z();
 
   // This means that an angle of the camera rolling and pitching larger than acos(0.75) = 41[deg]
-  if (swing > 0.25)
+  if (swing > 0.30)
     _error(0) = 1e4;  // infinity loss
 
   // This means that the angle is enough small.

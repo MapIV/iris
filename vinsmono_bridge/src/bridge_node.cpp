@@ -107,8 +107,8 @@ int main(int argc, char* argv[])
           *vins_pointcloud += *(itr->first);
           pre_camera_pos = camera_pos;
         }
-        if (accumulated_length > 70) break;
-        if (vins_pointcloud->size() > 600) break;
+        if (accumulated_length > 50) break;
+        if (vins_pointcloud->size() > 400) break;
       }
       std::cout << "vins_cloud size= " << vins_pointcloud->size() << ", active_cloud size= " << active_cloud->size() << std::endl;
 

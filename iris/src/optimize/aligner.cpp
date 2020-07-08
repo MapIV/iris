@@ -46,6 +46,13 @@ Eigen::Matrix4f Aligner::estimate7DoF(
   Eigen::Matrix3f R = optimized->estimate().rotation().matrix().cast<float>();
   Eigen::Vector3f t = optimized->estimate().translation().cast<float>();
   std::cout << "scale= \033[31m" << scale << "\033[m" << std::endl;
+  {
+    Eigen::Vector3f b(0, -1, 0);
+    Eigen::Matrix3f R_ = R * (offset_camera).topLeftCorner(3, 3);
+    Eigen::Vector3f Rb = R_ * b;
+    std::cout << "swing= \033[31m" << Rb.z() << "\033[m" << std::endl;
+  }
+
 
   T = Eigen::Matrix4f::Identity();
   T.topLeftCorner(3, 3) = scale * R;
@@ -153,7 +160,7 @@ void Aligner::setEdgeRestriction(
 
   // Add a latitude edge
   {
-    Edge_Latitude_Restriction* e = new Edge_Latitude_Restriction(latitude_gain);
+    Edge_Latitude_Restriction* e = new Edge_Latitude_Restriction(offset_camera.topLeftCorner(3, 3).cast<double>(), latitude_gain);
     e->setVertex(0, vp0);
     e->information().setIdentity();
     e->setMeasurement(0.0);
