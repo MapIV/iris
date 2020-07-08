@@ -23,6 +23,17 @@ Outcome Optimizer::optimize(
 
   Eigen::Matrix4f T_align = T_initial_align;
 
+  auto distance_generator = [=](int itr) -> float {
+    const float max = config.distance_max;
+    const float min = config.distance_min;
+    const float N = static_cast<float>(config.iteration);
+
+    if (N <= 1)
+      return min;
+
+    return min + (N - 1 - static_cast<float>(itr)) * (max - min) / (N - 1);
+  };
+
   for (int itr = 0; itr < config.iteration; itr++) {
     std::cout << "itration= \033[32m" << itr << "\033[m";
 
@@ -43,11 +54,11 @@ Outcome Optimizer::optimize(
 
     // NOTE: distance_rejector doesn't seemd to work well.
     // Reject too far correspondences
-    float distance = config.distance_max - (config.distance_max - config.distance_min) * static_cast<float>(itr) / static_cast<float>(config.iteration);
+    float distance = distance_generator(itr);
     distance_rejector.setInputCorrespondences(correspondences);
-    distance_rejector.setMaximumDistance(distance);
+    distance_rejector.setMaximumDistance(distance * distance);
     distance_rejector.getCorrespondences(*correspondences);
-    std::cout << " ,refined_correspondecnes= \033[32m" << correspondences->size() << "\033[m" << std::endl;
+    std::cout << " ,refined_correspondecnes= \033[32m" << correspondences->size() << " @ " << distance << " \033[m" << std::endl;
 
     Eigen::Matrix4f vllm_camera = T_align * offset_camera;
     Eigen::Matrix4f last_camera = vllm_camera;
