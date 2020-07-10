@@ -14,6 +14,7 @@ struct Publication {
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
   Eigen::Matrix4f iris_camera;
+  Eigen::Matrix4f T_align;
   Eigen::Matrix4f offset_camera;
   std::vector<Eigen::Vector3f, Eigen::aligned_allocator<Eigen::Vector3f>> iris_trajectory;
   std::vector<Eigen::Vector3f, Eigen::aligned_allocator<Eigen::Vector3f>> offset_trajectory;

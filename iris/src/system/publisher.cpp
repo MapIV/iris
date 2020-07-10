@@ -28,6 +28,7 @@ void Publisher::push(
 {
   Publication& tmp = publication[id];
 
+  tmp.T_align = T_align;
   tmp.iris_camera = util::normalizePose(iris_camera);
   tmp.offset_camera = util::normalizePose(offset_camera);
   tmp.iris_trajectory = iris_trajectory;

@@ -42,6 +42,8 @@ Outcome Optimizer::optimize(
 
     Eigen::Vector3f offset_pos = (T_align * offset_camera).topRightCorner(3, 1);
 
+    std::cout << "offset_pos: " << offset_pos.transpose() << std::endl;
+
     // TODO: We should enable the estimator handle the PointXYZINormal
     estimator.setInputSource(tmp_cloud);
     estimator.setSourceNormals(tmp_normals);
