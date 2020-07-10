@@ -46,7 +46,7 @@ private:
   void setEdgeRestriction(
       g2o::SparseOptimizer& optimizer,
       const Eigen::Matrix4f& offset_camera,
-      const std::list<Eigen::Matrix4f, Eigen::aligned_allocator<Eigen::Matrix4f>>& history,
+      const Eigen::Matrix4f& T,
       double ref_scale);
 
   void setEdge7DoFGICP(

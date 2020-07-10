@@ -126,8 +126,6 @@ void publishNormal(ros::Publisher& publisher,
     marker_array.markers.push_back(marker);
   }
   publisher.publish(marker_array);
-
-  std::cout << "Debug: " << cloud->size() << std::endl;
 }
 
 

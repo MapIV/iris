@@ -165,7 +165,6 @@ pcl::PointCloud<pcl::PointXYZINormal>::Ptr pushbackPointXYZINormal(const sensor_
     if (point.z > max_height_range)
       continue;
 
-
     point.intensity = 1.0f;
 
     Eigen::Vector3f normal;

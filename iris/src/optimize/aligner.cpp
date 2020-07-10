@@ -32,7 +32,7 @@ Eigen::Matrix4f Aligner::estimate7DoF(
 
   setVertexSim3(optimizer, T);
   setEdge7DoFGICP(optimizer, source_clouds, target, correspondances, offset_camera.topRightCorner(3, 1), target_normals);
-  setEdgeRestriction(optimizer, offset_camera, history, ref_scale);
+  setEdgeRestriction(optimizer, offset_camera, T, ref_scale);
 
   // execute
   optimizer.setVerbose(false);
@@ -130,28 +130,28 @@ void Aligner::setEdge7DoFGICP(
 void Aligner::setEdgeRestriction(
     g2o::SparseOptimizer& optimizer,
     const Eigen::Matrix4f& offset_camera,
-    const std::list<Eigen::Matrix4f, Eigen::aligned_allocator<Eigen::Matrix4f>>&,
+    const Eigen::Matrix4f& T,
     double ref_scale)
 {
   g2o::VertexSim3Expmap* vp0 = dynamic_cast<g2o::VertexSim3Expmap*>(optimizer.vertices().find(0)->second);
 
-  // Add a scale edge
-  {
-    Edge_Scale_Restriction* e = new Edge_Scale_Restriction(scale_gain);
-    e->setVertex(0, vp0);
-    e->information().setIdentity();
-    e->setMeasurement(ref_scale);
-    optimizer.addEdge(e);
-  }
+  // // Add a scale edge
+  // {
+  //   Edge_Scale_Restriction* e = new Edge_Scale_Restriction(scale_gain);
+  //   e->setVertex(0, vp0);
+  //   e->information().setIdentity();
+  //   e->setMeasurement(ref_scale);
+  //   optimizer.addEdge(e);
+  // }
 
-  // Add an altitude edge
-  {
-    Edge_Altitude_Restriction* e = new Edge_Altitude_Restriction(altitude_gain);
-    e->setVertex(0, vp0);
-    e->information().setIdentity();
-    e->setMeasurement(offset_camera.topRightCorner(3, 1).cast<double>());
-    optimizer.addEdge(e);
-  }
+  // // Add an altitude edge
+  // {
+  //   Edge_Altitude_Restriction* e = new Edge_Altitude_Restriction(altitude_gain);
+  //   e->setVertex(0, vp0);
+  //   e->information().setIdentity();
+  //   e->setMeasurement(offset_camera.topRightCorner(3, 1).cast<double>());
+  //   optimizer.addEdge(e);
+  // }
 
   // Add a latitude edge
   {

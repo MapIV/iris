@@ -50,6 +50,22 @@ void Edge_Latitude_Restriction::computeError()
     _error(0) = gain * swing;
 }
 
+void Edge_Euclid_Restriction::computeError()
+{
+  const VertexSim3Expmap* vp0 = static_cast<const VertexSim3Expmap*>(_vertices[0]);
+
+  Eigen::Matrix3d R = vp0->estimate().rotation().toRotationMatrix();
+  Eigen::Vector3d t = vp0->estimate().translation();
+  double s = vp0->estimate().scale();
+
+  // double e1 = (R - R_init).trace();
+  double e2 = (t - t_init).norm();
+  // double e3 = (s - s_init);
+
+  // TODO: NOTE:
+  _error(0) = gain * e2;
+}
+
 // void Edge_Smooth_Restriction::computeError()
 // {
 // TODO:

@@ -127,7 +127,6 @@ bool Map::isUpdateNecessary(const Eigen::Matrix4f& T) const
 
   // (2) Condition about the location
   float yaw = yawFromPose(T);
-  std::cout << "yaw " << yaw << std::endl;
   if (subtractAngles(yaw, localmap_info.theta) > 60.f / 180.f * 3.14f) {
     std::cout << "because 2" << std::endl;
     return true;
