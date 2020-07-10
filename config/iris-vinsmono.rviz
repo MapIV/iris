@@ -7,6 +7,8 @@ Panels:
         - /target_points1/Autocompute Value Bounds1
         - /TF1/Frames1
         - /correspondences1/Namespaces1
+        - /Normal1
+        - /Normal1/Status1
       Splitter Ratio: 0.3891128897666931
     Tree Height: 435
   - Class: rviz/Selection
@@ -243,6 +245,14 @@ Visualization Manager:
       top: 128
       update interval: 0.03999999910593033
       width: 128
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Marker Topic: /iris/normals
+      Name: Normal
+      Namespaces:
+        {}
+      Queue Size: 100
+      Value: true
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48

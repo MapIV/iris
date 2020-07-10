@@ -16,7 +16,7 @@ bool vins_update = false;
 sensor_msgs::PointCloudConstPtr tmp_msg1, tmp_msg2;
 void callback(const sensor_msgs::PointCloudConstPtr& pointcloud_msg, const sensor_msgs::PointCloudConstPtr& historycloud_msg)
 {
-  ROS_INFO("visible: %lu, unvisible:%lu ", pointcloud_msg->points.size(), historycloud_msg->points.size());
+  // ROS_INFO("visible: %lu, unvisible:%lu ", pointcloud_msg->points.size(), historycloud_msg->points.size());
   if (pointcloud_msg->points.empty() && historycloud_msg->points.empty()) return;
   vins_update = true;
   tmp_msg1 = pointcloud_msg;
@@ -152,6 +152,8 @@ Eigen::Matrix4f listenTransform(tf::TransformListener& listener)
 pcl::PointCloud<pcl::PointXYZINormal>::Ptr pushbackPointXYZINormal(const sensor_msgs::PointCloudConstPtr& msg, const Eigen::Vector3f& camera_pos, float max_height_range)
 {
   pcl::PointCloud<pcl::PointXYZINormal>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZINormal>);
+
+  bool debug = true;
 
   for (size_t i = 0; i < msg->points.size(); i++) {
     const geometry_msgs::Point32& g_p = msg->points.at(i);

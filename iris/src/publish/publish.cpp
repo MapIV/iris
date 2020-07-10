@@ -83,6 +83,54 @@ void publishCorrespondences(ros::Publisher& publisher,
   publisher.publish(line_strip);
 }
 
+void publishNormal(ros::Publisher& publisher,
+    const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud,
+    const pcl::PointCloud<pcl::Normal>::Ptr& normals)
+{
+  visualization_msgs::MarkerArray marker_array;
+
+  geometry_msgs::Vector3 arrow;
+  arrow.x = 0.2;  // length
+  arrow.y = 0.4;  // width
+  arrow.z = 0.5;  // height
+
+  for (size_t id = 0; id < cloud->size(); id++) {
+    visualization_msgs::Marker marker;
+
+    pcl::PointXYZ p = cloud->at(id);
+    pcl::Normal n = normals->at(id);
+
+    marker.header.frame_id = "world";
+    marker.header.stamp = ros::Time::now();
+    marker.ns = "normal";
+    marker.action = visualization_msgs::Marker::ADD;
+    marker.pose.orientation.w = 1.0;
+    marker.id = static_cast<int>(id);
+    marker.scale = arrow;
+    marker.type = visualization_msgs::Marker::ARROW;
+    marker.color.r = 0.0;
+    marker.color.g = 1.0;
+    marker.color.b = 0.0;
+    marker.color.a = 1.0;
+
+    geometry_msgs::Point p1, p2;
+    p1.x = p.x;
+    p1.y = p.y;
+    p1.z = p.z;
+    p2.x = p.x + 2.0f * n.normal_x;
+    p2.y = p.y + 2.0f * n.normal_y;
+    p2.z = p.z + 2.0f * n.normal_z;
+
+    marker.points.push_back(p1);
+    marker.points.push_back(p2);
+    marker_array.markers.push_back(marker);
+  }
+  publisher.publish(marker_array);
+
+  std::cout << "Debug: " << cloud->size() << std::endl;
+}
+
+
 visualization_msgs::Marker makeMarkerAsLine(const Eigen::Vector3f& s, const Eigen::Vector3f& e, int id)
 {
   visualization_msgs::Marker line_strip;

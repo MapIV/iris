@@ -100,6 +100,7 @@ int main(int argc, char* argv[])
   ros::Publisher vslam_trajectory_publisher = nh.advertise<visualization_msgs::Marker>("iris/vslam_trajectory", 1);
   ros::Publisher correspondences_publisher = nh.advertise<visualization_msgs::Marker>("iris/correspondences", 1);
   ros::Publisher scale_publisher = nh.advertise<std_msgs::Float32>("iris/align_scale", 1);
+  ros::Publisher normal_publisher = nh.advertise<visualization_msgs::MarkerArray>("iris/normals", 1);
   iris::Publication publication;
 
   // Get rosparams
@@ -150,6 +151,7 @@ int main(int argc, char* argv[])
       iris::publishTrajectory(iris_trajectory_publisher, publication.iris_trajectory, {1.0f, 0.0f, 1.0f});
       iris::publishTrajectory(vslam_trajectory_publisher, publication.offset_trajectory, {0.6f, 0.6f, 0.6f});
       iris::publishCorrespondences(correspondences_publisher, publication.cloud, map->getTargetCloud(), publication.correspondences);
+      iris::publishNormal(normal_publisher, publication.cloud, publication.normals);
       {
         std_msgs::Float32 scale;
         scale.data = iris::util::getScale(publication.T_align);

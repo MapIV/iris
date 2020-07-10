@@ -46,17 +46,11 @@ Eigen::Matrix4f Aligner::estimate7DoF(
   Eigen::Matrix3f R = optimized->estimate().rotation().matrix().cast<float>();
   Eigen::Vector3f t = optimized->estimate().translation().cast<float>();
   std::cout << "scale= \033[31m" << scale << "\033[m" << std::endl;
-  {
-    Eigen::Vector3f b(0, -1, 0);
-    Eigen::Matrix3f R_ = R * (offset_camera).topLeftCorner(3, 3);
-    Eigen::Vector3f Rb = R_ * b;
-    std::cout << "swing= \033[31m" << Rb.z() << "\033[m" << std::endl;
-  }
-
 
   T = Eigen::Matrix4f::Identity();
   T.topLeftCorner(3, 3) = scale * R;
   T.topRightCorner(3, 1) = t;
+
   return T;
 }
 
@@ -64,9 +58,9 @@ void Aligner::setVertexSim3(g2o::SparseOptimizer& optimizer, Eigen::Matrix4f& T)
 {
   // set up rotation and translation for this node
   Eigen::Vector3d t = T.topRightCorner(3, 1).cast<double>();
-  Eigen::Matrix3d R = T.topLeftCorner(3, 3).cast<double>();
-  Eigen::Quaterniond q = Eigen::Quaterniond(R);
-  double scale = util::getScale(R.cast<float>());
+  Eigen::Matrix3d sR = T.topLeftCorner(3, 3).cast<double>();
+  double scale = util::getScale(sR.cast<float>());
+  Eigen::Quaterniond q = Eigen::Quaterniond(sR / scale);
   g2o::Sim3 sim3(q, t, scale);
 
   // set up initial parameter
@@ -121,7 +115,8 @@ void Aligner::setEdge7DoFGICP(
       e->cov0 = meas.cov0(1.0f);  // target
     }
     meas.normal1 = n1.cast<double>();
-    e->cov1 = meas.cov1(0.50f);  // source
+    // TODO:
+    e->cov1 = meas.cov1(1.00f);  // source
     e->information() = (e->cov0 + R * e->cov1 * R.transpose()).inverse();
 
 
@@ -160,7 +155,8 @@ void Aligner::setEdgeRestriction(
 
   // Add a latitude edge
   {
-    Edge_Latitude_Restriction* e = new Edge_Latitude_Restriction(offset_camera.topLeftCorner(3, 3).cast<double>(), latitude_gain);
+    Eigen::Matrix3f R = util::normalizeRotation(offset_camera);
+    Edge_Latitude_Restriction* e = new Edge_Latitude_Restriction(R.cast<double>(), latitude_gain);
     e->setVertex(0, vp0);
     e->information().setIdentity();
     e->setMeasurement(0.0);

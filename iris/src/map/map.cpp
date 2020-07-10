@@ -117,11 +117,6 @@ bool Map::isUpdateNecessary(const Eigen::Matrix4f& T) const
 {
   // NOTE: The boundaries of the submap have overlaps in order not to vibrate
 
-  std::cout << "isUpdateNecessary: " << std::endl;
-  std::cout << T << std::endl;
-  std::cout << localmap_info.xy().transpose() << std::endl;
-  std::cout << localmap_info.theta << std::endl;
-
   // (1) Condition about the location
   float distance = (T.topRightCorner(2, 1) - localmap_info.xy()).cwiseAbs().maxCoeff();
   std::cout << "distance " << distance << std::endl;

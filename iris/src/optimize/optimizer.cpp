@@ -47,8 +47,8 @@ Outcome Optimizer::optimize(
     // TODO: We should enable the estimator handle the PointXYZINormal
     estimator.setInputSource(tmp_cloud);
     estimator.setSourceNormals(tmp_normals);
-    estimator.setCenter(offset_pos);
-    estimator.setMethod(method_num);
+    // estimator.setCenter(offset_pos);
+    // estimator.setMethod(method_num);
     estimator.determineCorrespondences(*correspondences);
     method_num = (method_num + 1) % 2;
 
@@ -84,6 +84,16 @@ Outcome Optimizer::optimize(
         && config.threshold_rotation > update_rotation)
       break;
   }
+
+  {
+    // Initial transform
+    util::transformXYZINormal(vslam_data, tmp_cloud, tmp_normals, T_align);
+    Eigen::Vector3f offset_pos = (T_align * offset_camera).topRightCorner(3, 1);
+    estimator.setInputSource(tmp_cloud);
+    estimator.setSourceNormals(tmp_normals);
+    estimator.determineCorrespondences(*correspondences);
+  }
+
 
   Outcome outcome;
   outcome.correspondences = correspondences;

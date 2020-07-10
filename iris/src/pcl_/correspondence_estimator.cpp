@@ -59,6 +59,10 @@ Eigen::Matrix3f calcInversedCovariance1(const Eigen::Vector3f& n, float epsilon 
   R.block(0, 0, 1, 3) = n0.transpose();
   R.block(1, 0, 1, 3) = n1.transpose();
   R.block(2, 0, 1, 3) = n2.transpose();
+  //
+  //      |n0_x, n0_y, n0_z|
+  // R =  |n1_x, n1_y, n1_z|
+  //      |n2_x, n2_y, n2_z|
 
   // clang-format off
   Eigen::Matrix3f inv_cov;
@@ -67,7 +71,7 @@ Eigen::Matrix3f calcInversedCovariance1(const Eigen::Vector3f& n, float epsilon 
                      0,      0,       1;
   // clang-format on
 
-  return R * inv_cov * R.transpose();
+  return R.transpose() * inv_cov * R;
   // cov = R.transpose() * cov * R;
 }
 Eigen::Matrix3f calcInversedCovariance2(const Eigen::Vector3f& n, float epsilon = 0.2f)
@@ -128,9 +132,6 @@ void CorrespondenceEstimationBackProjection<PointSource, PointTarget, NormalT, S
   pcl::Correspondence corr;
   unsigned int nr_valid_correspondences = 0;
 
-  constexpr float gain_center[] = {-0.3f, 0.0f, 0.3f};
-  constexpr int gain_K[] = {1, 1, 1};
-
   // Check if the template types are the same. If true, avoid a copy.
   // Both point types MUST be registered using the POINT_CLOUD_REGISTER_POINT_STRUCT macro!
   if (pcl::isSamePointType<PointSource, PointTarget>()) {
@@ -141,45 +142,37 @@ void CorrespondenceEstimationBackProjection<PointSource, PointTarget, NormalT, S
 
       min_dist = std::numeric_limits<float>::max();
       Eigen::Vector3f input_point = input_->points[*idx_i].getVector3fMap();
-      Eigen::Vector3f input_normal = source_normals_->points[*idx_i].getNormalVector3fMap();
-      Eigen::Vector3f distance_from_camera = (input_point - center_);
+      // Eigen::Vector3f input_normal(1, 1, 1);  // = source_normals_->points[*idx_i].getNormalVector3fMap();
+      // Eigen::Vector3f distance_from_camera = (input_point - center_);
 
-      Eigen::Matrix3f covariance;
-      if (method_ == 0) {
-        covariance = calcInversedCovariance1(distance_from_camera);
-      } else {
-        covariance = calcInversedCovariance2(distance_from_camera);
-        // rotate offset vector
-        distance_from_camera = (Eigen::Vector3f::UnitZ()).cross(distance_from_camera);
-      }
+      // Eigen::Matrix3f covariance;
+      // covariance = calcInversedCovariance1(distance_from_camera);
 
-      for (int k = 0; k < 3; k++) {
-        Eigen::Vector3f offset_point = input_point + gain_center[k] * distance_from_camera;
-        tree_->nearestKSearch(PointSource(offset_point.x(), offset_point.y(), offset_point.z()), k_ * gain_K[k], nn_indices, nn_dists);
+      Eigen::Vector3f offset_point = input_point;
+      tree_->nearestKSearch(PointSource(offset_point.x(), offset_point.y(), offset_point.z()), k_, nn_indices, nn_dists);
 
-        // Find the best correspondence
-        for (size_t j = 0; j < nn_indices.size(); j++) {
-          Eigen::Vector3f target_point = target_->points[nn_indices[j]].getVector3fMap();
-          Eigen::Vector3f target_normal = target_normals_->points[nn_indices[j]].getNormalVector3fMap();
+      // Find the best correspondence
+      for (size_t j = 0; j < nn_indices.size(); j++) {
+        Eigen::Vector3f target_point = target_->points[nn_indices[j]].getVector3fMap();
+        // Eigen::Vector3f target_normal = target_normals_->points[nn_indices[j]].getNormalVector3fMap();
 
-          Eigen::Vector3f e = target_point - input_point;
-          float cosin = (input_normal.dot(target_normal));
-          float dist = e.dot(covariance * e) * (1.5f - cosin * cosin);
+        Eigen::Vector3f e = target_point - input_point;
+        // float cosin = (input_normal.dot(target_normal));
+        // float dist = e.dot(covariance * e);
+        float dist = e.dot(e);
 
-          if (dist < min_dist) {
-            min_dist = dist;
-            min_index = nn_indices[j];
-            min_output_dist = nn_dists[j];
-          }
+        if (dist < min_dist) {
+          min_dist = dist;
+          min_index = nn_indices[j];
+          min_output_dist = nn_dists[j];
         }
       }
-
 
       if (min_dist > max_distance)
         continue;
 
       corr.index_query = *idx_i;
-      corr.index_match = min_index;  // NOTE:
+      corr.index_match = min_index;
       corr.distance = min_output_dist;
       correspondences[nr_valid_correspondences++] = corr;
     }

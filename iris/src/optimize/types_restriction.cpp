@@ -13,7 +13,7 @@ void Edge_Scale_Restriction::computeError()
   double diff = (ref_scale - scale);
   double e = 0;
   if (diff > 0) e = diff;
-  if (diff < 0) e = -diff / (scale + 1e6);
+  if (diff < 0) e = -diff / (scale + 1e-6);
 
   _error(0) = gain * e;
 }
@@ -42,11 +42,10 @@ void Edge_Latitude_Restriction::computeError()
 
   double swing = 1 - Rb.z();
 
-  // This means that an angle of the camera rolling and pitching larger than acos(0.75) = 41[deg]
+  // an angle of the camera rolling and pitching larger than acos(0.75) = 41[deg]
   if (swing > 0.20)
     _error(0) = 1e4;  // infinity loss
-
-  // This means that the angle is enough small.
+  // the angle is enough small.
   else
     _error(0) = gain * swing;
 }

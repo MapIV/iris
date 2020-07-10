@@ -79,9 +79,6 @@ int System::execute(int vslam_state, const Eigen::Matrix4f& T_vslam, const pcXYZ
     optimizer.setConfig(optimize_config);
     Eigen::Matrix4f T_initial_align = T_align;
 
-    std::cout << "T_align\n"
-              << T_align << std::endl;
-
     optimize::Outcome outcome = optimizer.optimize(
         map, vslam_data, T_vslam, estimator, T_initial_align, iris_history);
     correspondences = outcome.correspondences;
