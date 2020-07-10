@@ -24,7 +24,7 @@ void callback(const sensor_msgs::PointCloudConstPtr& pointcloud_msg, const senso
 }
 
 Eigen::Matrix4f listenTransform(tf::TransformListener& listener);
-pcl::PointCloud<pcl::PointXYZINormal>::Ptr pushbackPointXYZINormal(const sensor_msgs::PointCloudConstPtr& msg, const Eigen::Vector3f& camera_pos);
+pcl::PointCloud<pcl::PointXYZINormal>::Ptr pushbackPointXYZINormal(const sensor_msgs::PointCloudConstPtr& msg, const Eigen::Vector3f& camera_pos, float max_height_range);
 
 Eigen::Vector3f getCentroid(const pcl::PointCloud<pcl::PointXYZINormal>& pc)
 {
@@ -55,6 +55,10 @@ int main(int argc, char* argv[])
   ros::init(argc, argv, "vinsmono_bridge_node");
   ros::NodeHandle nh;
 
+  ros::NodeHandle pnh("~");
+  float max_height_range;
+  pnh.getParam("max_height_range", max_height_range);
+
   // Setup subscriber
   tf::TransformListener listener;
   message_filters::Subscriber<sensor_msgs::PointCloud> pointcloud_subscriber(nh, "vins_estimator/point_cloud", 1);
@@ -80,8 +84,8 @@ int main(int argc, char* argv[])
       vins_update = false;
 
       const Eigen::Vector3f camera_pos = T.topRightCorner(3, 1);
-      pcl::PointCloud<pcl::PointXYZINormal>::Ptr active_cloud = pushbackPointXYZINormal(tmp_msg1, camera_pos);
-      pcl::PointCloud<pcl::PointXYZINormal>::Ptr inactive_cloud = pushbackPointXYZINormal(tmp_msg2, camera_pos);
+      pcl::PointCloud<pcl::PointXYZINormal>::Ptr active_cloud = pushbackPointXYZINormal(tmp_msg1, camera_pos, max_height_range);
+      pcl::PointCloud<pcl::PointXYZINormal>::Ptr inactive_cloud = pushbackPointXYZINormal(tmp_msg2, camera_pos, max_height_range);
       pointcloud_history.push_front(std::make_pair(inactive_cloud, camera_pos));
 
       // if list size get bigger then pop it
@@ -146,7 +150,7 @@ Eigen::Matrix4f listenTransform(tf::TransformListener& listener)
   return T.cast<float>();
 }
 
-pcl::PointCloud<pcl::PointXYZINormal>::Ptr pushbackPointXYZINormal(const sensor_msgs::PointCloudConstPtr& msg, const Eigen::Vector3f& camera_pos)
+pcl::PointCloud<pcl::PointXYZINormal>::Ptr pushbackPointXYZINormal(const sensor_msgs::PointCloudConstPtr& msg, const Eigen::Vector3f& camera_pos, float max_height_range)
 {
   pcl::PointCloud<pcl::PointXYZINormal>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZINormal>);
 
@@ -156,6 +160,11 @@ pcl::PointCloud<pcl::PointXYZINormal>::Ptr pushbackPointXYZINormal(const sensor_
     point.x = g_p.x;
     point.y = g_p.y;
     point.z = g_p.z;
+
+    if (point.z > max_height_range)
+      continue;
+
+
     point.intensity = 1.0f;
 
     Eigen::Vector3f normal;

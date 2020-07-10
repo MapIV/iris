@@ -43,7 +43,7 @@ void Edge_Latitude_Restriction::computeError()
   double swing = 1 - Rb.z();
 
   // This means that an angle of the camera rolling and pitching larger than acos(0.75) = 41[deg]
-  if (swing > 0.30)
+  if (swing > 0.20)
     _error(0) = 1e4;  // infinity loss
 
   // This means that the angle is enough small.
