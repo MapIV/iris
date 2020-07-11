@@ -128,6 +128,53 @@ void publishNormal(ros::Publisher& publisher,
   publisher.publish(marker_array);
 }
 
+Eigen::Quaternionf normalToQuaternion(const Eigen::Vector3f& n)
+{
+  return Eigen::Quaternionf::FromTwoVectors(Eigen::Vector3f(0, 0, 1), n);
+}
+
+void publishCovariance(ros::Publisher& publisher,
+    const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud,
+    const pcl::PointCloud<pcl::Normal>::Ptr& normals)
+{
+  visualization_msgs::MarkerArray marker_array;
+
+  geometry_msgs::Vector3 diameter;  // diameter
+  diameter.x = 0.5;
+  diameter.y = 0.5;
+  diameter.z = 2;
+
+  for (size_t id = 0; id < cloud->size(); id++) {
+    visualization_msgs::Marker marker;
+    marker.header.frame_id = "world";
+    marker.header.stamp = ros::Time::now();
+    marker.ns = "covariance";
+    marker.action = visualization_msgs::Marker::ADD;
+
+    pcl::PointXYZ p = cloud->at(id);
+    marker.pose.position.x = p.x;
+    marker.pose.position.y = p.y;
+    marker.pose.position.z = p.z;
+
+    pcl::Normal n = normals->at(id);
+    Eigen::Quaternionf q = normalToQuaternion(Eigen::Vector3f(n.normal_x, n.normal_y, n.normal_z));
+    marker.pose.orientation.x = q.x();
+    marker.pose.orientation.y = q.y();
+    marker.pose.orientation.z = q.z();
+    marker.pose.orientation.w = q.w();
+
+    marker.id = static_cast<int>(id);
+    marker.scale = diameter;
+    marker.type = visualization_msgs::Marker::SPHERE;
+    marker.color.r = 1.0f;
+    marker.color.g = 1.0f;
+    marker.color.b = 0.0f;
+    marker.color.a = 0.3f;
+    marker_array.markers.push_back(marker);
+  }
+
+  publisher.publish(marker_array);
+}
 
 visualization_msgs::Marker makeMarkerAsLine(const Eigen::Vector3f& s, const Eigen::Vector3f& e, int id)
 {

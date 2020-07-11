@@ -19,6 +19,9 @@ void publishCorrespondences(ros::Publisher& publisher,
 void publishNormal(ros::Publisher& publisher,
     const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud,
     const pcl::PointCloud<pcl::Normal>::Ptr& normals);
+void publishCovariance(ros::Publisher& publisher,
+    const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud,
+    const pcl::PointCloud<pcl::Normal>::Ptr& normals);
 
 void publishResetPointcloud(ros::Publisher& publisher);
 void publishResetTrajectory(ros::Publisher& publisher);
