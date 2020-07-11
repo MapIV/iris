@@ -139,10 +139,10 @@ void publishCovariance(ros::Publisher& publisher,
 {
   visualization_msgs::MarkerArray marker_array;
 
-  geometry_msgs::Vector3 diameter;  // diameter
-  diameter.x = 0.5;
-  diameter.y = 0.5;
-  diameter.z = 2;
+  geometry_msgs::Vector3 diameter;
+  diameter.x = 4.0;
+  diameter.y = 4.0;
+  diameter.z = 1.0;
 
   for (size_t id = 0; id < cloud->size(); id++) {
     visualization_msgs::Marker marker;

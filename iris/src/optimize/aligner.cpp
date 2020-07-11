@@ -21,7 +21,7 @@ Eigen::Matrix4f Aligner::estimate7DoF(
     const pcl::PointCloud<pcl::PointXYZ>::Ptr& target,
     const pcl::CorrespondencesPtr& correspondances,
     const Eigen::Matrix4f& offset_camera,
-    const std::list<Eigen::Matrix4f, Eigen::aligned_allocator<Eigen::Matrix4f>>& history,
+    const std::list<Eigen::Matrix4f, Eigen::aligned_allocator<Eigen::Matrix4f>>&,
     const double ref_scale,
     const pcl::PointCloud<pcl::Normal>::Ptr& target_normals)
 {
@@ -115,8 +115,7 @@ void Aligner::setEdge7DoFGICP(
       e->cov0 = meas.cov0(1.0f);  // target
     }
     meas.normal1 = n1.cast<double>();
-    // TODO:
-    e->cov1 = meas.cov1(1.00f);  // source
+    e->cov1 = meas.cov1(2.00f);  // source
     e->information() = (e->cov0 + R * e->cov1 * R.transpose()).inverse();
 
 
@@ -130,28 +129,28 @@ void Aligner::setEdge7DoFGICP(
 void Aligner::setEdgeRestriction(
     g2o::SparseOptimizer& optimizer,
     const Eigen::Matrix4f& offset_camera,
-    const Eigen::Matrix4f& T,
+    const Eigen::Matrix4f&,
     double ref_scale)
 {
   g2o::VertexSim3Expmap* vp0 = dynamic_cast<g2o::VertexSim3Expmap*>(optimizer.vertices().find(0)->second);
 
-  // // Add a scale edge
-  // {
-  //   Edge_Scale_Restriction* e = new Edge_Scale_Restriction(scale_gain);
-  //   e->setVertex(0, vp0);
-  //   e->information().setIdentity();
-  //   e->setMeasurement(ref_scale);
-  //   optimizer.addEdge(e);
-  // }
+  // Add a scale edge
+  {
+    Edge_Scale_Restriction* e = new Edge_Scale_Restriction(scale_gain);
+    e->setVertex(0, vp0);
+    e->information().setIdentity();
+    e->setMeasurement(ref_scale);
+    optimizer.addEdge(e);
+  }
 
-  // // Add an altitude edge
-  // {
-  //   Edge_Altitude_Restriction* e = new Edge_Altitude_Restriction(altitude_gain);
-  //   e->setVertex(0, vp0);
-  //   e->information().setIdentity();
-  //   e->setMeasurement(offset_camera.topRightCorner(3, 1).cast<double>());
-  //   optimizer.addEdge(e);
-  // }
+  // Add an altitude edge
+  {
+    Edge_Altitude_Restriction* e = new Edge_Altitude_Restriction(altitude_gain);
+    e->setVertex(0, vp0);
+    e->information().setIdentity();
+    e->setMeasurement(offset_camera.topRightCorner(3, 1).cast<double>());
+    optimizer.addEdge(e);
+  }
 
   // Add a latitude edge
   {

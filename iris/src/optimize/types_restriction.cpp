@@ -54,9 +54,9 @@ void Edge_Euclid_Restriction::computeError()
 {
   const VertexSim3Expmap* vp0 = static_cast<const VertexSim3Expmap*>(_vertices[0]);
 
-  Eigen::Matrix3d R = vp0->estimate().rotation().toRotationMatrix();
+  // Eigen::Matrix3d R = vp0->estimate().rotation().toRotationMatrix();
   Eigen::Vector3d t = vp0->estimate().translation();
-  double s = vp0->estimate().scale();
+  // double s = vp0->estimate().scale();
 
   // double e1 = (R - R_init).trace();
   double e2 = (t - t_init).norm();

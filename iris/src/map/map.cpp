@@ -75,8 +75,8 @@ Map::Map(const Parameter& parameter, const Eigen::Matrix4f& T_init)
     pcl::PointXYZ p = all_target_cloud->at(i);
     pcl::Normal n = all_target_normals->at(i);
 
-    int id_x = std::floor(p.x / L);
-    int id_y = std::floor(p.y / L);
+    int id_x = static_cast<int>(std::floor(p.x / L));
+    int id_y = static_cast<int>(std::floor(p.y / L));
 
     std::pair key = std::make_pair(id_x, id_y);
     submap_cloud[key].push_back(p);
@@ -119,16 +119,15 @@ bool Map::isUpdateNecessary(const Eigen::Matrix4f& T) const
 
   // (1) Condition about the location
   float distance = (T.topRightCorner(2, 1) - localmap_info.xy()).cwiseAbs().maxCoeff();
-  std::cout << "distance " << distance << std::endl;
   if (distance > 0.75 * parameter.submap_grid_leaf) {
-    std::cout << "because 1" << std::endl;
+    std::cout << "map update because of the distance condition" << std::endl;
     return true;
   }
 
   // (2) Condition about the location
   float yaw = yawFromPose(T);
   if (subtractAngles(yaw, localmap_info.theta) > 60.f / 180.f * 3.14f) {
-    std::cout << "because 2" << std::endl;
+    std::cout << "map update because of the angle condition" << std::endl;
     return true;
   }
 
@@ -139,13 +138,11 @@ bool Map::isUpdateNecessary(const Eigen::Matrix4f& T) const
 
 void Map::updateLocalmap(const Eigen::Matrix4f& T)
 {
-  std::cout << "###############" << std::endl;
+  std::cout << "\033[1;4;36m###############" << std::endl;
   std::cout << "Update Localmap" << std::endl;
-  std::cout << "###############" << std::endl;
+  std::cout << "###############\033[m" << std::endl;
 
   Eigen::Vector3f t = T.topRightCorner(3, 1);
-  std::cout << "T_init\n"
-            << T << std::endl;
   const float L = parameter.submap_grid_leaf;
   int id_x = static_cast<int>(std::floor(t.x() / L));
   int id_y = static_cast<int>(std::floor(t.y() / L));
@@ -198,7 +195,7 @@ void Map::updateLocalmap(const Eigen::Matrix4f& T)
 
     for (int i = 0; i < dx; i++) {
       for (int j = 0; j < dy; j++) {
-        std::cout << "(" << x_min + i << "," << y_min + j << ")";
+        // std::cout << "(" << x_min + i << "," << y_min + j << ")";
         std::pair<int, int> key = std::make_pair(x_min + i, y_min + j);
         if (submap_cloud.count(key) == 0) {
           continue;
@@ -214,7 +211,7 @@ void Map::updateLocalmap(const Eigen::Matrix4f& T)
     localmap_info.y = (static_cast<float>(id_y) + 0.5f) * L,
     localmap_info.theta = new_info_theta;
   }
-  std::cout << "new-info: "
+  std::cout << "new map-info: "
             << localmap_info.x << ", "
             << localmap_info.y << ", "
             << localmap_info.theta

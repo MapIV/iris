@@ -154,11 +154,6 @@ public:
     setTargetNormals(cloud);
   }
 
-  Eigen::Vector3f center_;
-  void setCenter(const Eigen::Vector3f& center) { center_ = center; }
-  int method_;
-  void setMethod(int m) { method_ = m; }
-
   /** \brief Determine the correspondences between input and target cloud.
           * \param[out] correspondences the found correspondences (index of query point, index of target point, distance)
           * \param[in] max_distance maximum distance between the normal on the source point cloud and the corresponding point in the target

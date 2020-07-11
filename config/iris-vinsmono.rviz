@@ -157,7 +157,7 @@ Visualization Manager:
         iris/iris_pose:
           Value: true
         iris/offseted_vslam_pose:
-          Value: true
+          Value: false
         iris/vslam_pose:
           Value: false
         velodyne:
@@ -183,13 +183,13 @@ Visualization Manager:
       Update Interval: 0
       Value: true
     - Class: rviz/Marker
-      Enabled: true
+      Enabled: false
       Marker Topic: /iris/vslam_trajectory
       Name: vslam_trajectory
       Namespaces:
-        points_and_lines: true
+        {}
       Queue Size: 100
-      Value: true
+      Value: false
     - Class: rviz/Marker
       Enabled: true
       Marker Topic: /iris/iris_trajectory
@@ -243,6 +243,31 @@ Visualization Manager:
       top: 128
       update interval: 0.03999999910593033
       width: 128
+    - Buffer length: 100
+      Class: jsk_rviz_plugin/Plotter2D
+      Enabled: true
+      Name: Time[ms]
+      Show Value: true
+      Topic: /iris/processing_time
+      Value: true
+      auto color change: false
+      auto scale: true
+      background color: 0; 0; 0
+      backround alpha: 0
+      border: true
+      foreground alpha: 0.699999988079071
+      foreground color: 255; 255; 20
+      height: 128
+      left: 256
+      linewidth: 1
+      max color: 255; 0; 0
+      max value: 1
+      min value: -1
+      show caption: true
+      text size: 12
+      top: 128
+      update interval: 0.03999999910593033
+      width: 128
     - Class: rviz/MarkerArray
       Enabled: true
       Marker Topic: /iris/normals
@@ -252,13 +277,13 @@ Visualization Manager:
       Queue Size: 100
       Value: true
     - Class: rviz/MarkerArray
-      Enabled: true
+      Enabled: false
       Marker Topic: /iris/covariances
       Name: Covariances
       Namespaces:
-        covariance: true
+        {}
       Queue Size: 100
-      Value: true
+      Value: false
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
@@ -286,7 +311,7 @@ Visualization Manager:
   Value: true
   Views:
     Current:
-      Angle: -2.2299997806549072
+      Angle: -5.52500057220459
       Class: rviz/TopDownOrtho
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
@@ -296,11 +321,11 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Scale: 12.49052906036377
+      Scale: 4.54863977432251
       Target Frame: iris/iris_pose
       Value: TopDownOrtho (rviz)
-      X: 13.012284278869629
-      Y: -12.983099937438965
+      X: -31.948076248168945
+      Y: 23.829113006591797
     Saved: ~
 Window Geometry:
   Displays:

@@ -101,6 +101,7 @@ int main(int argc, char* argv[])
   ros::Publisher scale_publisher = nh.advertise<std_msgs::Float32>("iris/align_scale", 1);
   ros::Publisher normal_publisher = nh.advertise<visualization_msgs::MarkerArray>("iris/normals", 1);
   ros::Publisher covariance_publisher = nh.advertise<visualization_msgs::MarkerArray>("iris/covariances", 1);
+  ros::Publisher processing_time_publisher = nh.advertise<std_msgs::Float32>("iris/processing_time", 1);
   iris::Publication publication;
 
   // Get rosparams
@@ -153,23 +154,28 @@ int main(int argc, char* argv[])
       iris::publishCorrespondences(correspondences_publisher, publication.cloud, map->getTargetCloud(), publication.correspondences);
       iris::publishNormal(normal_publisher, publication.cloud, publication.normals);
       iris::publishCovariance(covariance_publisher, publication.cloud, publication.normals);
+
+      // Processing time
+      long time = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - m_start).count();
+      std::stringstream ss;
+      ss << "processing time= \033[35m"
+         << time
+         << "\033[m ms";
+      ROS_INFO("Iris/ALIGN: %s", ss.str().c_str());
+
       {
         std_msgs::Float32 scale;
         scale.data = iris::util::getScale(publication.T_align);
         scale_publisher.publish(scale);
+
+        std_msgs::Float32 processing_time;
+        processing_time.data = static_cast<float>(time);
+        processing_time_publisher.publish(processing_time);
       }
 
       offseted_vslam_pose = publication.offset_camera;
       iris_pose = publication.iris_camera;
-
       current_pointcloud = publication.cloud;
-
-      // Inform processing time
-      std::stringstream ss;
-      ss << "processing time= \033[35m"
-         << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - m_start).count()
-         << "\033[m ms";
-      ROS_INFO("Iris/ALIGN: %s", ss.str().c_str());
     }
 
     iris::publishPose(offseted_vslam_pose, "iris/offseted_vslam_pose");
