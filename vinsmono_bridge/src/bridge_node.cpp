@@ -153,33 +153,31 @@ pcl::PointCloud<pcl::PointXYZINormal>::Ptr pushbackPointXYZINormal(const sensor_
 {
   pcl::PointCloud<pcl::PointXYZINormal>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZINormal>);
 
-  bool debug = true;
-
   for (size_t i = 0; i < msg->points.size(); i++) {
-    const geometry_msgs::Point32& g_p = msg->points.at(i);
-    pcl::PointXYZINormal point;
-    point.x = g_p.x;
-    point.y = g_p.y;
-    point.z = g_p.z;
+    const geometry_msgs::Point32& g = msg->points.at(i);
 
-    if (point.z > max_height_range)
+    // Conversion of the camera's direction of travel to the z-axis
+    Eigen::Vector4f vec(g.x, g.y, g.z, 1);
+    vec = T_align * vec;
+
+    pcl::PointXYZINormal point;
+    point.x = vec.x();
+    point.y = vec.y();
+    point.z = vec.z();
+
+    if (point.y < -max_height_range)
       continue;
 
-    point.intensity = 1.0f;
-
     Eigen::Vector3f normal;
-    normal << g_p.x, g_p.y, g_p.z;
-    normal = (normal - camera_pos).normalized();
+    normal = (vec.topRows(3) - camera_pos).normalized();
 
     point.normal_x = normal.x();
     point.normal_y = normal.y();
     point.normal_z = normal.z();
+    point.intensity = 1.0f;
+
     cloud->push_back(point);
   }
-
-  // TODO: DEBUG:
-  // Conversion of the camera's direction of travel to the z-axis
-  pcl::transformPointCloud(*cloud, *cloud, T_align);
 
   return cloud;
 }

@@ -18,7 +18,6 @@ pcl::PointCloud<pcl::PointXYZINormal>::Ptr vslam_data(new pcl::PointCloud<pcl::P
 bool vslam_update = false;
 void callback(const pcl::PointCloud<pcl::PointXYZINormal>::ConstPtr& msg)
 {
-  ROS_INFO("It subscribes vslam_data %lu", msg->size());
   *vslam_data = *msg;
   if (vslam_data->size() > 0)
     vslam_update = true;
