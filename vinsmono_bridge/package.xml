@@ -2,11 +2,10 @@
 <package format="2">
     <name>vinsmono_bridge</name>
     <version>0.0.0</version>
-    <description>The ROS package for VLLM</description>
+    <description>The ROS package for bridging VINS-mono</description>
 
-    <maintainer email="kyabuuchi@todo.todo">Kento Yabuuchi</maintainer>
-    <license>TODO</license>
-
+    <maintainer email="kento.yabuuchi@tier4.jp">Kento Yabuuchi</maintainer>
+    <license>BSD</license>
 
     <buildtool_depend>catkin</buildtool_depend>
 
@@ -31,4 +30,3 @@
     <exec_depend>visualization_msgs</exec_depend>
     <exec_depend>tf</exec_depend>
 </package>
-
