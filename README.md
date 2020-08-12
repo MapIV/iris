@@ -20,7 +20,7 @@ please check [openvslam document](https://openvslam.readthedocs.io/en/master/ins
 ```bash
 mkdir -p catkin_ws/src
 cd catkin_ws/src
-git clone --recursive https://gitlab.com/MapIV/iris.git
+git clone --recursive https://**/**.git
 cd ..
 catkin_make
 ```
@@ -64,6 +64,8 @@ roslaunch vins_estimator realsense_color.launch # (on another terminal)
 rosbag play hongo-imu.bag # (on another terminal)
 ```
 
+## License
+Iris is provided under the BSD 3-Clause License.
 
 ## References
 * [Monocular Camera Localization in 3D LiDAR Maps](http://www.lifelong-navigation.eu/files/caselitz16iros.pdf)
