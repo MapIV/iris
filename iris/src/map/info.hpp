@@ -52,7 +52,7 @@ struct Info {
     constexpr float EPSILON = 1e-7f;
     if (std::fabs(a.x - b.x) > EPSILON)
       return false;
-    if (std::fabs(a.y - b.y) > EPSILOn)
+    if (std::fabs(a.y - b.y) > EPSILON)
       return false;
     if (std::fabs(a.theta - b.theta) > EPSILON)
       return false;

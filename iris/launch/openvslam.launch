@@ -21,7 +21,7 @@
        <param name="vocab_path" type="string" value="$(arg vocab_file)" />
        <param name="image_topic_name" type="string" value="$(arg image_topic_name)" />
        <param name="is_image_compressed" type="bool" value="$(arg is_image_compressed)" />
-       <param name="max_height_range" type="float" value="$(arg max_height_range)"/>
+       <param name="max_height_range" type="double" value="$(arg max_height_range)"/>
     </node>
 
     <!-- rviz -->
