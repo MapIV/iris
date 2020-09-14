@@ -53,7 +53,7 @@ link_directories(${PCL_LIBRARY_DIRS})
 message(STATUS "PCL version:\n\t${PCL_VERSION}")
 
 # == OpenCV ==
-find_package(OpenCV 4 REQUIRED)
+find_package(OpenCV 3.2  REQUIRED)
 message(STATUS "OpenCV version:\n\t${OpenCV_VERSION}")
 
 # == Eigen3 ==
