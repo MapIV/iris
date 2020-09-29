@@ -33,9 +33,9 @@ namespace map
 struct Info {
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
-  float x;
-  float y;
-  float theta;
+  float x = 0;
+  float y = 0;
+  float theta = 0;
 
   Info() {}
   Info(float x, float y, float theta) : x(x), y(y), theta(theta) {}

@@ -49,7 +49,7 @@ rosbag play kitti_00.bag # (on another terminal)
 
 
 ## How to Run with Your Data
-### What you need to prepare
+### All you need to prepare
 1. pointcloud map file (*.pcd)
 1. rosbag (*.bag)
 1. Config file for iris such as `config/sample_iris_config.yaml`
@@ -64,7 +64,7 @@ rosbag play yours.bag # (on another terminal)
 ### Run with VINS-mono
 ```bash
 roslaunch iris vinsmono.launch iris_config_path:=... 
-roslaunch vins_estimator *something*.launch
+roslaunch vins_estimator *something*.launch # (on another terminal)
 rosbag play yours.bag # (on another terminal)
 ```
 

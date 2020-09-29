@@ -117,8 +117,8 @@ int main(int argc, char* argv[])
   tf::TransformListener listener;
 
   // Setup publisher
-  ros::Publisher target_pc_publisher = nh.advertise<pcl::PointCloud<pcl::PointXYZI>>("iris/target_pointcloud", 1);
-  ros::Publisher whole_pc_publisher = nh.advertise<pcl::PointCloud<pcl::PointXYZI>>("iris/whole_pointcloud", 1);
+  ros::Publisher target_pc_publisher = nh.advertise<pcl::PointCloud<pcl::PointXYZI>>("iris/target_pointcloud", 1, true);
+  ros::Publisher whole_pc_publisher = nh.advertise<pcl::PointCloud<pcl::PointXYZI>>("iris/whole_pointcloud", 1, true);
   ros::Publisher source_pc_publisher = nh.advertise<pcl::PointCloud<pcl::PointXYZI>>("iris/source_pointcloud", 1);
   ros::Publisher iris_trajectory_publisher = nh.advertise<visualization_msgs::Marker>("iris/iris_trajectory", 1);
   ros::Publisher vslam_trajectory_publisher = nh.advertise<visualization_msgs::Marker>("iris/vslam_trajectory", 1);
@@ -149,10 +149,12 @@ int main(int argc, char* argv[])
 
   std::chrono::system_clock::time_point m_start;
   ros::Rate loop_rate(10);
-  int loop_count = 0;
-
   Eigen::Matrix4f offseted_vslam_pose = config.T_init;
   Eigen::Matrix4f iris_pose = config.T_init;
+
+  // Publish map
+  iris::publishPointcloud(whole_pc_publisher, map->getSparseCloud());
+
 
   // Start main loop
   ROS_INFO("start main loop.");
@@ -205,13 +207,7 @@ int main(int argc, char* argv[])
 
     iris::publishPose(offseted_vslam_pose, "iris/offseted_vslam_pose");
     iris::publishPose(iris_pose, "iris/iris_pose");
-
-    // Publish target pointcloud map at long intervals
-    if (++loop_count >= 10) {
-      loop_count = 0;
-      iris::publishPointcloud(target_pc_publisher, map->getTargetCloud());
-      iris::publishPointcloud(whole_pc_publisher, map->getSparseCloud());
-    }
+    iris::publishPointcloud(target_pc_publisher, map->getTargetCloud());
 
     // Spin and wait
     ros::spinOnce();

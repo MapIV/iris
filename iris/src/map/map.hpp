@@ -72,21 +72,18 @@ public:
     return localmap_info;
   }
 
-  // TODO: This function may have conflicts
   const pcXYZ::Ptr getTargetCloud() const
   {
     std::lock_guard lock(localmap_mtx);
     return local_target_cloud;
   }
 
-  // TODO: This function may have conflicts
   const pcXYZ::Ptr getSparseCloud() const
   {
     std::lock_guard lock(localmap_mtx);
     return all_sparse_cloud;
   }
 
-  // TODO: This function may have conflicts
   const pcNormal::Ptr getTargetNormals() const
   {
     std::lock_guard lock(localmap_mtx);
