@@ -8,9 +8,10 @@
 
 ## Submodule 
 * [OpenVSLAM forked by MapIV](https://github.com/MapIV/openvslam.git)
-* > [original repository (xdspacelab)](https://github.com/xdspacelab/openvslam)
+  * > [original repository (xdspacelab)](https://github.com/xdspacelab/openvslam)
 
 ## Dependency
+If you are using ROS, you only need to install `g2o` and `DBoW2`.
 * [ROS](http://wiki.ros.org/)
 * [OpenCV](https://opencv.org/) >= 3.2
 * [Eigen](http://eigen.tuxfamily.org/index.php?title=Main_Page) 
@@ -19,7 +20,6 @@
 * [DBow2](https://github.com/shinsumicco/DBoW2.git)
   * Please use the custom version released in [https://github.com/shinsumicco/DBoW2)](https://github.com/shinsumicco/DBoW2)
 
-If you are using ROS, you only need to install `g2o` and `DBoW2`.
 > see also: [openvslam](https://openvslam.readthedocs.io/en/master/installation.html#dependencies).
 
 ## How to Build
