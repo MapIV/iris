@@ -175,7 +175,7 @@ Visualization Manager:
       Marker Topic: /iris/vslam_trajectory
       Name: vslam_trajectory
       Namespaces:
-        points_and_lines: true
+        {}
       Queue Size: 100
       Value: true
     - Class: rviz/Marker
@@ -183,7 +183,7 @@ Visualization Manager:
       Marker Topic: /iris/iris_trajectory
       Name: iris_trajectory
       Namespaces:
-        points_and_lines: true
+        {}
       Queue Size: 100
       Value: true
     - Class: rviz/Marker
@@ -191,7 +191,7 @@ Visualization Manager:
       Marker Topic: /iris/correspondences
       Name: correspondences
       Namespaces:
-        correspondences: true
+        {}
       Queue Size: 100
       Value: true
     - Class: rviz/Image
@@ -233,7 +233,7 @@ Visualization Manager:
   Value: true
   Views:
     Current:
-      Angle: 0
+      Angle: -1.5299997329711914
       Class: rviz/TopDownOrtho
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549

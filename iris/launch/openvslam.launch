@@ -1,13 +1,16 @@
 <launch>
     <!-- parameters -->
-    <arg name="iris_config_path" default = "$(find iris)/../config/hongo-openvslam.yaml" /> 
-    <arg name="pcd_path" default = "$(find iris)/../../../hongo.pcd" /> 
+    <arg name="iris_config_path" default = "$(find iris)/../config/sample_iris_config.yaml" /> 
+    <arg name="vslam_config_path" default = "$(find iris)/../config/sample_openvslam_config.yaml" />
 
-    <arg name="vslam_config_path" default = "$(find iris)/../config/openvslam-theta.yaml" />
+    <arg name="pcd_path" default = "$(find iris)/../../../kitti_00.pcd" /> 
     <arg name="vocab_file" default = "$(find iris)/../../../orb_vocab.dbow2" />
+
     <arg name="image_topic_name" default = "/camera/color/image_raw" />
     <arg name="is_image_compressed" default = "true"/>
     <arg name="max_height_range" default ="30"/>
+
+
     
     <!-- iris_node -->
     <node name="iris_node" pkg="iris" type="iris_node" output="screen">
@@ -25,5 +28,5 @@
     </node>
 
     <!-- rviz -->
-    <node name="rvizvisualisation" pkg="rviz" type="rviz" output="log" args="-d $(find iris)/../config/iris-openvslam.rviz" />
+    <node name="rvizvisualisation" pkg="rviz" type="rviz" output="log" args="-d $(find iris)/../config/iris_openvslam.rviz" />
 </launch>
