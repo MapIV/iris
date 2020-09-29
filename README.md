@@ -32,7 +32,7 @@ catkin_make
 ```
 
 ## How to Run with Sample Data
-### Download sample data
+### Download sample data (TODO)
 1. visual feature file: `orb_vocab.dbow` from [URL(TODO)](https://www.map4.jp/)
 2. pointcloud map : `kitti_00.pcd` from [URL(TODO)](https://www.map4.jp/)
 3. rosbag : `kitti_00.bag` from [URL(TODO)](https://www.map4.jp/)
