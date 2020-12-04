@@ -32,7 +32,6 @@ class BridgeStereoOpenVSLAM : public BridgeOpenVSLAM
 {
 public:
   BridgeStereoOpenVSLAM() {}
-  ~BridgeStereoOpenVSLAM();
 
   void setup(const std::string& config_path, const std::string& vocab_path) override;
   void execute(const cv::Mat& image0, const cv::Mat& image1);

@@ -41,7 +41,6 @@ std::function<void(const sensor_msgs::ImageConstPtr&)> imageCallbackGenerator(cv
   };
 }
 
-
 void publishPose(const Eigen::Matrix4f& T, const std::string& child_frame_id)
 {
   static tf::TransformBroadcaster br;

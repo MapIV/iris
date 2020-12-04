@@ -39,6 +39,7 @@
 #include <spdlog/spdlog.h>
 namespace iris
 {
+
 void BridgeStereoOpenVSLAM::setup(const std::string& config_path, const std::string& vocab_path)
 {
   // setup logger
@@ -55,7 +56,7 @@ void BridgeStereoOpenVSLAM::setup(const std::string& config_path, const std::str
   }
 
   // run tracking
-  if (cfg->camera_->setup_type_ != openvslam::camera::setup_type_t::Monocular) {
+  if (cfg->camera_->setup_type_ != openvslam::camera::setup_type_t::Stereo) {
     std::cout << "Invalid setup type: " + cfg->camera_->get_setup_type_string() << std::endl;
     exit(EXIT_FAILURE);
   }
@@ -68,7 +69,8 @@ void BridgeStereoOpenVSLAM::setup(const std::string& config_path, const std::str
 
 void BridgeStereoOpenVSLAM::execute(const cv::Mat& image0, const cv::Mat& image1)
 {
-  SLAM_ptr->feed_monocular_frame(image0, 0.05, cv::Mat{});
+  SLAM_ptr->feed_stereo_frame(image0, image1, 0.05, cv::Mat{});
+
   if (SLAM_ptr->get_frame_publisher()->get_tracking_state() == openvslam::tracker_state_t::Lost) {
     std::cout << "\n\033[33m ##### Request Reset #####\n\033[m" << std::endl;
     requestReset();

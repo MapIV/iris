@@ -2,8 +2,8 @@
 #==============#
 # Camera Model #
 #==============#
-Camera.name: "KITTI monocular"
-Camera.setup: "monocular"
+Camera.name: "KITTI stereo"
+Camera.setup: "stereo"
 Camera.model: "perspective"
 
 Camera.fps: 10.0
