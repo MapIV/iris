@@ -2,7 +2,7 @@
 #==============#
 # Camera Model #
 #==============#
-Camera.name: "KITTI monocular"
+Camera.name: "KITTI monocular 00"
 Camera.setup: "monocular"
 Camera.model: "perspective"
 
@@ -21,8 +21,7 @@ Camera.p1: 0.0
 Camera.p2: 0.0
 Camera.k3: 0.0
 
-Camera.color_order: "Gray"
-Camera.focal_x_baseline: 386.1448
+Camera.color_order: "RGB"
 
 #================#
 # ORB Parameters #

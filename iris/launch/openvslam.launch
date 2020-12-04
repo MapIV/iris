@@ -10,7 +10,6 @@
     <arg name="is_image_compressed" default = "true"/>
     <arg name="max_height_range" default ="30"/>
 
-
     
     <!-- iris_node -->
     <node name="iris_node" pkg="iris" type="iris_node" output="screen">
