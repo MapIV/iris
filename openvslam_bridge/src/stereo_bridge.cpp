@@ -23,39 +23,57 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#pragma once
-#include <opencv2/videoio.hpp>
-#include <openvslam/system.h>
-#include <pcl/point_cloud.h>
-#include <pcl/point_types.h>
+#include "stereo_bridge.hpp"
+#include <openvslam/config.h>
+#include <openvslam/data/landmark.h>
+#include <openvslam/publish/frame_publisher.h>
+#include <openvslam/publish/map_publisher.h>
 
+#include <chrono>
+#include <iostream>
+#include <numeric>
+
+#include <opencv2/core/core.hpp>
+#include <opencv2/imgcodecs.hpp>
+#include <opencv2/videoio.hpp>
+#include <spdlog/spdlog.h>
 namespace iris
 {
-class BridgeOpenVSLAM
+void BridgeStereoOpenVSLAM::setup(const std::string& config_path, const std::string& vocab_path)
 {
-public:
-  BridgeOpenVSLAM() {}
-  ~BridgeOpenVSLAM();
+  // setup logger
+  spdlog::set_pattern("[%Y-%m-%d %H:%M:%S.%e] %^[%L] %v%$");
+  spdlog::set_level(spdlog::level::info);
 
-  void virtual setup(const std::string& config_path, const std::string& vocab_path);
-  void execute(const cv::Mat& image);
-  void requestReset();
+  // load configuration
+  std::shared_ptr<openvslam::config> cfg;
+  try {
+    cfg = std::make_shared<openvslam::config>(config_path);
+  } catch (const std::exception& e) {
+    std::cerr << e.what() << std::endl;
+    exit(EXIT_FAILURE);
+  }
 
-  void getLandmarksAndNormals(pcl::PointCloud<pcl::PointXYZINormal>::Ptr& vslam_data) const;
-  void setCriteria(unsigned int recollection_, float accuracy_);
-  std::pair<unsigned int, float> getCriteria() const;
+  // run tracking
+  if (cfg->camera_->setup_type_ != openvslam::camera::setup_type_t::Monocular) {
+    std::cout << "Invalid setup type: " + cfg->camera_->get_setup_type_string() << std::endl;
+    exit(EXIT_FAILURE);
+  }
 
-  // return openvslam::tracker_state_t
-  int getState() const;
+  // build a SLAM system
+  SLAM_ptr = std::make_shared<openvslam::system>(cfg, vocab_path);
+  SLAM_ptr->startup();
+  SLAM_ptr->disable_loop_detector();
+}
 
-  cv::Mat getFrame() const;
+void BridgeStereoOpenVSLAM::execute(const cv::Mat& image0, const cv::Mat& image1)
+{
+  SLAM_ptr->feed_monocular_frame(image0, 0.05, cv::Mat{});
+  if (SLAM_ptr->get_frame_publisher()->get_tracking_state() == openvslam::tracker_state_t::Lost) {
+    std::cout << "\n\033[33m ##### Request Reset #####\n\033[m" << std::endl;
+    requestReset();
+  }
+}
 
-  Eigen::Matrix4f getCameraPose() const;
 
-protected:
-  unsigned int recollection = 0;
-  float accuracy = -1;
-
-  std::shared_ptr<openvslam::system> SLAM_ptr = nullptr;
-};
 }  // namespace iris
