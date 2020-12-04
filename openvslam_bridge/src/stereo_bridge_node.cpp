@@ -88,7 +88,7 @@ int main(int argc, char* argv[])
   message_filters::TimeSynchronizer<sensor_msgs::CompressedImage, sensor_msgs::CompressedImage> syncronizer(infra1_image_subscriber, infra2_image_subscriber, 10);
 
   if (is_image_compressed == false) {
-    std::cerr << "Compressed Image is only acceptable" << std::endl;
+    std::cerr << "Only compressed Image is acceptable" << std::endl;
     exit(EXIT_FAILURE);
   }
 
@@ -119,11 +119,8 @@ int main(int argc, char* argv[])
   ROS_INFO("start main loop.");
   while (ros::ok()) {
     if (!subscribed_image0.empty() && !subscribed_image1.empty()) {
-      m_start = std::chrono::system_clock::now();  // start timer
-
-      cv::imshow("image0", subscribed_image0);
-      cv::imshow("image1", subscribed_image1);
-      cv::waitKey(1);
+      // start timer
+      m_start = std::chrono::system_clock::now();
 
       // process OpenVSLAM
       bridge.execute(subscribed_image0, subscribed_image1);

@@ -15,13 +15,13 @@
 
     
     <!-- iris_node -->
-    <!-- <node name="iris_node" pkg="iris" type="iris_node" output="screen">
+    <node name="iris_node" pkg="iris" type="iris_node" output="screen">
         <param name="iris_config_path" type="string" value="$(arg iris_config_path)" />
         <param name="pcd_path" type="string" value="$(arg pcd_path)" />
-    </node> -->
+    </node>
 
     <!-- openvslam_bridge_node -->
-     <node name="openvslam_stereo_bridge_node" pkg="openvslam_bridge" type="openvslam_stereo_bridge_node" output="screen">
+     <node name="openvslam_stereo_bridge_node" pkg="openvslam_bridge" type="openvslam_stereo_bridge_node" output="log">
        <param name="vslam_config_path" type="string" value="$(arg vslam_config_path)" />
        <param name="vocab_path" type="string" value="$(arg vocab_file)" />
        <param name="image_topic_name0" type="string" value="$(arg image_topic_name0)" />
@@ -32,5 +32,5 @@
     </node>
 
     <!-- rviz -->
-    <!-- <node name="rvizvisualisation" pkg="rviz" type="rviz" output="log" args="-d $(find iris)/../config/iris_openvslam.rviz" /> -->
+    <node name="rvizvisualisation" pkg="rviz" type="rviz" output="log" args="-d $(find iris)/../config/iris_openvslam.rviz" />
 </launch>
