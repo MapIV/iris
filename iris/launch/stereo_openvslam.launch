@@ -1,6 +1,6 @@
 <launch>
     <!-- parameters -->
-    <arg name="iris_config_path" default = "$(find iris)/../config/sample_iris_config.yaml" /> 
+    <arg name="iris_config_path" default = "$(find iris)/../config/sample_stereo_iris_config.yaml" /> 
     <arg name="vslam_config_path" default = "$(find iris)/../config/sample_stereo_openvslam_config.yaml" />
 
     <arg name="pcd_path" default = "$(find iris)/../../../kitti_00.pcd" /> 

@@ -1,4 +1,4 @@
-# Equirectangular model for RICOH THETA S
+# KITTI stereo
 #==============#
 # Camera Model #
 #==============#
@@ -30,5 +30,16 @@ Camera.focal_x_baseline: 386.1448
 Feature.max_num_keypoints: 2000
 Feature.scale_factor: 1.2
 Feature.num_levels: 8
-Feature.ini_fast_threshold: 20
+Feature.ini_fast_threshold: 12
 Feature.min_fast_threshold: 7
+
+
+#=====================#
+# Tracking Parameters #
+#=====================#
+depth_threshold: 40
+
+#========================#
+# Initializer Parameters #
+#========================#
+Initializer.num_min_triangulated_pts: 100
