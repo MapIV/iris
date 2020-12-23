@@ -35,7 +35,7 @@ catkin_make
 ### Download sample data
 1. visual feature file: `orb_vocab.dbow` from [URL](https://www.dropbox.com/s/z8vodds9y6yxg0p/orb_vocab.dbow2?dl=0)
 2. pointcloud map : `kitti_00.pcd` from [URL](https://www.dropbox.com/s/tzdqtsl1p7v1ylo/kitti_00.pcd?dl=0)
-3. rosbag : `kitti_00_stereo.bag` from [**TODO**](TODO)
+3. rosbag : `kitti_00_stereo.bag` from [URL](https://www.dropbox.com/s/kfouz9gkjefpvb5/kitti_00_stereo.bag?dl=0)
 
 ### Run with sample data
 #### Monocular camera sample
