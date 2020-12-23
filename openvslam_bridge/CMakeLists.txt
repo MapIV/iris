@@ -82,3 +82,6 @@ include_directories(
 # == Executable ==
 add_executable(openvslam_bridge_node src/bridge_node.cpp src/bridge.cpp)
 target_link_libraries(openvslam_bridge_node ${catkin_LIBRARIES} ${OpenCV_LIBS} openvslam)
+
+add_executable(openvslam_stereo_bridge_node src/stereo_bridge_node.cpp src/bridge.cpp src/stereo_bridge.cpp)
+target_link_libraries(openvslam_stereo_bridge_node ${catkin_LIBRARIES} ${OpenCV_LIBS} openvslam)

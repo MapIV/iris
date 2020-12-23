@@ -1,0 +1,45 @@
+# KITTI stereo
+#==============#
+# Camera Model #
+#==============#
+Camera.name: "KITTI stereo"
+Camera.setup: "stereo"
+Camera.model: "perspective"
+
+Camera.fps: 10.0
+Camera.cols: 1241
+Camera.rows: 376
+
+Camera.fx: 718.856
+Camera.fy: 718.856
+Camera.cx: 607.1928
+Camera.cy: 185.2157
+
+Camera.k1: 0.0
+Camera.k2: 0.0
+Camera.p1: 0.0
+Camera.p2: 0.0
+Camera.k3: 0.0
+
+Camera.color_order: "Gray"
+Camera.focal_x_baseline: 386.1448
+
+#================#
+# ORB Parameters #
+#================#
+Feature.max_num_keypoints: 2000
+Feature.scale_factor: 1.2
+Feature.num_levels: 8
+Feature.ini_fast_threshold: 12
+Feature.min_fast_threshold: 7
+
+
+#=====================#
+# Tracking Parameters #
+#=====================#
+depth_threshold: 40
+
+#========================#
+# Initializer Parameters #
+#========================#
+Initializer.num_min_triangulated_pts: 100

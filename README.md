@@ -35,17 +35,29 @@ catkin_make
 ### Download sample data
 1. visual feature file: `orb_vocab.dbow` from [URL](https://www.dropbox.com/s/z8vodds9y6yxg0p/orb_vocab.dbow2?dl=0)
 2. pointcloud map : `kitti_00.pcd` from [URL](https://www.dropbox.com/s/tzdqtsl1p7v1ylo/kitti_00.pcd?dl=0)
-3. rosbag : `kitti_00_video.bag` from [URL](https://www.dropbox.com/s/6ltlrxtxi3i6ye5/kitti_00_video.bag?dl=0)
+3. rosbag : `kitti_00_stereo.bag` from [URL](https://www.dropbox.com/s/kfouz9gkjefpvb5/kitti_00_stereo.bag?dl=0)
 
 ### Run with sample data
+#### Monocular camera sample
 ```bash
 roscd iris/../../../
-# download sample data to here (orb_voceb.dbow, kitti_00.pcd, kitti_00.bag)
-ls # > build devel install src orb_vocab.dbow kitti_00.pcd kitti_00.bag
+# download sample data to here (orb_voceb.dbow, kitti_00.pcd, kitti_00_stereo.bag)
+ls # > build devel install src orb_vocab.dbow kitti_00.pcd kitti_00_stereo.bag
 roslaunch iris openvslam.launch
-rosbag play kitti_00.bag # (on another terminal)
+rosbag play kitti_00_stereo.bag # (on another terminal)
 ```
 > If the estimated position is misaligned, it can be corrected using `2D Pose Estimate` in rviz.
+
+#### Stereo camera sample
+```bash
+roscd iris/../../../
+# download sample data to here (orb_voceb.dbow, kitti_00.pcd, kitti_00_stereo.bag)
+ls # > build devel install src orb_vocab.dbow kitti_00.pcd kitti_00_stereo.bag
+roslaunch iris stereo_openvslam.launch
+rosbag play kitti_00_stereo.bag # (on another terminal)
+```
+> If the estimated position is misaligned, it can be corrected using `2D Pose Estimate` in rviz.
+
 
 
 ## How to Run with Your Data
