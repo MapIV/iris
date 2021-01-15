@@ -30,6 +30,7 @@
 #include <chrono>
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
 #include <image_transport/image_transport.h>
+#include <nav_msgs/Path.h>
 #include <pcl_ros/point_cloud.h>
 #include <ros/ros.h>
 #include <std_msgs/Float32.h>
@@ -120,8 +121,8 @@ int main(int argc, char* argv[])
   ros::Publisher target_pc_publisher = nh.advertise<pcl::PointCloud<pcl::PointXYZI>>("iris/target_pointcloud", 1, true);
   ros::Publisher whole_pc_publisher = nh.advertise<pcl::PointCloud<pcl::PointXYZI>>("iris/whole_pointcloud", 1, true);
   ros::Publisher source_pc_publisher = nh.advertise<pcl::PointCloud<pcl::PointXYZI>>("iris/source_pointcloud", 1);
-  ros::Publisher iris_trajectory_publisher = nh.advertise<visualization_msgs::Marker>("iris/iris_trajectory", 1);
-  ros::Publisher vslam_trajectory_publisher = nh.advertise<visualization_msgs::Marker>("iris/vslam_trajectory", 1);
+  ros::Publisher iris_path_publisher = nh.advertise<nav_msgs::Path>("iris/iris_path", 1);
+  ros::Publisher vslam_path_publisher = nh.advertise<nav_msgs::Path>("iris/vslam_path", 1);
   ros::Publisher correspondences_publisher = nh.advertise<visualization_msgs::Marker>("iris/correspondences", 1);
   ros::Publisher scale_publisher = nh.advertise<std_msgs::Float32>("iris/align_scale", 1);
   ros::Publisher normal_publisher = nh.advertise<visualization_msgs::MarkerArray>("iris/normals", 1);
@@ -148,7 +149,7 @@ int main(int argc, char* argv[])
   std::shared_ptr<iris::System> system = std::make_shared<iris::System>(config, map);
 
   std::chrono::system_clock::time_point m_start;
-  ros::Rate loop_rate(10);
+  ros::Rate loop_rate(20);
   Eigen::Matrix4f offseted_vslam_pose = config.T_init;
   Eigen::Matrix4f iris_pose = config.T_init;
 
@@ -176,8 +177,8 @@ int main(int argc, char* argv[])
       // Publish for rviz
       system->popPublication(publication);
       iris::publishPointcloud(source_pc_publisher, publication.cloud);
-      iris::publishTrajectory(iris_trajectory_publisher, publication.iris_trajectory, {1.0f, 0.0f, 1.0f});
-      iris::publishTrajectory(vslam_trajectory_publisher, publication.offset_trajectory, {0.6f, 0.6f, 0.6f});
+      iris::publishPath(iris_path_publisher, publication.iris_trajectory);
+      iris::publishPath(vslam_path_publisher, publication.offset_trajectory);
       iris::publishCorrespondences(correspondences_publisher, publication.cloud, map->getTargetCloud(), publication.correspondences);
       iris::publishNormal(normal_publisher, publication.cloud, publication.normals);
       iris::publishCovariance(covariance_publisher, publication.cloud, publication.normals);

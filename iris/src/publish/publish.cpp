@@ -25,6 +25,7 @@
 
 #include "publish/publish.hpp"
 #include "core/util.hpp"
+#include <nav_msgs/Path.h>
 #include <visualization_msgs/Marker.h>
 #include <visualization_msgs/MarkerArray.h>
 
@@ -231,32 +232,23 @@ visualization_msgs::Marker makeMarkerAsLine(const Eigen::Vector3f& s, const Eige
   return line_strip;
 }
 
-void publishTrajectory(ros::Publisher& publisher,
-    const std::vector<Eigen::Vector3f, Eigen::aligned_allocator<Eigen::Vector3f>>& trajectory, const Eigen::Vector3f& color)
+void publishPath(ros::Publisher& publisher, const std::vector<Eigen::Vector3f, Eigen::aligned_allocator<Eigen::Vector3f>>& trajectory)
 {
-  visualization_msgs::Marker line_strip;
-  line_strip.header.frame_id = "world";
-  line_strip.header.stamp = ros::Time::now();
-  line_strip.ns = "points_and_lines";
-  line_strip.action = visualization_msgs::Marker::ADD;
-  line_strip.pose.orientation.w = 1.0;
-  line_strip.id = 0;
-  line_strip.type = visualization_msgs::Marker::LINE_STRIP;
-  line_strip.color.a = 1.0;
-  line_strip.scale.x = 0.4;
+  nav_msgs::Path path;
 
-  line_strip.color.r = color(0);
-  line_strip.color.g = color(1);
-  line_strip.color.b = color(2);
-
+  path.header.frame_id = "world";
+  path.header.stamp = ros::Time::now();
   for (const Eigen::Vector3f& t : trajectory) {
-    geometry_msgs::Point p;
-    p.x = t.x();
-    p.y = t.y();
-    p.z = t.z();
-    line_strip.points.push_back(p);
+    geometry_msgs::PoseStamped pose_stamped;
+    pose_stamped.pose.position.x = t.x();
+    pose_stamped.pose.position.y = t.y();
+    pose_stamped.pose.position.z = t.z();
+
+    // We don't care about the orientation
+    pose_stamped.pose.orientation.w = 1;
+    path.poses.push_back(pose_stamped);
   }
-  publisher.publish(line_strip);
+  publisher.publish(path);
 }
 
 std::function<void(const sensor_msgs::ImageConstPtr&)> imageCallbackGenerator(cv::Mat& subscribed_image)
@@ -284,16 +276,6 @@ void publishResetPointcloud(ros::Publisher& publisher)
   pcl_conversions::toPCL(ros::Time::now(), tmp->header.stamp);
   tmp->header.frame_id = "world";
   publisher.publish(tmp);
-}
-
-void publishResetTrajectory(ros::Publisher& publisher)
-{
-  visualization_msgs::Marker reset_line;
-  reset_line.header.frame_id = "world";
-  reset_line.header.stamp = ros::Time::now();
-  reset_line.ns = "points_and_lines";
-  reset_line.action = visualization_msgs::Marker::DELETEALL;
-  publisher.publish(reset_line);
 }
 
 void publishResetCorrespondences(ros::Publisher& publisher)

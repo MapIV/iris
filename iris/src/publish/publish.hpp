@@ -36,7 +36,7 @@ void publishImage(image_transport::Publisher& publisher, const cv::Mat& image);
 
 void publishPose(const Eigen::Matrix4f& T, const std::string& child_frame_id);
 void publishPointcloud(ros::Publisher& publisher, const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud);
-void publishTrajectory(ros::Publisher& publisher, const std::vector<Eigen::Vector3f, Eigen::aligned_allocator<Eigen::Vector3f>>& trajectory, const Eigen::Vector3f& color);
+void publishPath(ros::Publisher& publisher, const std::vector<Eigen::Vector3f, Eigen::aligned_allocator<Eigen::Vector3f>>& path);
 void publishCorrespondences(ros::Publisher& publisher,
     const pcl::PointCloud<pcl::PointXYZ>::Ptr& source,
     const pcl::PointCloud<pcl::PointXYZ>::Ptr& target,
@@ -49,7 +49,6 @@ void publishCovariance(ros::Publisher& publisher,
     const pcl::PointCloud<pcl::Normal>::Ptr& normals);
 
 void publishResetPointcloud(ros::Publisher& publisher);
-void publishResetTrajectory(ros::Publisher& publisher);
 void publishResetCorrespondences(ros::Publisher& publisher);
 
 std::function<void(const sensor_msgs::ImageConstPtr&)> imageCallbackGenerator(cv::Mat& subscribed_image);
