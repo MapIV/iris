@@ -111,7 +111,7 @@ int main(int argc, char* argv[])
   bridge.setup(vslam_config_path, vocab_path);
 
   std::chrono::system_clock::time_point m_start;
-  ros::Rate loop_rate(10);
+  ros::Rate loop_rate(20);
   float accuracy = 0.5f;
   pcl::PointCloud<pcl::PointXYZINormal>::Ptr vslam_data(new pcl::PointCloud<pcl::PointXYZINormal>);
 

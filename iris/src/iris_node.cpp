@@ -28,6 +28,7 @@
 #include "publish/publish.hpp"
 #include "system/system.hpp"
 #include <chrono>
+#include <fstream>
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
 #include <image_transport/image_transport.h>
 #include <nav_msgs/Path.h>
@@ -39,7 +40,11 @@
 #include <visualization_msgs/Marker.h>
 #include <visualization_msgs/MarkerArray.h>
 
-// TODO:
+
+//
+Eigen::Matrix4f listenTransform(tf::TransformListener& listener);
+
+//
 pcl::PointCloud<pcl::PointXYZINormal>::Ptr vslam_data(new pcl::PointCloud<pcl::PointXYZINormal>);
 bool vslam_update = false;
 void callback(const pcl::PointCloud<pcl::PointXYZINormal>::ConstPtr& msg)
@@ -49,22 +54,7 @@ void callback(const pcl::PointCloud<pcl::PointXYZINormal>::ConstPtr& msg)
     vslam_update = true;
 }
 
-// TODO:
-Eigen::Matrix4f listenTransform(tf::TransformListener& listener)
-{
-  tf::StampedTransform transform;
-  try {
-    listener.lookupTransform("world", "iris/vslam_pose", ros::Time(0), transform);
-  } catch (...) {
-  }
-
-  double data[16];
-  transform.getOpenGLMatrix(data);
-  Eigen::Matrix4d T(data);
-  return T.cast<float>();
-}
-
-// TODO:
+//
 Eigen::Matrix4f T_recover = Eigen::Matrix4f::Zero();
 pcl::PointCloud<pcl::PointXYZ>::Ptr current_pointcloud = nullptr;
 void callbackForRecover(const geometry_msgs::PoseWithCovarianceStampedConstPtr& msg)
@@ -102,15 +92,21 @@ void callbackForRecover(const geometry_msgs::PoseWithCovarianceStampedConstPtr& 
   T_recover.topLeftCorner(3, 3) = Eigen::AngleAxisf(theta, Eigen::Vector3f::UnitZ()).toRotationMatrix() * R;
 }
 
+void writeCsv(std::ofstream& ofs, const ros::Time& timestamp, const Eigen::Matrix4f& iris_pose)
+{
+  auto convert = [](const Eigen::MatrixXf& mat) -> Eigen::VectorXf {
+    Eigen::MatrixXf tmp = mat.transpose();
+    return Eigen::VectorXf(Eigen::Map<Eigen::VectorXf>(tmp.data(), mat.size()));
+  };
+
+  ofs << std::fixed << std::setprecision(std::numeric_limits<double>::max_digits10);
+  ofs << timestamp.toSec() << " " << convert(iris_pose).transpose() << std::endl;
+}
+
 int main(int argc, char* argv[])
 {
   ros::init(argc, argv, "iris_node");
   ros::NodeHandle nh;
-
-  // Setup for vslam_data
-  iris::pcXYZ::Ptr vslam_points(new iris::pcXYZ);
-  iris::pcNormal::Ptr vslam_normals(new iris::pcNormal);
-  std::vector<float> vslam_weights;
 
   // Setup subscriber
   ros::Subscriber vslam_subscriber = nh.subscribe<pcl::PointCloud<pcl::PointXYZINormal>>("iris/vslam_data", 5, callback);
@@ -149,15 +145,15 @@ int main(int argc, char* argv[])
   std::shared_ptr<iris::System> system = std::make_shared<iris::System>(config, map);
 
   std::chrono::system_clock::time_point m_start;
-  ros::Rate loop_rate(20);
   Eigen::Matrix4f offseted_vslam_pose = config.T_init;
   Eigen::Matrix4f iris_pose = config.T_init;
 
   // Publish map
   iris::publishPointcloud(whole_pc_publisher, map->getSparseCloud());
-
+  std::ofstream csv_ofs("trajectory.csv");
 
   // Start main loop
+  ros::Rate loop_rate(20);
   ROS_INFO("start main loop.");
   while (ros::ok()) {
 
@@ -210,6 +206,8 @@ int main(int argc, char* argv[])
     iris::publishPose(iris_pose, "iris/iris_pose");
     iris::publishPointcloud(target_pc_publisher, map->getTargetCloud());
 
+    writeCsv(csv_ofs, ros::Time::now(), iris_pose);
+
     // Spin and wait
     ros::spinOnce();
     loop_rate.sleep();
@@ -217,4 +215,19 @@ int main(int argc, char* argv[])
 
   ROS_INFO("Finalize the system");
   return 0;
+}
+
+
+Eigen::Matrix4f listenTransform(tf::TransformListener& listener)
+{
+  tf::StampedTransform transform;
+  try {
+    listener.lookupTransform("world", "iris/vslam_pose", ros::Time(0), transform);
+  } catch (...) {
+  }
+
+  double data[16];
+  transform.getOpenGLMatrix(data);
+  Eigen::Matrix4d T(data);
+  return T.cast<float>();
 }
