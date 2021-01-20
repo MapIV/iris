@@ -12,6 +12,8 @@
     <arg name="image_topic_name0" default = "/image_raw0/compressed" />
     <arg name="image_topic_name1" default = "/image_raw1/compressed" />
 
+    <arg name="keyframe_recollection" default = "30" />
+
     
     <!-- iris_node -->
     <node name="iris_node" pkg="iris" type="iris_node" output="screen">
@@ -27,6 +29,7 @@
        <param name="image_topic_name1" type="string" value="$(arg image_topic_name1)" />
        <param name="is_image_compressed" type="bool" value="$(arg is_image_compressed)" />
        <param name="is_image_color" type="bool" value="$(arg is_image_color)" />
+       <param name="keyframe_recollection" type="int" value="$(arg keyframe_recollection)" />
     </node>
 
     <!-- rviz -->

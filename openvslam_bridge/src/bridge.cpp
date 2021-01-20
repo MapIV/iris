@@ -81,7 +81,7 @@ void BridgeOpenVSLAM::setup(const std::string& config_path, const std::string& v
   SLAM_ptr->disable_loop_detector();
 }
 
-void BridgeOpenVSLAM::getLandmarksAndNormals(pcl::PointCloud<pcl::PointXYZINormal>::Ptr& vslam_data) const
+void BridgeOpenVSLAM::getLandmarksAndNormals(pcl::PointCloud<pcl::PointXYZINormal>::Ptr& vslam_data, float height) const
 {
   if (recollection == 0 || accuracy < 0) {
     std::cerr << "ERROR: recollection & accuracy are not set" << std::endl;
@@ -112,8 +112,10 @@ void BridgeOpenVSLAM::getLandmarksAndNormals(pcl::PointCloud<pcl::PointXYZINorma
     // when the distance is 5m or more, the weight is minimum.
     // float weight = static_cast<float>(1.0 - (t_vslam - pos).norm() * 0.2);
     float weight = 1.0f;
-    if (weight < 0.1f) weight = 0.1f;
-    if (weight > 1.0f) weight = 1.0f;
+    weight = std::min(std::max(weight, 0.1f), 1.0f);
+
+    Eigen::Vector3f t = getCameraPose().inverse().topRightCorner(3, 1);
+    if (pos.y() - t.y() < -height) continue;
 
     pcl::PointXYZINormal p;
     p.x = static_cast<float>(pos.x());

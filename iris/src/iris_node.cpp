@@ -59,7 +59,7 @@ Eigen::Matrix4f T_recover = Eigen::Matrix4f::Zero();
 pcl::PointCloud<pcl::PointXYZ>::Ptr current_pointcloud = nullptr;
 void callbackForRecover(const geometry_msgs::PoseWithCovarianceStampedConstPtr& msg)
 {
-  ROS_INFO("It subscribes initial_pose");
+  ROS_INFO("/initial_pose is subscribed");
 
   float x = static_cast<float>(msg->pose.pose.position.x);
   float y = static_cast<float>(msg->pose.pose.position.y);
@@ -68,15 +68,17 @@ void callbackForRecover(const geometry_msgs::PoseWithCovarianceStampedConstPtr& 
 
   float z = std::numeric_limits<float>::max();
 
-  if (current_pointcloud != nullptr) {
+  if (current_pointcloud == nullptr) {
+    std::cout << "z=0 because current_pointcloud is nullptr" << std::endl;
     z = 0;
   } else {
     for (const pcl::PointXYZ& p : *current_pointcloud) {
-      constexpr float r2 = 2 * 2;  // [m^2]
+      constexpr float r2 = 5 * 5;  // [m^2]
       float dx = x - p.x;
       float dy = y - p.y;
-      if (dx * dx + dy * dy < r2)
+      if (dx * dx + dy * dy < r2) {
         z = std::min(z, p.z);
+      }
     }
   }
 
@@ -178,6 +180,7 @@ int main(int argc, char* argv[])
       iris::publishCorrespondences(correspondences_publisher, publication.cloud, map->getTargetCloud(), publication.correspondences);
       iris::publishNormal(normal_publisher, publication.cloud, publication.normals);
       iris::publishCovariance(covariance_publisher, publication.cloud, publication.normals);
+      iris::publishPointcloud(target_pc_publisher, map->getTargetCloud());
 
       // Processing time
       long time = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - m_start).count();
@@ -199,14 +202,14 @@ int main(int argc, char* argv[])
 
       offseted_vslam_pose = publication.offset_camera;
       iris_pose = publication.iris_camera;
-      current_pointcloud = publication.cloud;
+      current_pointcloud = map->getTargetCloud();
+
+      writeCsv(csv_ofs, ros::Time::now(), iris_pose);
     }
 
     iris::publishPose(offseted_vslam_pose, "iris/offseted_vslam_pose");
     iris::publishPose(iris_pose, "iris/iris_pose");
-    iris::publishPointcloud(target_pc_publisher, map->getTargetCloud());
 
-    writeCsv(csv_ofs, ros::Time::now(), iris_pose);
 
     // Spin and wait
     ros::spinOnce();

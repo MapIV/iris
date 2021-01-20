@@ -41,7 +41,7 @@ public:
   void execute(const cv::Mat& image);
   void requestReset();
 
-  void getLandmarksAndNormals(pcl::PointCloud<pcl::PointXYZINormal>::Ptr& vslam_data) const;
+  void getLandmarksAndNormals(pcl::PointCloud<pcl::PointXYZINormal>::Ptr& vslam_data, float height) const;
   void setCriteria(unsigned int recollection_, float accuracy_);
   std::pair<unsigned int, float> getCriteria() const;
 

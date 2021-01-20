@@ -62,6 +62,7 @@ int main(int argc, char* argv[])
   // Get rosparams
   ros::NodeHandle pnh("~");
   bool is_image_compressed;
+  float height = 5;
   std::string vocab_path, vslam_config_path, image_topic_name;
   pnh.getParam("vocab_path", vocab_path);
   pnh.getParam("vslam_config_path", vslam_config_path);
@@ -101,7 +102,7 @@ int main(int argc, char* argv[])
       // process OpenVSLAM
       bridge.execute(subscribed_image);
       bridge.setCriteria(30 /*recollection*/, accuracy);
-      bridge.getLandmarksAndNormals(vslam_data);
+      bridge.getLandmarksAndNormals(vslam_data, height);
 
       // Reset input
       subscribed_image = cv::Mat();

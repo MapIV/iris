@@ -56,7 +56,6 @@ int main(int argc, char* argv[])
 {
   // TODO:
   // We should set the values of the following parameters using rosparam
-  // - int: recollection
   // - int: upper_threshold_of_pointcloud
   // - int: lower_threshold_of_pointcloud
 
@@ -66,6 +65,8 @@ int main(int argc, char* argv[])
   ros::NodeHandle pnh("~");
   bool is_image_compressed = true;
   bool is_image_color = true;
+  int recollection = 30;
+  float height = 5;
   std::string vocab_path, vslam_config_path;
   std::string image_topic_name0;
   std::string image_topic_name1;
@@ -75,6 +76,8 @@ int main(int argc, char* argv[])
   pnh.getParam("image_topic_name1", image_topic_name1);
   pnh.getParam("is_image_compressed", is_image_compressed);
   pnh.getParam("is_image_color", is_image_color);
+  pnh.getParam("keyframe_recolection", recollection);
+  pnh.getParam("max_height", height);
   ROS_INFO("vocab_path: %s, vslam_config_path: %s, image_topic_name: %s, is_image_compressed: %d",
       vocab_path.c_str(), vslam_config_path.c_str(), image_topic_name0.c_str(), is_image_compressed);
 
@@ -124,17 +127,16 @@ int main(int argc, char* argv[])
 
       // process OpenVSLAM
       bridge.execute(subscribed_image0, subscribed_image1);
-      bridge.setCriteria(30 /*recollection*/, accuracy);
-      bridge.getLandmarksAndNormals(vslam_data);
+      bridge.setCriteria(recollection, accuracy);
+      bridge.getLandmarksAndNormals(vslam_data, height);
 
       // Reset input
       subscribed_image0 = cv::Mat();
       subscribed_image1 = cv::Mat();
 
-      // TODO: The accuracy should be reflected in the results of align_node
       // Update threshold to adjust the number of points
       if (vslam_data->size() < 300 /*lower_threshold_of_pointcloud*/ && accuracy > 0.10) accuracy -= 0.01f;
-      if (vslam_data->size() > 500 /*upper_threshold_of_pointcloud*/ && accuracy < 0.90) accuracy += 0.01f;
+      if (vslam_data->size() > 2000 /*upper_threshold_of_pointcloud*/ && accuracy < 0.90) accuracy += 0.01f;
 
       {
         sensor_msgs::ImagePtr msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", bridge.getFrame()).toImageMsg();
