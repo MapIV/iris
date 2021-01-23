@@ -56,7 +56,7 @@ void callback(const pcl::PointCloud<pcl::PointXYZINormal>::ConstPtr& msg)
 
 //
 Eigen::Matrix4f T_recover = Eigen::Matrix4f::Zero();
-pcl::PointCloud<pcl::PointXYZ>::Ptr current_pointcloud = nullptr;
+pcl::PointCloud<pcl::PointXYZ>::Ptr whole_pointcloud = nullptr;
 void callbackForRecover(const geometry_msgs::PoseWithCovarianceStampedConstPtr& msg)
 {
   ROS_INFO("/initial_pose is subscribed");
@@ -68,11 +68,11 @@ void callbackForRecover(const geometry_msgs::PoseWithCovarianceStampedConstPtr& 
 
   float z = std::numeric_limits<float>::max();
 
-  if (current_pointcloud == nullptr) {
-    std::cout << "z=0 because current_pointcloud is nullptr" << std::endl;
+  if (whole_pointcloud == nullptr) {
+    std::cout << "z=0 because whole_pointcloud is nullptr" << std::endl;
     z = 0;
   } else {
-    for (const pcl::PointXYZ& p : *current_pointcloud) {
+    for (const pcl::PointXYZ& p : *whole_pointcloud) {
       constexpr float r2 = 5 * 5;  // [m^2]
       float dx = x - p.x;
       float dy = y - p.y;
@@ -92,6 +92,8 @@ void callbackForRecover(const geometry_msgs::PoseWithCovarianceStampedConstPtr& 
       -1, 0, 0,
       0, -1, 0;
   T_recover.topLeftCorner(3, 3) = Eigen::AngleAxisf(theta, Eigen::Vector3f::UnitZ()).toRotationMatrix() * R;
+  std::cout << "T_recover:\n"
+            << T_recover << std::endl;
 }
 
 void writeCsv(std::ofstream& ofs, const ros::Time& timestamp, const Eigen::Matrix4f& iris_pose)
@@ -152,6 +154,7 @@ int main(int argc, char* argv[])
 
   // Publish map
   iris::publishPointcloud(whole_pc_publisher, map->getSparseCloud());
+  whole_pointcloud = map->getSparseCloud();
   std::ofstream csv_ofs("trajectory.csv");
 
   // Start main loop
@@ -161,6 +164,7 @@ int main(int argc, char* argv[])
 
     Eigen::Matrix4f T_vslam = listenTransform(listener);
     if (!T_recover.isZero()) {
+      std::cout << "apply recover pose" << std::endl;
       system->specifyTWorld(T_recover);
       T_recover.setZero();
     }
@@ -202,7 +206,6 @@ int main(int argc, char* argv[])
 
       offseted_vslam_pose = publication.offset_camera;
       iris_pose = publication.iris_camera;
-      current_pointcloud = map->getTargetCloud();
 
       writeCsv(csv_ofs, ros::Time::now(), iris_pose);
     }

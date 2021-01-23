@@ -96,15 +96,14 @@ public:
     return T_world;
   }
 
-  // TODO:NOTE: This is not thread safe
   void specifyTWorld(const Eigen::Matrix4f& specified_T_world)
   {
-    // std::cout << "last T_align\n"
-    //           << T_align << std::endl;
-    // std::cout << "last T_world\n"
-    //           << T_world << std::endl;
-    // std::cout << "last T_vslam\n"
-    //           << last_T_vslam << std::endl;
+    std::cout << "last T_align\n"
+              << T_align << std::endl;
+    std::cout << "last T_world\n"
+              << T_world << std::endl;
+    std::cout << "last T_vslam\n"
+              << last_T_vslam << std::endl;
 
     float scale = util::getScale(T_world);
     auto scaled_new_T_world = util::applyScaling(specified_T_world, scale);
@@ -112,14 +111,8 @@ public:
     //           << scaled_new_T_world << std::endl;
     T_align = scaled_new_T_world * last_T_vslam.inverse();
 
-    // std::cout << "new T_align\n"
-    //           << T_align << std::endl;
-  }
-
-  // TODO:NOTE: This is not thread safe.
-  void specifyScale(const float scale)
-  {
-    T_align = util::applyScaling(T_align, scale);
+    std::cout << "new T_align\n"
+              << T_align << std::endl;
   }
 
 private:
