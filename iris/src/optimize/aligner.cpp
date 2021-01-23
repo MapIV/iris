@@ -140,7 +140,7 @@ void Aligner::setEdge7DoFGICP(
       e->cov0 = meas.cov0(1.0f);  // target
     }
     meas.normal1 = n1.cast<double>();
-    e->cov1 = meas.cov1(2.00f);  // source
+    e->cov1 = meas.cov1(1.00f);  // source
     e->information() = (e->cov0 + R * e->cov1 * R.transpose()).inverse();
 
 

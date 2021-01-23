@@ -46,6 +46,7 @@ namespace iris
 {
 namespace pcl_
 {
+// Set epsilon > 1 when the normal vector is considered
 Eigen::Matrix3f calcInversedCovariance(const Eigen::Vector3f& n, float epsilon = 1.0f)
 {
   Eigen::Vector3f n0 = n.normalized();
@@ -56,17 +57,17 @@ Eigen::Matrix3f calcInversedCovariance(const Eigen::Vector3f& n, float epsilon =
   Eigen::Vector3f n2 = n0.cross(n1);
 
   Eigen::Matrix3f R;
-  //      |n0_x, n0_y, n0_z|
-  // R =  |n1_x, n1_y, n1_z|
-  //      |n2_x, n2_y, n2_z|
-  R.block(0, 0, 1, 3) = n0.transpose();
-  R.block(1, 0, 1, 3) = n1.transpose();
-  R.block(2, 0, 1, 3) = n2.transpose();
+  //      |n1_x, n1_y, n1_z|
+  // R =  |n2_x, n2_y, n2_z|
+  //      |n_x , n_y , n_z|
+  R.row(0) = n1.transpose();
+  R.row(1) = n2.transpose();
+  R.row(2) = n0.transpose();
 
   // clang-format off
   Eigen::Matrix3f inv_cov;
   inv_cov <<   epsilon,      0,       0,
-                     0,      1,       0,
+                     0,epsilon,       0,
                      0,      0,       1;
   // clang-format on
 
@@ -116,9 +117,7 @@ void CorrespondenceEstimationBackProjection<PointSource, PointTarget, NormalT, S
 
       min_dist = std::numeric_limits<float>::max();
       Eigen::Vector3f input_point = input_->points[*idx_i].getVector3fMap();
-      Eigen::Vector3f input_normal = source_normals_->points[*idx_i].getNormalVector3fMap();
-
-      Eigen::Matrix3f information_matrix = calcInversedCovariance(input_normal);
+      // Eigen::Vector3f input_normal = source_normals_->points[*idx_i].getNormalVector3fMap();
 
       Eigen::Vector3f offset_point = input_point;
       tree_->nearestKSearch(PointSource(offset_point.x(), offset_point.y(), offset_point.z()), k_, nn_indices, nn_dists);
@@ -126,7 +125,8 @@ void CorrespondenceEstimationBackProjection<PointSource, PointTarget, NormalT, S
       // Find the best correspondence
       for (size_t j = 0; j < nn_indices.size(); j++) {
         Eigen::Vector3f target_point = target_->points[nn_indices[j]].getVector3fMap();
-        // Eigen::Vector3f target_normal = target_normals_->points[nn_indices[j]].getNormalVector3fMap();
+        Eigen::Vector3f target_normal = target_normals_->points[nn_indices[j]].getNormalVector3fMap();
+        Eigen::Matrix3f information_matrix = calcInversedCovariance(target_normal, 0.1f);
 
         Eigen::Vector3f e = target_point - input_point;
         float dist = e.dot(information_matrix * e);

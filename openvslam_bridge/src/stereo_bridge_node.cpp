@@ -135,7 +135,7 @@ int main(int argc, char* argv[])
       subscribed_image1 = cv::Mat();
 
       // Update threshold to adjust the number of points
-      if (vslam_data->size() < 300 /*lower_threshold_of_pointcloud*/ && accuracy > 0.10) accuracy -= 0.01f;
+      if (vslam_data->size() < 1500 /*lower_threshold_of_pointcloud*/ && accuracy > 0.10) accuracy -= 0.01f;
       if (vslam_data->size() > 2000 /*upper_threshold_of_pointcloud*/ && accuracy < 0.90) accuracy += 0.01f;
 
       {
