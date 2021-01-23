@@ -66,7 +66,7 @@ int main(int argc, char* argv[])
   std::string vocab_path, vslam_config_path, image_topic_name;
   pnh.getParam("vocab_path", vocab_path);
   pnh.getParam("vslam_config_path", vslam_config_path);
-  pnh.getParam("image_topic_name", image_topic_name);
+  pnh.getParam("image_topic_name0", image_topic_name);
   pnh.getParam("is_image_compressed", is_image_compressed);
   ROS_INFO("vocab_path: %s, vslam_config_path: %s, image_topic_name: %s, is_image_compressed: %d",
       vocab_path.c_str(), vslam_config_path.c_str(), image_topic_name.c_str(), is_image_compressed);
@@ -89,7 +89,7 @@ int main(int argc, char* argv[])
   bridge.setup(vslam_config_path, vocab_path);
 
   std::chrono::system_clock::time_point m_start;
-  ros::Rate loop_rate(10);
+  ros::Rate loop_rate(20);
   float accuracy = 0.5f;
   pcl::PointCloud<pcl::PointXYZINormal>::Ptr vslam_data(new pcl::PointCloud<pcl::PointXYZINormal>);
 
@@ -107,10 +107,9 @@ int main(int argc, char* argv[])
       // Reset input
       subscribed_image = cv::Mat();
 
-      // TODO: The accuracy should be reflected in the results of align_node
       // Update threshold to adjust the number of points
-      if (vslam_data->size() < 300 /*lower_threshold_of_pointcloud*/ && accuracy > 0.10) accuracy -= 0.01f;
-      if (vslam_data->size() > 500 /*upper_threshold_of_pointcloud*/ && accuracy < 0.90) accuracy += 0.01f;
+      if (vslam_data->size() < 1500 /*lower_threshold_of_pointcloud*/ && accuracy > 0.10) accuracy -= 0.01f;
+      if (vslam_data->size() > 2000 /*upper_threshold_of_pointcloud*/ && accuracy < 0.90) accuracy += 0.01f;
 
       {
         sensor_msgs::ImagePtr msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", bridge.getFrame()).toImageMsg();
