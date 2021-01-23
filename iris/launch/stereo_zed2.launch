@@ -3,17 +3,17 @@
     <arg name="iris_config_path" default = "$(find iris)/../config/iris_zed2.yaml" /> 
     <arg name="vslam_config_path" default = "$(find iris)/../config/zed2_openvslam.yaml" />
 
-    <arg name="pcd_path" default = "$(find iris)/../../../m.pcd" /> 
+    <arg name="pcd_path" default = "$(find iris)/../../../zed2-0.pcd" /> 
     <arg name="vocab_file" default = "$(find iris)/../../../orb_vocab.dbow2" />
 
     <arg name="is_image_compressed" default = "true"/>
-    <arg name="is_image_color" default = "false"/>
+    <arg name="is_image_color" default = "true"/>
 
     <arg name="image_topic_name0" default = "/zed2/zed_node/left/image_rect_color/compressed" />
     <arg name="image_topic_name1" default = "/zed2/zed_node/right/image_rect_color/compressed" />
 
-    <arg name="keyframe_recollection" default = "70" />
-    <arg name="max_height" default = "10" />
+    <arg name="keyframe_recollection" default = "50" />
+    <arg name="max_height" default = "15" />
 
     
     <!-- iris_node -->

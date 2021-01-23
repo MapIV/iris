@@ -139,8 +139,11 @@ int main(int argc, char* argv[])
       if (vslam_data->size() > 2000 /*upper_threshold_of_pointcloud*/ && accuracy < 0.90) accuracy += 0.01f;
 
       {
-        sensor_msgs::ImagePtr msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", bridge.getFrame()).toImageMsg();
-        image_publisher.publish(msg);
+        cv::Mat img = bridge.getFrame();
+        if (!img.empty()) {
+          sensor_msgs::ImagePtr msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", img).toImageMsg();
+          image_publisher.publish(msg);
+        }
       }
       {
         pcl_conversions::toPCL(ros::Time::now(), vslam_data->header.stamp);

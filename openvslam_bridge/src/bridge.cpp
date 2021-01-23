@@ -142,7 +142,7 @@ int BridgeOpenVSLAM::getState() const
 
 cv::Mat BridgeOpenVSLAM::getFrame() const
 {
-  return SLAM_ptr->get_frame_publisher()->draw_frame(false);
+  return SLAM_ptr->get_frame_publisher()->draw_frame(true);
 }
 
 Eigen::Matrix4f BridgeOpenVSLAM::getCameraPose() const

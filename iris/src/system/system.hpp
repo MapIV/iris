@@ -98,12 +98,12 @@ public:
 
   void specifyTWorld(const Eigen::Matrix4f& specified_T_world)
   {
-    std::cout << "last T_align\n"
-              << T_align << std::endl;
-    std::cout << "last T_world\n"
-              << T_world << std::endl;
-    std::cout << "last T_vslam\n"
-              << last_T_vslam << std::endl;
+    // std::cout << "last T_align\n"
+    //           << T_align << std::endl;
+    // std::cout << "last T_world\n"
+    //           << T_world << std::endl;
+    // std::cout << "last T_vslam\n"
+    //           << last_T_vslam << std::endl;
 
     float scale = util::getScale(T_world);
     auto scaled_new_T_world = util::applyScaling(specified_T_world, scale);
