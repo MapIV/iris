@@ -214,13 +214,11 @@ void Map::updateLocalmap(const Eigen::Matrix4f& T)
 
   // Critical section from here
   {
-    std::lock_guard lock(localmap_mtx);
     local_target_cloud->clear();
     local_target_normals->clear();
 
     for (int i = 0; i < dx; i++) {
       for (int j = 0; j < dy; j++) {
-        // std::cout << "(" << x_min + i << "," << y_min + j << ")";
         std::pair<int, int> key = std::make_pair(x_min + i, y_min + j);
         if (submap_cloud.count(key) == 0) {
           continue;
@@ -231,7 +229,6 @@ void Map::updateLocalmap(const Eigen::Matrix4f& T)
     }
   }
   {
-    std::lock_guard lock(info_mtx);
     localmap_info.x = (static_cast<float>(id_x) + 0.5f) * L,
     localmap_info.y = (static_cast<float>(id_y) + 0.5f) * L,
     localmap_info.theta = new_info_theta;

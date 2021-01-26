@@ -45,7 +45,7 @@ System::System(const Config& config_, const std::shared_ptr<map::Map>& map_)
   // Setup correspondence estimator
   estimator.setInputTarget(map->getTargetCloud());
   estimator.setTargetNormals(map->getTargetNormals());
-  estimator.setKSearch(20);
+  estimator.setKSearch(40);
 
   localmap_info = map->getLocalmapInfo();
 

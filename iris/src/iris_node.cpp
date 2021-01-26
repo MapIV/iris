@@ -154,8 +154,11 @@ int main(int argc, char* argv[])
 
   // Publish map
   iris::publishPointcloud(whole_pc_publisher, map->getSparseCloud());
+  iris::publishPointcloud(target_pc_publisher, map->getTargetCloud());
   whole_pointcloud = map->getSparseCloud();
   std::ofstream csv_ofs("trajectory.csv");
+
+  iris::map::Info last_map_info;
 
   // Start main loop
   ros::Rate loop_rate(20);
@@ -184,7 +187,12 @@ int main(int argc, char* argv[])
       iris::publishCorrespondences(correspondences_publisher, publication.cloud, map->getTargetCloud(), publication.correspondences);
       iris::publishNormal(normal_publisher, publication.cloud, publication.normals);
       iris::publishCovariance(covariance_publisher, publication.cloud, publication.normals);
-      iris::publishPointcloud(target_pc_publisher, map->getTargetCloud());
+
+      if (last_map_info != map->getLocalmapInfo()) {
+        iris::publishPointcloud(target_pc_publisher, map->getTargetCloud());
+      }
+      last_map_info = map->getLocalmapInfo();
+      std::cout << "map: " << last_map_info.toString() << std::endl;
 
       // Processing time
       long time = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - m_start).count();
