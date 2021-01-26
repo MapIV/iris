@@ -90,20 +90,19 @@ int main(int argc, char* argv[])
   message_filters::Subscriber<sensor_msgs::CompressedImage> infra2_image_subscriber(nh, image_topic_name1, 1);
   message_filters::TimeSynchronizer<sensor_msgs::CompressedImage, sensor_msgs::CompressedImage> syncronizer(infra1_image_subscriber, infra2_image_subscriber, 10);
 
-  if (is_image_compressed == false) {
-    std::cerr << "Only compressed Image is acceptable" << std::endl;
+
+  // Setup image callback
+  cv::Mat subscribed_image0, subscribed_image1;
+  if (is_image_compressed) {
+    auto image_callback = [is_image_color, &subscribed_image0, &subscribed_image1](const sensor_msgs::CompressedImageConstPtr& image0, const sensor_msgs::CompressedImageConstPtr& image1) -> void {
+      subscribed_image0 = cv::imdecode(cv::Mat(image0->data), is_image_color ? 1 : 0 /* '1': bgr, '0': gray*/);
+      subscribed_image1 = cv::imdecode(cv::Mat(image1->data), is_image_color ? 1 : 0 /* '1': bgr, '0': gray*/);
+    };
+    syncronizer.registerCallback(boost::bind<void>(image_callback, _1, _2));
+  } else {
+    std::cerr << "Error: Only compressed image is acceptable" << std::endl;
     exit(EXIT_FAILURE);
   }
-
-  cv::Mat subscribed_image0, subscribed_image1;
-  auto image_callback = [is_image_color, is_image_compressed, &subscribed_image0, &subscribed_image1](const sensor_msgs::CompressedImageConstPtr& image1, const sensor_msgs::CompressedImageConstPtr& image2) -> void {
-    if (is_image_compressed) {
-      std::cout << "image subscribing" << std::endl;
-      subscribed_image0 = cv::imdecode(cv::Mat(image1->data), is_image_color ? 1 : 0 /* '1': bgr, '0': gray*/);
-      subscribed_image1 = cv::imdecode(cv::Mat(image2->data), is_image_color ? 1 : 0 /* '1': bgr, '0': gray*/);
-    }
-  };
-  syncronizer.registerCallback(boost::bind<void>(image_callback, _1, _2));
 
   // Setup publisher
   ros::Publisher vslam_publisher = nh.advertise<pcl::PointCloud<pcl::PointXYZINormal>>("iris/vslam_data", 1);
@@ -135,8 +134,8 @@ int main(int argc, char* argv[])
       subscribed_image1 = cv::Mat();
 
       // Update threshold to adjust the number of points
-      if (vslam_data->size() < 1500 /*lower_threshold_of_pointcloud*/ && accuracy > 0.10) accuracy -= 0.01f;
-      if (vslam_data->size() > 2000 /*upper_threshold_of_pointcloud*/ && accuracy < 0.90) accuracy += 0.01f;
+      if (vslam_data->size() < 1000 /*lower_threshold_of_pointcloud*/ && accuracy > 0.10) accuracy -= 0.01f;
+      if (vslam_data->size() > 1500 /*upper_threshold_of_pointcloud*/ && accuracy < 0.90) accuracy += 0.01f;
 
       {
         cv::Mat img = bridge.getFrame();

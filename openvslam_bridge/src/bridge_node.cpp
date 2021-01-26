@@ -53,7 +53,6 @@ int main(int argc, char* argv[])
 {
   // TODO:
   // We should set the values of the following parameters using rosparam
-  // - int: recollection
   // - int: upper_threshold_of_pointcloud
   // - int: lower_threshold_of_pointcloud
 
@@ -62,12 +61,15 @@ int main(int argc, char* argv[])
   // Get rosparams
   ros::NodeHandle pnh("~");
   bool is_image_compressed;
+  int recollection = 30;
   float height = 5;
   std::string vocab_path, vslam_config_path, image_topic_name;
   pnh.getParam("vocab_path", vocab_path);
   pnh.getParam("vslam_config_path", vslam_config_path);
   pnh.getParam("image_topic_name0", image_topic_name);
   pnh.getParam("is_image_compressed", is_image_compressed);
+  pnh.getParam("keyframe_recollection", recollection);
+  pnh.getParam("max_height", height);
   ROS_INFO("vocab_path: %s, vslam_config_path: %s, image_topic_name: %s, is_image_compressed: %d",
       vocab_path.c_str(), vslam_config_path.c_str(), image_topic_name.c_str(), is_image_compressed);
 
@@ -101,7 +103,7 @@ int main(int argc, char* argv[])
 
       // process OpenVSLAM
       bridge.execute(subscribed_image);
-      bridge.setCriteria(30 /*recollection*/, accuracy);
+      bridge.setCriteria(recollection, accuracy);
       bridge.getLandmarksAndNormals(vslam_data, height);
 
       // Reset input
@@ -110,7 +112,7 @@ int main(int argc, char* argv[])
       // Update threshold to adjust the number of points
       if (vslam_data->size() < 1500 /*lower_threshold_of_pointcloud*/ && accuracy > 0.10) accuracy -= 0.01f;
       if (vslam_data->size() > 2000 /*upper_threshold_of_pointcloud*/ && accuracy < 0.90) accuracy += 0.01f;
-
+      std::cout << "accuracy: " << accuracy << std::endl;
       {
         sensor_msgs::ImagePtr msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", bridge.getFrame()).toImageMsg();
         image_publisher.publish(msg);

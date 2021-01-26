@@ -170,9 +170,9 @@ void BridgeOpenVSLAM::setCriteria(unsigned int recollection_, float accuracy_)
   recollection = recollection_;
   accuracy = accuracy_;
 
-  if (recollection < 1) recollection = 1;
-  if (accuracy < 0.1f) accuracy = 0.1f;
-  if (accuracy > 1.0f) accuracy = 1.0f;
+  recollection = std::max(recollection, 1);
+  accuracy = std::max(accyracy, 0.1f);
+  accuracy = std::min(accyracy, 1.0f);
 }
 
 std::pair<unsigned int, float> BridgeOpenVSLAM::getCriteria() const
