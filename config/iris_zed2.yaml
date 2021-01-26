@@ -18,7 +18,7 @@ Iris.distance_min: 2.0
 Iris.distance_max: 5.0
 
 Iris.iteration: 5
-Iris.converge_translation: 0.01
+Iris.converge_translation: 0.05
 Iris.converge_rotation: 0.001
 
 # Map Parameter
