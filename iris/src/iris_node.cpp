@@ -125,9 +125,9 @@ int main(int argc, char* argv[])
   ros::Publisher vslam_path_publisher = nh.advertise<nav_msgs::Path>("iris/vslam_path", 1);
   ros::Publisher correspondences_publisher = nh.advertise<visualization_msgs::Marker>("iris/correspondences", 1);
   ros::Publisher scale_publisher = nh.advertise<std_msgs::Float32>("iris/align_scale", 1);
-  ros::Publisher normal_publisher = nh.advertise<visualization_msgs::MarkerArray>("iris/normals", 1);
-  ros::Publisher covariance_publisher = nh.advertise<visualization_msgs::MarkerArray>("iris/covariances", 1);
   ros::Publisher processing_time_publisher = nh.advertise<std_msgs::Float32>("iris/processing_time", 1);
+  // ros::Publisher normal_publisher = nh.advertise<visualization_msgs::MarkerArray>("iris/normals", 1);
+  // ros::Publisher covariance_publisher = nh.advertise<visualization_msgs::MarkerArray>("iris/covariances", 1);
   iris::Publication publication;
 
   // Get rosparams
@@ -175,6 +175,8 @@ int main(int argc, char* argv[])
     if (vslam_update) {
       vslam_update = false;
       m_start = std::chrono::system_clock::now();
+      ros::Time process_stamp;
+      pcl_conversions::fromPCL(vslam_data->header.stamp, process_stamp);
 
       // Execution
       system->execute(2, T_vslam, vslam_data);
@@ -185,8 +187,8 @@ int main(int argc, char* argv[])
       iris::publishPath(iris_path_publisher, publication.iris_trajectory);
       iris::publishPath(vslam_path_publisher, publication.offset_trajectory);
       iris::publishCorrespondences(correspondences_publisher, publication.cloud, map->getTargetCloud(), publication.correspondences);
-      iris::publishNormal(normal_publisher, publication.cloud, publication.normals);
-      iris::publishCovariance(covariance_publisher, publication.cloud, publication.normals);
+      // iris::publishNormal(normal_publisher, publication.cloud, publication.normals);
+      // iris::publishCovariance(covariance_publisher, publication.cloud, publication.normals);
 
       if (last_map_info != map->getLocalmapInfo()) {
         iris::publishPointcloud(target_pc_publisher, map->getTargetCloud());
@@ -215,7 +217,7 @@ int main(int argc, char* argv[])
       offseted_vslam_pose = publication.offset_camera;
       iris_pose = publication.iris_camera;
 
-      writeCsv(csv_ofs, ros::Time::now(), iris_pose);
+      writeCsv(csv_ofs, process_stamp, iris_pose);
     }
 
     iris::publishPose(offseted_vslam_pose, "iris/offseted_vslam_pose");

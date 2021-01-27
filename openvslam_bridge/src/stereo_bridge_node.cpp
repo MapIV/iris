@@ -54,11 +54,6 @@ void publishPose(const Eigen::Matrix4f& T, const std::string& child_frame_id)
 
 int main(int argc, char* argv[])
 {
-  // TODO:
-  // We should set the values of the following parameters using rosparam
-  // - int: upper_threshold_of_pointcloud
-  // - int: lower_threshold_of_pointcloud
-
   ros::init(argc, argv, "openvslam_stereo_bridge_node");
 
   // Get rosparams
@@ -96,10 +91,12 @@ int main(int argc, char* argv[])
 
   // Setup image callback
   cv::Mat subscribed_image0, subscribed_image1;
+  ros::Time subscribed_stamp;
   if (is_image_compressed) {
-    auto image_callback = [is_image_color, &subscribed_image0, &subscribed_image1](const sensor_msgs::CompressedImageConstPtr& image0, const sensor_msgs::CompressedImageConstPtr& image1) -> void {
+    auto image_callback = [is_image_color, &subscribed_image0, &subscribed_image1, &subscribed_stamp](const sensor_msgs::CompressedImageConstPtr& image0, const sensor_msgs::CompressedImageConstPtr& image1) -> void {
       subscribed_image0 = cv::imdecode(cv::Mat(image0->data), is_image_color ? 1 : 0 /* '1': bgr, '0': gray*/);
       subscribed_image1 = cv::imdecode(cv::Mat(image1->data), is_image_color ? 1 : 0 /* '1': bgr, '0': gray*/);
+      subscribed_stamp = image0->header.stamp;
     };
     syncronizer.registerCallback(boost::bind<void>(image_callback, _1, _2));
   } else {
@@ -126,6 +123,7 @@ int main(int argc, char* argv[])
     if (!subscribed_image0.empty() && !subscribed_image1.empty()) {
       // start timer
       m_start = std::chrono::system_clock::now();
+      ros::Time process_stamp = subscribed_stamp;
 
       // process OpenVSLAM
       bridge.execute(subscribed_image0, subscribed_image1);
@@ -148,7 +146,7 @@ int main(int argc, char* argv[])
         }
       }
       {
-        pcl_conversions::toPCL(ros::Time::now(), vslam_data->header.stamp);
+        pcl_conversions::toPCL(process_stamp, vslam_data->header.stamp);
         vslam_data->header.frame_id = "world";
         vslam_publisher.publish(vslam_data);
       }

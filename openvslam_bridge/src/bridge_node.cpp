@@ -68,8 +68,8 @@ int main(int argc, char* argv[])
   // Setup subscriber
   ros::NodeHandle nh;
   image_transport::ImageTransport it(nh);
-  cv::Mat subscribed_image;
   ros::Time subscribed_stamp;
+  cv::Mat subscribed_image;
   image_transport::TransportHints hints("raw");
   if (is_image_compressed) hints = image_transport::TransportHints("compressed");
 
@@ -101,6 +101,7 @@ int main(int argc, char* argv[])
   while (ros::ok()) {
     if (!subscribed_image.empty()) {
       m_start = std::chrono::system_clock::now();  // start timer
+      ros::Time process_stamp = subscribed_stamp;
 
       // process OpenVSLAM
       bridge.execute(subscribed_image);
@@ -119,7 +120,7 @@ int main(int argc, char* argv[])
         image_publisher.publish(msg);
       }
       {
-        pcl_conversions::toPCL(ros::Time::now(), vslam_data->header.stamp);
+        pcl_conversions::toPCL(process_stamp, vslam_data->header.stamp);
         vslam_data->header.frame_id = "world";
         vslam_publisher.publish(vslam_data);
       }
