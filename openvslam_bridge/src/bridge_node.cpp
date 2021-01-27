@@ -34,11 +34,6 @@
 
 std::function<void(const sensor_msgs::ImageConstPtr&)> imageCallbackGenerator(cv::Mat& subscribed_image)
 {
-  return [&subscribed_image](const sensor_msgs::ImageConstPtr& msg) -> void {
-    cv_bridge::CvImagePtr cv_ptr;
-    cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8);
-    subscribed_image = cv_ptr->image.clone();
-  };
 }
 
 void publishPose(const Eigen::Matrix4f& T, const std::string& child_frame_id)
@@ -51,11 +46,6 @@ void publishPose(const Eigen::Matrix4f& T, const std::string& child_frame_id)
 
 int main(int argc, char* argv[])
 {
-  // TODO:
-  // We should set the values of the following parameters using rosparam
-  // - int: upper_threshold_of_pointcloud
-  // - int: lower_threshold_of_pointcloud
-
   ros::init(argc, argv, "openvslam_bridge_node");
 
   // Get rosparams
@@ -71,13 +61,26 @@ int main(int argc, char* argv[])
   ROS_INFO("vocab_path: %s, vslam_config_path: %s, image_topic_name: %s, is_image_compressed: %d",
       vocab_path.c_str(), vslam_config_path.c_str(), image_topic_name.c_str(), is_image_compressed);
 
+
+  const int lower_threshold_of_points = 1500;
+  const int upper_threshold_of_points = 2000;
+
   // Setup subscriber
   ros::NodeHandle nh;
   image_transport::ImageTransport it(nh);
   cv::Mat subscribed_image;
+  ros::Time subscribed_stamp;
   image_transport::TransportHints hints("raw");
   if (is_image_compressed) hints = image_transport::TransportHints("compressed");
-  auto callback = imageCallbackGenerator(subscribed_image);
+
+  auto callback = [&subscribed_image, &subscribed_stamp](const sensor_msgs::ImageConstPtr& msg) -> void {
+    cv_bridge::CvImagePtr cv_ptr;
+    cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8);
+    subscribed_image = cv_ptr->image.clone();
+    subscribed_stamp = msg->header.stamp;
+  };
+
+
   image_transport::Subscriber image_subscriber = it.subscribe(image_topic_name, 5, callback, ros::VoidPtr(), hints);
 
   // Setup publisher
@@ -108,8 +111,8 @@ int main(int argc, char* argv[])
       subscribed_image = cv::Mat();
 
       // Update threshold to adjust the number of points
-      if (vslam_data->size() < 1500 /*lower_threshold_of_pointcloud*/ && accuracy > 0.10) accuracy -= 0.01f;
-      if (vslam_data->size() > 2000 /*upper_threshold_of_pointcloud*/ && accuracy < 0.90) accuracy += 0.01f;
+      if (vslam_data->size() < lower_threshold_of_points && accuracy > 0.10) accuracy -= 0.01f;
+      if (vslam_data->size() > upper_threshold_of_points && accuracy < 0.90) accuracy += 0.01f;
       std::cout << "accuracy: " << accuracy << std::endl;
       {
         sensor_msgs::ImagePtr msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", bridge.getFrame()).toImageMsg();

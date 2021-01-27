@@ -81,6 +81,9 @@ int main(int argc, char* argv[])
   ROS_INFO("vocab_path: %s, vslam_config_path: %s, image_topic_name: %s, is_image_compressed: %d",
       vocab_path.c_str(), vslam_config_path.c_str(), image_topic_name0.c_str(), is_image_compressed);
 
+  const int lower_threshold_of_points = 1500;
+  const int upper_threshold_of_points = 2000;
+
   // Setup subscriber
   ros::NodeHandle nh;
   image_transport::ImageTransport it(nh);
@@ -134,8 +137,8 @@ int main(int argc, char* argv[])
       subscribed_image1 = cv::Mat();
 
       // Update threshold to adjust the number of points
-      if (vslam_data->size() < 1000 /*lower_threshold_of_pointcloud*/ && accuracy > 0.10) accuracy -= 0.01f;
-      if (vslam_data->size() > 1500 /*upper_threshold_of_pointcloud*/ && accuracy < 0.90) accuracy += 0.01f;
+      if (vslam_data->size() < lower_threshold_of_points && accuracy > 0.10) accuracy -= 0.01f;
+      if (vslam_data->size() > upper_threshold_of_points && accuracy < 0.90) accuracy += 0.01f;
 
       {
         cv::Mat img = bridge.getFrame();
