@@ -1,17 +1,17 @@
 <launch>
     <!-- parameters -->
-    <arg name="iris_config_path" default = "$(find iris)/../config/iris_mono_kitti.yaml" /> 
-    <arg name="vslam_config_path" default = "$(find iris)/../openvslam_bridge/3rd/openvslam/example/kitti/KITTI_mono_00-02.yaml" />
+    <arg name="iris_config_path" default = "$(find iris)/../config/iris_hongo_mono.yaml" /> 
+    <arg name="vslam_config_path" default = "$(find iris)/../config/d435mono_openvslam.yaml" />
 
-    <arg name="pcd_path" default = "$(find iris)/../../../kitti_00.pcd" /> 
+    <arg name="pcd_path" default = "$(find iris)/../../../hongo.pcd" /> 
     <arg name="vocab_file" default = "$(find iris)/../../../orb_vocab.dbow2" />
 
     <arg name="is_image_compressed" default = "true"/>
     <arg name="is_image_color" default = "false"/>
 
-    <arg name="image_topic_name0" default = "/image_raw0" />
+    <arg name="image_topic_name0" default = "/camera/infra1/image_rect_raw" />
 
-    <arg name="keyframe_recollection" default = "20" />
+    <arg name="keyframe_recollection" default = "80" />
 
     
     <!-- iris_node -->

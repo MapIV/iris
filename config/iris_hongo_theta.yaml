@@ -1,11 +1,11 @@
 # transform of camera 
-Init.transform: [ -9.0, -12.0, 0.0]
+Init.transform: [ -9.0, -13.0, 0.0]
 # normal vector of camera
 Init.normal: [ -1.0, 0.0, 0.0]
 # upper vector of camera
 Init.upper: [ 0, 0, 1]
 # scale
-Init.scale: 0.6
+Init.scale: 1.0
 
 Iris.scale_gain: 80.00
 Iris.smooth_gain: 0.0

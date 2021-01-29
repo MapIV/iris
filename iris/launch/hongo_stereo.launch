@@ -1,17 +1,17 @@
 <launch>
     <!-- parameters -->
-    <arg name="iris_config_path" default = "$(find iris)/../config/iris_mono_kitti.yaml" /> 
-    <arg name="vslam_config_path" default = "$(find iris)/../openvslam_bridge/3rd/openvslam/example/kitti/KITTI_mono_00-02.yaml" />
+    <arg name="iris_config_path" default = "$(find iris)/../config/iris_hongo_stereo.yaml" /> 
+    <arg name="vslam_config_path" default = "$(find iris)/../config/d435stereo_openvslam.yaml" />
 
-    <arg name="pcd_path" default = "$(find iris)/../../../kitti_00.pcd" /> 
+    <arg name="pcd_path" default = "$(find iris)/../../../hongo.pcd" /> 
     <arg name="vocab_file" default = "$(find iris)/../../../orb_vocab.dbow2" />
 
     <arg name="is_image_compressed" default = "true"/>
     <arg name="is_image_color" default = "false"/>
 
-    <arg name="image_topic_name0" default = "/image_raw0" />
-
-    <arg name="keyframe_recollection" default = "20" />
+    <arg name="image_topic_name0" default = "/camera/infra1/image_rect_raw/compressed" />
+    <arg name="image_topic_name1" default = "/camera/infra2/image_rect_raw/compressed" />
+    <arg name="keyframe_recollection" default = "80" />
 
     
     <!-- iris_node -->
@@ -21,10 +21,11 @@
     </node>
 
     <!-- openvslam_bridge_node -->
-     <node name="openvslam_bridge_node" pkg="openvslam_bridge" type="openvslam_bridge_node" output="screen">
+     <node name="openvslam_stereo_bridge_node" pkg="openvslam_bridge" type="openvslam_stereo_bridge_node" output="screen">
        <param name="vslam_config_path" type="string" value="$(arg vslam_config_path)" />
        <param name="vocab_path" type="string" value="$(arg vocab_file)" />
        <param name="image_topic_name0" type="string" value="$(arg image_topic_name0)" />
+       <param name="image_topic_name1" type="string" value="$(arg image_topic_name1)" />
        <param name="is_image_compressed" type="bool" value="$(arg is_image_compressed)" />
        <param name="is_image_color" type="bool" value="$(arg is_image_color)" />
        <param name="keyframe_recollection" type="int" value="$(arg keyframe_recollection)" />
