@@ -127,7 +127,6 @@ void Aligner::setEdge7DoFGICP(
     meas.pos1 = pt1.cast<double>();
 
     e->setMeasurement(meas);
-    e->information().setIdentity();
 
     Eigen::Vector3f n0 = target_normals->at(cor.index_match).getNormalVector3fMap();
     Eigen::Vector3f n1 = source_clouds->at(cor.index_query).getNormalVector3fMap();
@@ -141,7 +140,8 @@ void Aligner::setEdge7DoFGICP(
     }
     meas.normal1 = n1.cast<double>();
     e->cov1 = meas.cov1(1.00f);  // source
-    e->information() = (e->cov0 + R * e->cov1 * R.transpose()).inverse();
+    // e->information() = (e->cov0 + R * e->cov1 * R.transpose()).inverse();
+    e->information() = (e->cov0).inverse();
 
 
     // set Huber kernel (default delta = 1.0)
@@ -169,23 +169,23 @@ void Aligner::setEdgeRestriction(
   }
 
   // Add an altitude edge
-  {
-    Edge_Altitude_Restriction* e = new Edge_Altitude_Restriction(altitude_gain);
-    e->setVertex(0, vp0);
-    e->information().setIdentity();
-    e->setMeasurement(offset_camera.topRightCorner(3, 1).cast<double>());
-    optimizer.addEdge(e);
-  }
+  // {
+  //   Edge_Altitude_Restriction* e = new Edge_Altitude_Restriction(altitude_gain);
+  //   e->setVertex(0, vp0);
+  //   e->information().setIdentity();
+  //   e->setMeasurement(offset_camera.topRightCorner(3, 1).cast<double>());
+  //   optimizer.addEdge(e);
+  // }
 
   // Add a latitude edge
-  {
-    Eigen::Matrix3f R = util::normalizeRotation(offset_camera);
-    Edge_Latitude_Restriction* e = new Edge_Latitude_Restriction(R.cast<double>(), latitude_gain);
-    e->setVertex(0, vp0);
-    e->information().setIdentity();
-    e->setMeasurement(0.0);
-    optimizer.addEdge(e);
-  }
+  // {
+  //   Eigen::Matrix3f R = util::normalizeRotation(offset_camera);
+  //   Edge_Latitude_Restriction* e = new Edge_Latitude_Restriction(R.cast<double>(), latitude_gain);
+  //   e->setVertex(0, vp0);
+  //   e->information().setIdentity();
+  //   e->setMeasurement(0.0);
+  //   optimizer.addEdge(e);
+  // }
 
   //  TODO:
   // // add a const velocity Model Constraint Edge of Scale
