@@ -17,7 +17,7 @@ Iris.distance_max: 5.0
 
 Iris.iteration: 5
 Iris.converge_translation: 0.05
-Iris.converge_rotation: 0.001
+Iris.converge_rotation: 0.005
 
 # Map Parameter
 Map.voxel_grid_leaf: 1.000

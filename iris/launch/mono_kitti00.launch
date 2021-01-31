@@ -8,7 +8,6 @@
 
     <arg name="is_image_compressed" default = "true"/>
     <arg name="is_image_color" default = "false"/>
-
     <arg name="image_topic_name0" default = "/image_raw0" />
 
     <arg name="keyframe_recollection" default = "20" />
