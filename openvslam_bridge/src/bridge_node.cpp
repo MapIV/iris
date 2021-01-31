@@ -25,16 +25,13 @@
 
 #include "bridge.hpp"
 #include <cv_bridge/cv_bridge.h>
+#include <fstream>
 #include <image_transport/image_transport.h>
 #include <iostream>
 #include <pcl/correspondence.h>
 #include <pcl_ros/point_cloud.h>
 #include <ros/ros.h>
 #include <tf/transform_broadcaster.h>
-
-std::function<void(const sensor_msgs::ImageConstPtr&)> imageCallbackGenerator(cv::Mat& subscribed_image)
-{
-}
 
 void publishPose(const Eigen::Matrix4f& T, const std::string& child_frame_id)
 {
@@ -95,6 +92,7 @@ int main(int argc, char* argv[])
   ros::Rate loop_rate(20);
   float accuracy = 0.5f;
   pcl::PointCloud<pcl::PointXYZINormal>::Ptr vslam_data(new pcl::PointCloud<pcl::PointXYZINormal>);
+  std::ofstream ofs_time("vslam_time.csv");
 
   // Start main loop
   ROS_INFO("start main loop.");
@@ -127,9 +125,11 @@ int main(int argc, char* argv[])
 
       // Inform processing time
       std::stringstream ss;
+      long time_ms = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - m_start).count();
       ss << "processing time= \033[35m"
-         << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - m_start).count()
+         << time_ms
          << "\033[m ms";
+      ofs_time << time_ms << std::endl;
       ROS_INFO("%s", ss.str().c_str());
     }
     publishPose(bridge.getCameraPose().inverse(), "iris/vslam_pose");

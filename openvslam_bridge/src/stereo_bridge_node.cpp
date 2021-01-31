@@ -25,6 +25,7 @@
 
 #include "stereo_bridge.hpp"
 #include <cv_bridge/cv_bridge.h>
+#include <fstream>
 #include <image_transport/image_transport.h>
 #include <iostream>
 #include <message_filters/subscriber.h>
@@ -76,8 +77,8 @@ int main(int argc, char* argv[])
   ROS_INFO("vocab_path: %s, vslam_config_path: %s, image_topic_name: %s, is_image_compressed: %d",
       vocab_path.c_str(), vslam_config_path.c_str(), image_topic_name0.c_str(), is_image_compressed);
 
-  const int lower_threshold_of_points = 1500;
-  const int upper_threshold_of_points = 2000;
+  const int lower_threshold_of_points = 1000;
+  const int upper_threshold_of_points = 1500;
 
   // Setup subscriber
   ros::NodeHandle nh;
@@ -116,6 +117,7 @@ int main(int argc, char* argv[])
   ros::Rate loop_rate(20);
   float accuracy = 0.5f;
   pcl::PointCloud<pcl::PointXYZINormal>::Ptr vslam_data(new pcl::PointCloud<pcl::PointXYZINormal>);
+  std::ofstream ofs_time("vslam_time.csv");
 
   // Start main loop
   ROS_INFO("start main loop.");
@@ -129,6 +131,15 @@ int main(int argc, char* argv[])
       bridge.execute(subscribed_image0, subscribed_image1);
       bridge.setCriteria(recollection, accuracy);
       bridge.getLandmarksAndNormals(vslam_data, height);
+
+      // Inform processing time
+      std::stringstream ss;
+      long time_ms = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - m_start).count();
+      ss << "processing time= \033[35m"
+         << time_ms
+         << "\033[m ms";
+      ofs_time << time_ms << std::endl;
+      ROS_INFO("%s", ss.str().c_str());
 
       // Reset input
       subscribed_image0 = cv::Mat();
@@ -150,13 +161,6 @@ int main(int argc, char* argv[])
         vslam_data->header.frame_id = "world";
         vslam_publisher.publish(vslam_data);
       }
-
-      // Inform processing time
-      std::stringstream ss;
-      ss << "processing time= \033[35m"
-         << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - m_start).count()
-         << "\033[m ms";
-      ROS_INFO("%s", ss.str().c_str());
     }
     publishPose(bridge.getCameraPose().inverse(), "iris/vslam_pose");
 
