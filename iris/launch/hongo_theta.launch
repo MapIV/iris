@@ -11,7 +11,6 @@
     <arg name="image_topic_name0" default = "/theta/image_raw" />
 
     <arg name="keyframe_recollection" default = "60" />
-    <arg name="max_height" default = "15" />
 
     
     <!-- iris_node -->
@@ -28,7 +27,6 @@
        <param name="is_image_compressed" type="bool" value="$(arg is_image_compressed)" />
        <param name="is_image_color" type="bool" value="$(arg is_image_color)" />
        <param name="keyframe_recollection" type="int" value="$(arg keyframe_recollection)" />
-       <param name="max_height" type="double" value="$(arg max_height)" />
     </node>
 
     <!-- rviz -->

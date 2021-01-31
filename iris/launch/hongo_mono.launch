@@ -11,7 +11,7 @@
 
     <arg name="image_topic_name0" default = "/camera/infra1/image_rect_raw" />
 
-    <arg name="keyframe_recollection" default = "80" />
+    <arg name="keyframe_recollection" default = "40" />
 
     
     <!-- iris_node -->

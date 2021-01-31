@@ -138,6 +138,11 @@ void loadMap(
     cloud = all_cloud;
   }
 
+  if (grid_leaf > radius) {
+    std::cerr << "normal_search_leaf" << radius << " must be larger than grid_leaf" << grid_leaf << std::endl;
+    exit(EXIT_FAILURE);
+  }
+
   // normal estimation
   pcl::search::KdTree<pcl::PointXYZ>::Ptr tree(new pcl::search::KdTree<pcl::PointXYZ>());
   pcl_::NormalEstimation<pcl::PointXYZ, pcl::Normal> ne;

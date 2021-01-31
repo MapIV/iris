@@ -11,7 +11,7 @@ Init.scale: 1.15
 
 Iris.scale_gain: 80.00
 Iris.smooth_gain: 0.0
-Iris.latitude_gain: 5.0
+Iris.latitude_gain: 0.0
 Iris.altitude_gain: 0.0
 
 Iris.distance_min: 2.0

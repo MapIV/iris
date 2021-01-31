@@ -1,6 +1,6 @@
 <launch>
     <!-- parameters -->
-    <arg name="iris_config_path" default = "$(find iris)/../config/iris_kitti.yaml" /> 
+    <arg name="iris_config_path" default = "$(find iris)/../config/iris_stereo_kitti.yaml" /> 
     <arg name="vslam_config_path" default = "$(find iris)/../openvslam_bridge/3rd/openvslam/example/kitti/KITTI_stereo_00-02.yaml" />
 
     <arg name="pcd_path" default = "$(find iris)/../../../kitti_02.pcd" /> 
@@ -21,7 +21,7 @@
     </node>
 
     <!-- openvslam_bridge_node -->
-     <node name="openvslam_stereo_bridge_node" pkg="openvslam_bridge" type="openvslam_stereo_bridge_node" output="log">
+     <node name="openvslam_stereo_bridge_node" pkg="openvslam_bridge" type="openvslam_stereo_bridge_node" output="screen">
        <param name="vslam_config_path" type="string" value="$(arg vslam_config_path)" />
        <param name="vocab_path" type="string" value="$(arg vocab_file)" />
        <param name="image_topic_name0" type="string" value="$(arg image_topic_name0)" />

@@ -1,7 +1,7 @@
 # transform of camera 
-Init.transform: [ -9.0, -13.0, 0.0]
+Init.transform: [ 0.0, 0.0, 0.0]
 # normal vector of camera
-Init.normal: [ -1.0, 0.0, 0.0]
+Init.normal: [ 01.0, 0.0, 0.0]
 # upper vector of camera
 Init.upper: [ 0, 0, 1]
 # scale

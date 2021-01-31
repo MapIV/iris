@@ -5,12 +5,12 @@ Init.normal: [ 1.0, 0.0, 0.0]
 # upper vector of camera
 Init.upper: [ 0, 0, 1]
 # scale
-Init.scale: 1.0
+Init.scale: 1.10
 
 Iris.scale_gain: 100.00
 Iris.smooth_gain: 0.0
-Iris.latitude_gain: 5.0
-Iris.altitude_gain: 0.2
+Iris.latitude_gain: 0.0
+Iris.altitude_gain: 0.0
 
 Iris.distance_min: 2.0
 Iris.distance_max: 5.0
