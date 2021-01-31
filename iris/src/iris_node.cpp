@@ -156,7 +156,8 @@ int main(int argc, char* argv[])
   iris::publishPointcloud(whole_pc_publisher, map->getSparseCloud());
   iris::publishPointcloud(target_pc_publisher, map->getTargetCloud());
   whole_pointcloud = map->getSparseCloud();
-  std::ofstream csv_ofs("trajectory.csv");
+  std::ofstream ofs_track("trajectory.csv");
+  std::ofstream ofs_time("iris_time.csv");
 
   iris::map::Info last_map_info;
 
@@ -196,28 +197,29 @@ int main(int argc, char* argv[])
       last_map_info = map->getLocalmapInfo();
       std::cout << "map: " << last_map_info.toString() << std::endl;
 
+
       // Processing time
-      long time = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - m_start).count();
+      long time_ms = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - m_start).count();
       std::stringstream ss;
       ss << "processing time= \033[35m"
-         << time
+         << time_ms
          << "\033[m ms";
+      ofs_time << time_ms << std::endl;
       ROS_INFO("Iris/ALIGN: %s", ss.str().c_str());
-
       {
         std_msgs::Float32 scale;
         scale.data = iris::util::getScale(publication.T_align);
         scale_publisher.publish(scale);
 
         std_msgs::Float32 processing_time;
-        processing_time.data = static_cast<float>(time);
+        processing_time.data = static_cast<float>(time_ms);
         processing_time_publisher.publish(processing_time);
       }
 
       offseted_vslam_pose = publication.offset_camera;
       iris_pose = publication.iris_camera;
 
-      writeCsv(csv_ofs, process_stamp, iris_pose);
+      writeCsv(ofs_track, process_stamp, iris_pose);
     }
 
     iris::publishPose(offseted_vslam_pose, "iris/offseted_vslam_pose");
