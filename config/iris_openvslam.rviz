@@ -4,13 +4,12 @@ Panels:
     Name: Displays
     Property Tree Widget:
       Expanded:
-        - /target_points1
+        - /Global Options1
         - /target_points1/Autocompute Value Bounds1
         - /TF1/Frames1
         - /correspondences1/Namespaces1
-        - /OverlayImage1
       Splitter Ratio: 0.3891128897666931
-    Tree Height: 441
+    Tree Height: 806
   - Class: rviz/Selection
     Name: Selection
   - Class: rviz/Tool Properties
@@ -41,7 +40,7 @@ Visualization Manager:
       Cell Size: 100
       Class: rviz/Grid
       Color: 160; 160; 164
-      Enabled: true
+      Enabled: false
       Line Style:
         Line Width: 0.029999999329447746
         Value: Lines
@@ -54,7 +53,7 @@ Visualization Manager:
       Plane: XY
       Plane Cell Count: 10
       Reference Frame: <Fixed Frame>
-      Value: true
+      Value: false
     - Alpha: 0.5
       Autocompute Intensity Bounds: true
       Autocompute Value Bounds:
@@ -64,7 +63,7 @@ Visualization Manager:
       Axis: Z
       Channel Name: intensity
       Class: rviz/PointCloud2
-      Color: 120; 255; 255
+      Color: 25; 255; 240
       Color Transformer: FlatColor
       Decay Time: 0
       Enabled: true
@@ -124,7 +123,7 @@ Visualization Manager:
       Axis: Z
       Channel Name: intensity
       Class: rviz/PointCloud2
-      Color: 150; 0; 0
+      Color: 239; 41; 41
       Color Transformer: FlatColor
       Decay Time: 0
       Enabled: true
@@ -146,33 +145,19 @@ Visualization Manager:
       Use rainbow: true
       Value: true
     - Class: rviz/TF
-      Enabled: true
+      Enabled: false
       Frame Timeout: 15
       Frames:
         All Enabled: false
-        iris/iris_pose:
-          Value: true
-        iris/offseted_vslam_pose:
-          Value: true
-        iris/vslam_pose:
-          Value: false
-        world:
-          Value: true
       Marker Scale: 10
       Name: TF
       Show Arrows: false
       Show Axes: true
       Show Names: true
       Tree:
-        world:
-          iris/iris_pose:
-            {}
-          iris/offseted_vslam_pose:
-            {}
-          iris/vslam_pose:
-            {}
+        {}
       Update Interval: 0
-      Value: true
+      Value: false
     - Class: rviz/Marker
       Enabled: true
       Marker Topic: /iris/correspondences
@@ -267,7 +252,7 @@ Visualization Manager:
       width: 800
   Enabled: true
   Global Options:
-    Background Color: 48; 48; 48
+    Background Color: 0; 0; 0
     Default Light: true
     Fixed Frame: world
     Frame Rate: 30
@@ -292,7 +277,7 @@ Visualization Manager:
   Value: true
   Views:
     Current:
-      Angle: 0
+      Angle: -1.6350001096725464
       Class: rviz/TopDownOrtho
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
@@ -302,11 +287,11 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Scale: 5.418240547180176
+      Scale: 9.02682113647461
       Target Frame: iris/iris_pose
       Value: TopDownOrtho (rviz)
-      X: -54.51904296875
-      Y: 7.522234916687012
+      X: -2.350830554962158
+      Y: 15.373180389404297
     Saved: ~
 Window Geometry:
   Displays:
