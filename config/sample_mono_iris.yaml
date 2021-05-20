@@ -20,6 +20,6 @@ Iris.converge_translation: 0.10
 Iris.converge_rotation: 0.3
 
 # Map Parameter
-Map.voxel_grid_leaf: 0.400
+Map.voxel_grid_leaf: 0.500
 Map.submap_grid_leaf: 50
-Map.normal_search_leaf: 0.6
+Map.normal_search_leaf: 1.0

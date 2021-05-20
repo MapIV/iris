@@ -28,12 +28,6 @@ Feature.scale_factor: 1.2
 Feature.num_levels: 8
 Feature.ini_fast_threshold: 20
 Feature.min_fast_threshold: 7
-# Feature.mask_rectangles:
-# # for hongo_theta 20210126 
-#   - [0.0, 0.140, 0.3125, 1.0]
-#   - [0.140, 0.3515, 0.578, 1.0]
-#   - [0.3515, 1.0, 0.828, 1.0]
-#   - [0.9375, 1.0, 0.468, 1.0]
 Feature.mask_rectangles:
   - [0.0 ,0.525,0.58,1.0]
   - [0.0 ,0.17,0.21,1.0]
