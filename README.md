@@ -1,6 +1,10 @@
+**Modifications are underway.**
+
+
 # *Iris*
 * Visual localization in pre-build pointcloud maps.
 * **OpenVSLAM** and **VINS-mono**  can be used.
+
 
 ## Video
 [![](https://img.youtube.com/vi/a_BnifwBZC8/0.jpg)](https://www.youtube.com/watch?v=a_BnifwBZC8)
@@ -81,7 +85,9 @@ rosbag play yours.bag # (on another terminal)
 ```
 
 ## License
-Iris is provided under the BSD 3-Clause License.
+**Modifications are underway.**
+
+~~Iris is provided under the BSD 3-Clause License.~~
 
 The following files are derived from third-party libraries.
 * `iris/src/optimize/types_gicp.hpp` : part of [g2o](https://github.com/RainerKuemmerle/g2o) (BSD)
