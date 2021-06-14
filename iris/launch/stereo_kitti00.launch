@@ -1,16 +1,18 @@
 <launch>
     <!-- parameters -->
-    <arg name="iris_config_path" default = "$(find iris)/../config/sample_iris_config.yaml" /> 
-    <arg name="vslam_config_path" default = "$(find iris)/../config/sample_openvslam_config.yaml" />
+    <arg name="iris_config_path" default = "$(find iris)/../config/iris_stereo_kitti.yaml" /> 
+    <arg name="vslam_config_path" default = "$(find iris)/../openvslam_bridge/3rd/openvslam/example/kitti/KITTI_stereo_00-02.yaml" />
 
     <arg name="pcd_path" default = "$(find iris)/../../../kitti_00.pcd" /> 
     <arg name="vocab_file" default = "$(find iris)/../../../orb_vocab.dbow2" />
 
-    <arg name="is_image_color" default = "false"/>
     <arg name="is_image_compressed" default = "true"/>
-    <arg name="max_height_range" default ="30"/>
+    <arg name="is_image_color" default = "false"/>
 
-    <arg name="image_topic_name" default = "/image_raw0" />
+    <arg name="image_topic_name0" default = "/image_raw0/compressed" />
+    <arg name="image_topic_name1" default = "/image_raw1/compressed" />
+
+    <arg name="keyframe_recollection" default = "30" />
 
     
     <!-- iris_node -->
@@ -20,15 +22,14 @@
     </node>
 
     <!-- openvslam_bridge_node -->
-     <node name="openvslam_bridge_node" pkg="openvslam_bridge" type="openvslam_bridge_node" output="log">
+     <node name="openvslam_stereo_bridge_node" pkg="openvslam_bridge" type="openvslam_stereo_bridge_node" output="log">
        <param name="vslam_config_path" type="string" value="$(arg vslam_config_path)" />
        <param name="vocab_path" type="string" value="$(arg vocab_file)" />
-       <param name="image_topic_name" type="string" value="$(arg image_topic_name)" />
+       <param name="image_topic_name0" type="string" value="$(arg image_topic_name0)" />
+       <param name="image_topic_name1" type="string" value="$(arg image_topic_name1)" />
        <param name="is_image_compressed" type="bool" value="$(arg is_image_compressed)" />
        <param name="is_image_color" type="bool" value="$(arg is_image_color)" />
-       <param name="max_height_range" type="double" value="$(arg max_height_range)"/>
+       <param name="keyframe_recollection" type="int" value="$(arg keyframe_recollection)" />
     </node>
 
-    <!-- rviz -->
-    <node name="rvizvisualisation" pkg="rviz" type="rviz" output="log" args="-d $(find iris)/../config/iris_openvslam.rviz" />
 </launch>

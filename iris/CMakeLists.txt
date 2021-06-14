@@ -80,8 +80,8 @@ set(G2O_LIBS
 message(STATUS "g2o version:\n\t${g2o_VERSION}")
 
 # == Catkin ==
-find_package(catkin REQUIRED COMPONENTS cv_bridge image_transport tf)
-catkin_package(CATKIN_DEPENDS cv_bridge image_transport tf)
+find_package(catkin REQUIRED COMPONENTS cv_bridge image_transport tf nav_msgs)
+catkin_package(CATKIN_DEPENDS cv_bridge image_transport tf nav_msgs)
 
 # == Headers and sources ==
 include_directories(SYSTEM ${catkin_INCLUDE_DIRS})

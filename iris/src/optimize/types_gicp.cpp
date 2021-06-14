@@ -106,15 +106,19 @@ void Edge_Sim3_GICP::computeError()
   const VertexSim3Expmap* vp0 = static_cast<const VertexSim3Expmap*>(_vertices[0]);
   // get vp1 point into vp0 frame could be more efficient if we computed this transform just once
   Vector3 p1 = vp0->estimate().map(measurement().pos1);
+
+  //TODO:
   // Euclidean distance
-  _error = measurement().weight * (p1 - measurement().pos0);
+  // _error = measurement().weight * (p1 - measurement().pos0);
+  _error = (p1 - measurement().pos0);
 
   if (!plane2plane)
     return;
 
   // NOTE: re-define the information matrix for Plane2Plane ICP
-  const Matrix3 R = vp0->estimate().rotation().matrix();
-  information() = (cov0 + R * cov1 * R.transpose()).inverse();
+  // const Matrix3 R = vp0->estimate().rotation().matrix();
+  // information() = (cov0 + R * cov1 * R.transpose()).inverse();
+  // information() = (cov0).inverse();
 }
 
 }  // namespace optimize

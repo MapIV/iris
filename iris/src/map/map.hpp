@@ -68,25 +68,21 @@ public:
   // This informs viewer of whether local map updated or not
   Info getLocalmapInfo() const
   {
-    std::lock_guard lock(info_mtx);
     return localmap_info;
   }
 
   const pcXYZ::Ptr getTargetCloud() const
   {
-    std::lock_guard lock(localmap_mtx);
     return local_target_cloud;
   }
 
   const pcXYZ::Ptr getSparseCloud() const
   {
-    std::lock_guard lock(localmap_mtx);
     return all_sparse_cloud;
   }
 
   const pcNormal::Ptr getTargetNormals() const
   {
-    std::lock_guard lock(localmap_mtx);
     return local_target_normals;
   }
 
@@ -114,8 +110,6 @@ private:
   Eigen::Vector3f last_grid_center;
   Info localmap_info;
 
-  mutable std::mutex localmap_mtx;
-  mutable std::mutex info_mtx;
 
   bool isRecalculationNecessary() const;
   bool isUpdateNecessary(const Eigen::Matrix4f& T) const;

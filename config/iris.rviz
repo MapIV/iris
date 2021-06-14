@@ -5,10 +5,11 @@ Panels:
     Property Tree Widget:
       Expanded:
         - /target_points1/Autocompute Value Bounds1
+        - /TF1
         - /TF1/Frames1
         - /correspondences1/Namespaces1
       Splitter Ratio: 0.3891128897666931
-    Tree Height: 435
+    Tree Height: 714
   - Class: rviz/Selection
     Name: Selection
   - Class: rviz/Tool Properties
@@ -28,6 +29,11 @@ Panels:
     Name: Time
     SyncMode: 0
     SyncSource: target_points
+  - CameraFrame: /camera_plugin
+    Class: camera_info_plugins/camera_info_panel
+    Name: camera_info_panel
+    ParentFrame: world
+    Topic: /camera_plugin
 Preferences:
   PromptSaveOnExit: true
 Toolbars:
@@ -36,7 +42,7 @@ Visualization Manager:
   Class: ""
   Displays:
     - Alpha: 0.5
-      Cell Size: 10
+      Cell Size: 50
       Class: rviz/Grid
       Color: 160; 160; 164
       Enabled: true
@@ -50,19 +56,19 @@ Visualization Manager:
         Y: 0
         Z: 0
       Plane: XY
-      Plane Cell Count: 30
+      Plane Cell Count: 20
       Reference Frame: <Fixed Frame>
       Value: true
     - Alpha: 0.5
       Autocompute Intensity Bounds: true
       Autocompute Value Bounds:
-        Max Value: 32.150455474853516
-        Min Value: -6.388444900512695
+        Max Value: 49.202606201171875
+        Min Value: -16.946548461914062
         Value: true
       Axis: Z
       Channel Name: intensity
       Class: rviz/PointCloud2
-      Color: 120; 255; 255
+      Color: 25; 255; 240
       Color Transformer: FlatColor
       Decay Time: 0
       Enabled: true
@@ -74,12 +80,12 @@ Visualization Manager:
       Name: target_points
       Position Transformer: XYZ
       Queue Size: 10
-      Selectable: false
+      Selectable: true
       Size (Pixels): 1
       Size (m): 0.009999999776482582
       Style: Points
       Topic: /iris/target_pointcloud
-      Unreliable: true
+      Unreliable: false
       Use Fixed Frame: true
       Use rainbow: true
       Value: true
@@ -105,7 +111,7 @@ Visualization Manager:
       Position Transformer: XYZ
       Queue Size: 10
       Selectable: true
-      Size (Pixels): 4
+      Size (Pixels): 2
       Size (m): 0.009999999776482582
       Style: Points
       Topic: /iris/source_pointcloud
@@ -122,7 +128,7 @@ Visualization Manager:
       Axis: Z
       Channel Name: intensity
       Class: rviz/PointCloud2
-      Color: 150; 0; 0
+      Color: 239; 41; 41
       Color Transformer: FlatColor
       Decay Time: 0
       Enabled: true
@@ -148,32 +154,25 @@ Visualization Manager:
       Frame Timeout: 15
       Frames:
         All Enabled: false
-        base_link:
-          Value: true
-        body:
-          Value: true
-        camera:
-          Value: true
+        camera_plugin:
+          Value: false
         iris/iris_pose:
           Value: true
         iris/offseted_vslam_pose:
-          Value: false
+          Value: true
         iris/vslam_pose:
           Value: false
-        velodyne:
-          Value: true
         world:
           Value: true
-      Marker Scale: 30
+      Marker Scale: 10
       Name: TF
-      Show Arrows: true
+      Show Arrows: false
       Show Axes: true
       Show Names: true
       Tree:
         world:
-          body:
-            camera:
-              {}
+          camera_plugin:
+            {}
           iris/iris_pose:
             {}
           iris/offseted_vslam_pose:
@@ -183,22 +182,6 @@ Visualization Manager:
       Update Interval: 0
       Value: true
     - Class: rviz/Marker
-      Enabled: false
-      Marker Topic: /iris/vslam_trajectory
-      Name: vslam_trajectory
-      Namespaces:
-        {}
-      Queue Size: 100
-      Value: false
-    - Class: rviz/Marker
-      Enabled: true
-      Marker Topic: /iris/iris_trajectory
-      Name: iris_trajectory
-      Namespaces:
-        points_and_lines: true
-      Queue Size: 100
-      Value: true
-    - Class: rviz/Marker
       Enabled: true
       Marker Topic: /iris/correspondences
       Name: correspondences
@@ -206,32 +189,66 @@ Visualization Manager:
         correspondences: true
       Queue Size: 100
       Value: true
-    - Class: rviz/Image
+    - Alpha: 1
+      Buffer Length: 1
+      Class: rviz/Path
+      Color: 25; 255; 0
       Enabled: true
-      Image Topic: /feature_tracker/feature_img
-      Max Value: 1
-      Median window: 5
-      Min Value: 0
-      Name: Image
-      Normalize Range: true
-      Queue Size: 10
-      Transport Hint: raw
+      Head Diameter: 0.30000001192092896
+      Head Length: 0.20000000298023224
+      Length: 0.30000001192092896
+      Line Style: Billboards
+      Line Width: 0.5
+      Name: IrisPath
+      Offset:
+        X: 0
+        Y: 0
+        Z: 0
+      Pose Color: 255; 85; 255
+      Pose Style: None
+      Radius: 0.029999999329447746
+      Shaft Diameter: 0.10000000149011612
+      Shaft Length: 0.10000000149011612
+      Topic: /iris/iris_path
+      Unreliable: false
+      Value: true
+    - Alpha: 1
+      Buffer Length: 1
+      Class: rviz/Path
+      Color: 143; 89; 2
+      Enabled: true
+      Head Diameter: 0.30000001192092896
+      Head Length: 0.20000000298023224
+      Length: 0.30000001192092896
+      Line Style: Billboards
+      Line Width: 0.5
+      Name: VslamPath
+      Offset:
+        X: 0
+        Y: 0
+        Z: 0
+      Pose Color: 255; 85; 255
+      Pose Style: None
+      Radius: 0.029999999329447746
+      Shaft Diameter: 0.10000000149011612
+      Shaft Length: 0.10000000149011612
+      Topic: /iris/vslam_path
       Unreliable: false
       Value: true
     - Buffer length: 100
       Class: jsk_rviz_plugin/Plotter2D
-      Enabled: true
+      Enabled: false
       Name: Scale
       Show Value: true
       Topic: /iris/align_scale
-      Value: true
+      Value: false
       auto color change: false
       auto scale: true
       background color: 0; 0; 0
       backround alpha: 0
       border: true
       foreground alpha: 0.699999988079071
-      foreground color: 25; 255; 240
+      foreground color: 255; 255; 0
       height: 128
       left: 128
       linewidth: 1
@@ -243,50 +260,55 @@ Visualization Manager:
       top: 128
       update interval: 0.03999999910593033
       width: 128
-    - Buffer length: 100
-      Class: jsk_rviz_plugin/Plotter2D
+    - Class: jsk_rviz_plugin/OverlayImage
       Enabled: true
-      Name: Time[ms]
-      Show Value: true
-      Topic: /iris/processing_time
+      Name: OverlayImage
+      Topic: /iris/processed_image
       Value: true
-      auto color change: false
-      auto scale: true
-      background color: 0; 0; 0
-      backround alpha: 0
-      border: true
-      foreground alpha: 0.699999988079071
-      foreground color: 255; 255; 20
+      alpha: 0.6000000238418579
       height: 128
-      left: 256
-      linewidth: 1
-      max color: 255; 0; 0
-      max value: 1
-      min value: -1
-      show caption: true
-      text size: 12
-      top: 128
-      update interval: 0.03999999910593033
-      width: 128
-    - Class: rviz/MarkerArray
-      Enabled: true
-      Marker Topic: /iris/normals
-      Name: Normal
-      Namespaces:
-        normal: true
-      Queue Size: 100
-      Value: true
-    - Class: rviz/MarkerArray
+      keep aspect ratio: true
+      left: 0
+      overwrite alpha value: false
+      top: 0
+      transport hint: raw
+      width: 1000
+    - Class: rviz/InteractiveMarkers
+      Enable Transparency: true
       Enabled: false
-      Marker Topic: /iris/covariances
-      Name: Covariances
-      Namespaces:
-        {}
-      Queue Size: 100
+      Name: InteractiveMarkers
+      Show Axes: false
+      Show Descriptions: true
+      Show Visual Aids: false
+      Update Topic: /menu/update
       Value: false
+    - Class: rviz/Camera
+      Enabled: false
+      Image Rendering: background and overlay
+      Image Topic: /camera_plugin/image_raw
+      Name: Camera
+      Overlay Alpha: 0
+      Queue Size: 2
+      Transport Hint: raw
+      Unreliable: false
+      Value: false
+      Visibility:
+        Grid: true
+        InteractiveMarkers: true
+        IrisPath: true
+        OverlayImage: true
+        Scale: true
+        TF: true
+        Value: true
+        VslamPath: true
+        correspondences: true
+        source_points: true
+        target_points: true
+        whole_points: true
+      Zoom Factor: 1
   Enabled: true
   Global Options:
-    Background Color: 48; 48; 48
+    Background Color: 46; 52; 54
     Default Light: true
     Fixed Frame: world
     Frame Rate: 30
@@ -311,31 +333,36 @@ Visualization Manager:
   Value: true
   Views:
     Current:
-      Angle: -5.52500057220459
-      Class: rviz/TopDownOrtho
+      Class: rviz/Orbit
+      Distance: 801.103759765625
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
+      Focal Point:
+        X: 170.86439514160156
+        Y: 19.133939743041992
+        Z: -17.068340301513672
+      Focal Shape Fixed Size: true
+      Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Scale: 4.54863977432251
+      Pitch: 1.5697963237762451
       Target Frame: iris/iris_pose
-      Value: TopDownOrtho (rviz)
-      X: -31.948076248168945
-      Y: 23.829113006591797
+      Value: Orbit (rviz)
+      Yaw: 3.156370162963867
     Saved: ~
 Window Geometry:
+  Camera:
+    collapsed: false
   Displays:
-    collapsed: false
+    collapsed: true
   Height: 1172
-  Hide Left Dock: false
+  Hide Left Dock: true
   Hide Right Dock: true
-  Image:
-    collapsed: false
-  QMainWindow State: 000000ff00000000fd00000004000000000000026d000003f6fc020000000dfb0000001200530065006c0065006300740069006f006e00000001e10000009b0000005c00fffffffb0000001e0054006f006f006c002000500072006f007000650072007400690065007302000001ed000001df00000185000000a3fb000000120056006900650077007300200054006f006f02000001df000002110000018500000122fb000000200054006f006f006c002000500072006f0070006500720074006900650073003203000002880000011d000002210000017afb0000000a0049006d006100670065010000003d000002000000001600fffffffb0000000a0049006d006100670065010000003d000001ba0000000000000000fb000000100044006900730070006c0061007900730100000243000001f0000000c900fffffffb0000002000730065006c0065006300740069006f006e00200062007500660066006500720200000138000000aa0000023a00000294fb00000014005700690064006500530074006500720065006f02000000e6000000d2000003ee0000030bfb0000000c004b0069006e0065006300740200000186000001060000030c00000261fb0000000c00430061006d006500720061010000022e000001720000000000000000fb0000000a0049006d006100670065010000018d000002130000000000000000fb0000000a0049006d00610067006501000002510000014f00000000000000000000000100000170000003f6fc0200000003fb0000001e0054006f006f006c002000500072006f00700065007200740069006500730100000041000000780000000000000000fb0000000a00560069006500770073000000003d000003f6000000a400fffffffb0000001200530065006c0065006300740069006f006e010000025a000000b200000000000000000000000200000490000000a9fc0100000001fb0000000a00560069006500770073030000004e00000080000002e10000019700000003000007800000003efc0100000002fb0000000800540069006d0065010000000000000780000002eb00fffffffb0000000800540069006d006501000000000000045000000000000000000000050d000003f600000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
+  QMainWindow State: 000000ff00000000fd000000040000000000000287000003f6fc0200000011fb0000001200530065006c0065006300740069006f006e00000001e10000009b0000005c00fffffffb0000001e0054006f006f006c002000500072006f007000650072007400690065007302000001ed000001df00000185000000a3fb000000120056006900650077007300200054006f006f02000001df000002110000018500000122fb000000200054006f006f006c002000500072006f0070006500720074006900650073003203000002880000011d000002210000017afb0000001e00700072006f006300650073007300650064005f0049006d006100670065000000003d000000f70000000000000000fb0000000a0049006d006100670065000000003d000001a10000000000000000fb00000012007200610077005f0049006d006100670065000000003d000001520000000000000000fb0000000a0049006d006100670065010000003d000001350000000000000000fb0000000a0049006d006100670065010000003d0000013e0000000000000000fc0000003d000003070000000000fffffffaffffffff0100000002fb0000000c00430061006d0065007200610200000cbc000000b70000021e000001eefb000000100044006900730070006c0061007900730000000000000002870000015600fffffffb0000002000730065006c0065006300740069006f006e00200062007500660066006500720200000138000000aa0000023a00000294fb00000014005700690064006500530074006500720065006f02000000e6000000d2000003ee0000030bfb0000000c004b0069006e0065006300740200000186000001060000030c00000261fb0000000c00430061006d006500720061010000022e000001720000000000000000fb0000000a0049006d006100670065010000018d000002130000000000000000fb0000000a0049006d00610067006501000002510000014f0000000000000000fb0000002200630061006d006500720061005f0069006e0066006f005f00700061006e0065006c000000034a000000e9000000d000ffffff00000001000001ef0000043afc0200000003fb0000001e0054006f006f006c002000500072006f00700065007200740069006500730100000041000000780000000000000000fb0000000a00560069006500770073000000003d0000043a000000a400fffffffb0000001200530065006c0065006300740069006f006e010000025a000000b200000000000000000000000200000780000000a9fc0100000001fb0000000a00560069006500770073030000004e00000080000002e10000019700000003000007800000003efc0100000002fb0000000800540069006d0065000000000000000780000002eb00fffffffb0000000800540069006d00650100000000000004500000000000000000000007800000043a00000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
   Selection:
     collapsed: false
   Time:
@@ -347,3 +374,5 @@ Window Geometry:
   Width: 1920
   X: 1920
   Y: 0
+  camera_info_panel:
+    collapsed: true

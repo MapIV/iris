@@ -25,6 +25,7 @@
 
 #include "stereo_bridge.hpp"
 #include <cv_bridge/cv_bridge.h>
+#include <fstream>
 #include <image_transport/image_transport.h>
 #include <iostream>
 #include <message_filters/subscriber.h>
@@ -54,18 +55,14 @@ void publishPose(const Eigen::Matrix4f& T, const std::string& child_frame_id)
 
 int main(int argc, char* argv[])
 {
-  // TODO:
-  // We should set the values of the following parameters using rosparam
-  // - int: recollection
-  // - int: upper_threshold_of_pointcloud
-  // - int: lower_threshold_of_pointcloud
-
   ros::init(argc, argv, "openvslam_stereo_bridge_node");
 
   // Get rosparams
   ros::NodeHandle pnh("~");
   bool is_image_compressed = true;
   bool is_image_color = true;
+  int recollection = 30;
+  float height = std::numeric_limits<float>::max();
   std::string vocab_path, vslam_config_path;
   std::string image_topic_name0;
   std::string image_topic_name1;
@@ -75,8 +72,13 @@ int main(int argc, char* argv[])
   pnh.getParam("image_topic_name1", image_topic_name1);
   pnh.getParam("is_image_compressed", is_image_compressed);
   pnh.getParam("is_image_color", is_image_color);
+  pnh.getParam("keyframe_recollection", recollection);
+  pnh.getParam("max_height", height);
   ROS_INFO("vocab_path: %s, vslam_config_path: %s, image_topic_name: %s, is_image_compressed: %d",
       vocab_path.c_str(), vslam_config_path.c_str(), image_topic_name0.c_str(), is_image_compressed);
+
+  const int lower_threshold_of_points = 1000;
+  const int upper_threshold_of_points = 1500;
 
   // Setup subscriber
   ros::NodeHandle nh;
@@ -87,20 +89,21 @@ int main(int argc, char* argv[])
   message_filters::Subscriber<sensor_msgs::CompressedImage> infra2_image_subscriber(nh, image_topic_name1, 1);
   message_filters::TimeSynchronizer<sensor_msgs::CompressedImage, sensor_msgs::CompressedImage> syncronizer(infra1_image_subscriber, infra2_image_subscriber, 10);
 
-  if (is_image_compressed == false) {
-    std::cerr << "Only compressed Image is acceptable" << std::endl;
+
+  // Setup image callback
+  cv::Mat subscribed_image0, subscribed_image1;
+  ros::Time subscribed_stamp;
+  if (is_image_compressed) {
+    auto image_callback = [is_image_color, &subscribed_image0, &subscribed_image1, &subscribed_stamp](const sensor_msgs::CompressedImageConstPtr& image0, const sensor_msgs::CompressedImageConstPtr& image1) -> void {
+      subscribed_image0 = cv::imdecode(cv::Mat(image0->data), is_image_color ? 1 : 0 /* '1': bgr, '0': gray*/);
+      subscribed_image1 = cv::imdecode(cv::Mat(image1->data), is_image_color ? 1 : 0 /* '1': bgr, '0': gray*/);
+      subscribed_stamp = image0->header.stamp;
+    };
+    syncronizer.registerCallback(boost::bind<void>(image_callback, _1, _2));
+  } else {
+    std::cerr << "Error: Only compressed image is acceptable" << std::endl;
     exit(EXIT_FAILURE);
   }
-
-  cv::Mat subscribed_image0, subscribed_image1;
-  auto image_callback = [is_image_color, is_image_compressed, &subscribed_image0, &subscribed_image1](const sensor_msgs::CompressedImageConstPtr& image1, const sensor_msgs::CompressedImageConstPtr& image2) -> void {
-    if (is_image_compressed) {
-      std::cout << "image subscribing" << std::endl;
-      subscribed_image0 = cv::imdecode(cv::Mat(image1->data), is_image_color ? 1 : 0 /* '1': bgr, '0': gray*/);
-      subscribed_image1 = cv::imdecode(cv::Mat(image2->data), is_image_color ? 1 : 0 /* '1': bgr, '0': gray*/);
-    }
-  };
-  syncronizer.registerCallback(boost::bind<void>(image_callback, _1, _2));
 
   // Setup publisher
   ros::Publisher vslam_publisher = nh.advertise<pcl::PointCloud<pcl::PointXYZINormal>>("iris/vslam_data", 1);
@@ -111,9 +114,10 @@ int main(int argc, char* argv[])
   bridge.setup(vslam_config_path, vocab_path);
 
   std::chrono::system_clock::time_point m_start;
-  ros::Rate loop_rate(10);
+  ros::Rate loop_rate(20);
   float accuracy = 0.5f;
   pcl::PointCloud<pcl::PointXYZINormal>::Ptr vslam_data(new pcl::PointCloud<pcl::PointXYZINormal>);
+  std::ofstream ofs_time("vslam_time.csv");
 
   // Start main loop
   ROS_INFO("start main loop.");
@@ -121,37 +125,42 @@ int main(int argc, char* argv[])
     if (!subscribed_image0.empty() && !subscribed_image1.empty()) {
       // start timer
       m_start = std::chrono::system_clock::now();
+      ros::Time process_stamp = subscribed_stamp;
 
       // process OpenVSLAM
       bridge.execute(subscribed_image0, subscribed_image1);
-      bridge.setCriteria(30 /*recollection*/, accuracy);
-      bridge.getLandmarksAndNormals(vslam_data);
+      bridge.setCriteria(recollection, accuracy);
+      bridge.getLandmarksAndNormals(vslam_data, height);
+
+      // Inform processing time
+      std::stringstream ss;
+      long time_ms = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - m_start).count();
+      ss << "processing time= \033[35m"
+         << time_ms
+         << "\033[m ms";
+      ofs_time << time_ms << std::endl;
+      ROS_INFO("%s", ss.str().c_str());
 
       // Reset input
       subscribed_image0 = cv::Mat();
       subscribed_image1 = cv::Mat();
 
-      // TODO: The accuracy should be reflected in the results of align_node
       // Update threshold to adjust the number of points
-      if (vslam_data->size() < 300 /*lower_threshold_of_pointcloud*/ && accuracy > 0.10) accuracy -= 0.01f;
-      if (vslam_data->size() > 500 /*upper_threshold_of_pointcloud*/ && accuracy < 0.90) accuracy += 0.01f;
-
+      if (vslam_data->size() < lower_threshold_of_points && accuracy > 0.10) accuracy -= 0.01f;
+      if (vslam_data->size() > upper_threshold_of_points && accuracy < 0.90) accuracy += 0.01f;
+      std::cout << "accuracy: " << accuracy << std::endl;
       {
-        sensor_msgs::ImagePtr msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", bridge.getFrame()).toImageMsg();
-        image_publisher.publish(msg);
+        cv::Mat img = bridge.getFrame();
+        if (!img.empty()) {
+          sensor_msgs::ImagePtr msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", img).toImageMsg();
+          image_publisher.publish(msg);
+        }
       }
       {
-        pcl_conversions::toPCL(ros::Time::now(), vslam_data->header.stamp);
+        pcl_conversions::toPCL(process_stamp, vslam_data->header.stamp);
         vslam_data->header.frame_id = "world";
         vslam_publisher.publish(vslam_data);
       }
-
-      // Inform processing time
-      std::stringstream ss;
-      ss << "processing time= \033[35m"
-         << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - m_start).count()
-         << "\033[m ms";
-      ROS_INFO("%s", ss.str().c_str());
     }
     publishPose(bridge.getCameraPose().inverse(), "iris/vslam_pose");
 

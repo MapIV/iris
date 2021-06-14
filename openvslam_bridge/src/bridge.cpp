@@ -81,16 +81,17 @@ void BridgeOpenVSLAM::setup(const std::string& config_path, const std::string& v
   SLAM_ptr->disable_loop_detector();
 }
 
-void BridgeOpenVSLAM::getLandmarksAndNormals(pcl::PointCloud<pcl::PointXYZINormal>::Ptr& vslam_data) const
+void BridgeOpenVSLAM::getLandmarksAndNormals(pcl::PointCloud<pcl::PointXYZINormal>::Ptr& vslam_data, float height) const
 {
+  auto t0 = std::chrono::system_clock::now();
+
   if (recollection == 0 || accuracy < 0) {
     std::cerr << "ERROR: recollection & accuracy are not set" << std::endl;
     exit(1);
   }
 
-  std::vector<openvslam::data::landmark*> landmarks;
   std::set<openvslam::data::landmark*> local_landmarks;
-  SLAM_ptr->get_map_publisher()->get_landmarks(landmarks, local_landmarks);
+  SLAM_ptr->get_map_publisher()->get_landmarks(local_landmarks);
 
   vslam_data->clear();
 
@@ -99,7 +100,7 @@ void BridgeOpenVSLAM::getLandmarksAndNormals(pcl::PointCloud<pcl::PointXYZINorma
   Eigen::Vector3d t_vslam = SLAM_ptr->get_map_publisher()->get_current_cam_pose().topRightCorner(3, 1);
 
   unsigned int max_id = SLAM_ptr->get_map_publisher()->get_max_keyframe_id();
-  for (const auto local_lm : landmarks) {
+  for (const auto local_lm : local_landmarks) {
     unsigned int first_observed_id = local_lm->first_keyfrm_id_;
     unsigned int last_observed_id = local_lm->last_observed_keyfrm_id_;
     if (local_lm->will_be_erased()) continue;
@@ -107,29 +108,34 @@ void BridgeOpenVSLAM::getLandmarksAndNormals(pcl::PointCloud<pcl::PointXYZINorma
     if (max_id > recollection && last_observed_id < max_id - recollection) continue;
 
     const openvslam::Vec3_t pos = local_lm->get_pos_in_world();
-    const openvslam::Vec3_t normal = local_lm->get_obs_mean_normal();
+    // const openvslam::Vec3_t normal = local_lm->get_obs_mean_normal();
 
     // when the distance is 5m or more, the weight is minimum.
     // float weight = static_cast<float>(1.0 - (t_vslam - pos).norm() * 0.2);
     float weight = 1.0f;
-    if (weight < 0.1f) weight = 0.1f;
-    if (weight > 1.0f) weight = 1.0f;
+    weight = std::min(std::max(weight, 0.1f), 1.0f);
+
+    Eigen::Vector3f t = getCameraPose().inverse().topRightCorner(3, 1);
+    if (pos.y() - t.y() < -height) continue;
 
     pcl::PointXYZINormal p;
     p.x = static_cast<float>(pos.x());
     p.y = static_cast<float>(pos.y());
     p.z = static_cast<float>(pos.z());
-    p.normal_x = static_cast<float>(normal.x());
-    p.normal_y = static_cast<float>(normal.y());
-    p.normal_z = static_cast<float>(normal.z());
+    // p.normal_x = static_cast<float>(normal.x());
+    // p.normal_y = static_cast<float>(normal.y());
+    // p.normal_z = static_cast<float>(normal.z());
     p.intensity = weight;
     vslam_data->push_back(p);
   }
 
+  auto t1 = std::chrono::system_clock::now();
+  long dt = std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0).count();
   std::cout
       << "landmark ratio \033[34m" << vslam_data->size()
       << "\033[m / \033[34m" << local_landmarks.size()
-      << "\033[m" << std::endl;
+      << "\033[m" << dt << std::endl;
+
   return;
 }
 
@@ -168,9 +174,9 @@ void BridgeOpenVSLAM::setCriteria(unsigned int recollection_, float accuracy_)
   recollection = recollection_;
   accuracy = accuracy_;
 
-  if (recollection < 1) recollection = 1;
-  if (accuracy < 0.1f) accuracy = 0.1f;
-  if (accuracy > 1.0f) accuracy = 1.0f;
+  recollection = std::max(recollection, 1u);
+  accuracy = std::max(accuracy, 0.1f);
+  accuracy = std::min(accuracy, 1.0f);
 }
 
 std::pair<unsigned int, float> BridgeOpenVSLAM::getCriteria() const

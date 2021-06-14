@@ -50,7 +50,7 @@ struct Publication {
   pcl::CorrespondencesPtr correspondences;
 };
 
-// thread safe publisher
+// OBSL: thread safe publisher
 class Publisher
 {
 public:

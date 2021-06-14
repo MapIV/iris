@@ -25,6 +25,7 @@
 
 #pragma once
 #include <Eigen/Dense>
+#include <limits>
 
 namespace iris
 {
@@ -33,9 +34,9 @@ namespace map
 struct Info {
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
-  float x = 0;
-  float y = 0;
-  float theta = 0;
+  float x = std::numeric_limits<float>::quiet_NaN();
+  float y = std::numeric_limits<float>::quiet_NaN();
+  float theta = std::numeric_limits<float>::quiet_NaN();
 
   Info() {}
   Info(float x, float y, float theta) : x(x), y(y), theta(theta) {}

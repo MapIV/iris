@@ -1,0 +1,5 @@
+<launch>
+    <!-- rviz -->
+    <node name="rvizvisualisation" pkg="rviz" type="rviz" output="log" args="-d $(find iris)/../config/iris.rviz" />
+</launch>
+
