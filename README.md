@@ -1,5 +1,6 @@
 <span style="color: orange;">Modifications are underway.</span>
 
+
 # *Iris*
 * Visual localization in pre-build pointcloud maps.
 * ~~**OpenVSLAM** and **VINS-mono**  can be used.~~ <span style="color: orange;">Modifications are underway.</span>
@@ -10,7 +11,7 @@
 
 ## Submodule 
 * [OpenVSLAM forked by MapIV](https://github.com/MapIV/openvslam.git)
-> [original repository (xdspacelab)](https://github.com/xdspacelab/openvslam) 
+> ~~[original repository (xdspacelab)](https://github.com/xdspacelab/openvslam)~~
 
 
 ## Dependency
@@ -41,26 +42,27 @@ catkin_make
 3. rosbag : `kitti_00_stereo.bag` from [URL](https://www.dropbox.com/s/kfouz9gkjefpvb5/kitti_00_stereo.bag?dl=0)
 
 ### Run with sample data
-#### Monocular camera sample
-```bash
-roscd iris/../../../
-# download sample data to here (orb_voceb.dbow, kitti_00.pcd, kitti_00_stereo.bag)
-ls # > build devel install src orb_vocab.dbow kitti_00.pcd kitti_00_stereo.bag
-roslaunch iris openvslam.launch
-rosbag play kitti_00_stereo.bag # (on another terminal)
-```
-> If the estimated position is misaligned, it can be corrected using `2D Pose Estimate` in rviz.
-
 #### Stereo camera sample
 ```bash
 roscd iris/../../../
 # download sample data to here (orb_voceb.dbow, kitti_00.pcd, kitti_00_stereo.bag)
 ls # > build devel install src orb_vocab.dbow kitti_00.pcd kitti_00_stereo.bag
-roslaunch iris stereo_openvslam.launch
+roslaunch iris stereo_kitti00.launch
+roslaunch iris rviz.launch # (on another terminal)
 rosbag play kitti_00_stereo.bag # (on another terminal)
 ```
 > If the estimated position is misaligned, it can be corrected using `2D Pose Estimate` in rviz.
 
+#### Monocular camera sample
+```bash
+roscd iris/../../../
+# download sample data to here (orb_voceb.dbow, kitti_00.pcd, kitti_00_stereo.bag)
+ls # > build devel install src orb_vocab.dbow kitti_00.pcd kitti_00_stereo.bag
+roslaunch iris mono_kitti00.launch
+roslaunch iris rviz.launch # (on another terminal)
+rosbag play kitti_00_stereo.bag # (on another terminal)
+```
+> If the estimated position is misaligned, it can be corrected using `2D Pose Estimate` in rviz.
 
 
 ## How to Run with Your Data
@@ -68,18 +70,11 @@ rosbag play kitti_00_stereo.bag # (on another terminal)
 1. pointcloud map file (*.pcd)
 1. rosbag (*.bag)
 1. Config file for iris such as `config/sample_iris_config.yaml`
-2. (only if you use OpenVSLAM) Config file for vSLAM such as `config/sample_openvslam_config.yaml` 
-3. (only if you use VINS-mono) To use the VINS-mono, you need to write a launch file and a config file. (More detail in [https://github.com/HKUST-Aerial-Robotics/VINS-Mono](https://github.com/HKUST-Aerial-Robotics/VINS-Mono))
+1. (only if you use OpenVSLAM) Config file for vSLAM such as `config/sample_openvslam_config.yaml` 
 
-### Run with OpenVSLAM
+### Run
 ```bash
 roslaunch iris openvslam.launch iris_config_path:=... 
-rosbag play yours.bag # (on another terminal)
-```
-### Run with VINS-mono
-```bash
-roslaunch iris vinsmono.launch iris_config_path:=... 
-roslaunch vins_estimator *something*.launch # (on another terminal)
 rosbag play yours.bag # (on another terminal)
 ```
 
@@ -98,3 +93,4 @@ The following files are derived from third-party libraries.
 
 ## Reference
 - T. Caselitz, B. Steder, M. Ruhnke, and W. Burgard, “Monocular camera localization in 3d lidar maps,” in 2016 IEEE/RSJ International Conference on Intelligent Robots and Systems (IROS). IEEE, 2016, pp. 1926–1931.
+> http://www.lifelong-navigation.eu/files/caselitz16iros.pdf
