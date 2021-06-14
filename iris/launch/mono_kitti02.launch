@@ -29,6 +29,4 @@
        <param name="keyframe_recollection" type="int" value="$(arg keyframe_recollection)" />
     </node>
 
-    <!-- rviz -->
-    <node name="rvizvisualisation" pkg="rviz" type="rviz" output="log" args="-d $(find iris)/../config/iris_openvslam.rviz" />
 </launch>

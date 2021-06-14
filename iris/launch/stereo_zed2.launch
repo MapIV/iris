@@ -34,6 +34,4 @@
        <param name="max_height" type="double" value="$(arg max_height)" />
     </node>
 
-    <!-- rviz -->
-    <node name="rvizvisualisation" pkg="rviz" type="rviz" output="log" args="-d $(find iris)/../config/iris_openvslam.rviz" />
 </launch>
