@@ -70,8 +70,8 @@ rosbag play kitti_00_stereo.bag # (on another terminal)
 ### All you need to prepare
 1. pointcloud map file (*.pcd)
 1. rosbag (*.bag)
-1. Config file for iris such as `config/sample_iris_config.yaml`
-1. (only if you use OpenVSLAM) Config file for vSLAM such as `config/sample_openvslam_config.yaml` 
+1. Config file for iris such as `./config/iris_stereo_config.yaml`
+1. Config file for OpenVSLAM such as `./openvslam_bridge/3rd/openvslam/example/kitti/KITTI_mono_00-02.yaml` 
 
 ### Run
 ```bash
