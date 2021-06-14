@@ -1,6 +1,8 @@
+<span style="color: orange;">Modifications are underway.</span>
+
 # *Iris*
 * Visual localization in pre-build pointcloud maps.
-* **OpenVSLAM** and **VINS-mono**  can be used.
+* ~~**OpenVSLAM** and **VINS-mono**  can be used.~~ <span style="color: orange;">Modifications are underway.</span>
 
 ## Video
 [![](https://img.youtube.com/vi/a_BnifwBZC8/0.jpg)](https://www.youtube.com/watch?v=a_BnifwBZC8)
@@ -8,7 +10,8 @@
 
 ## Submodule 
 * [OpenVSLAM forked by MapIV](https://github.com/MapIV/openvslam.git)
-  * > [original repository (xdspacelab)](https://github.com/xdspacelab/openvslam)
+> [original repository (xdspacelab)](https://github.com/xdspacelab/openvslam) 
+
 
 ## Dependency
 If you are using ROS, you only need to install `g2o` and `DBoW2`.
@@ -18,9 +21,9 @@ If you are using ROS, you only need to install `g2o` and `DBoW2`.
 * [PCL](https://pointclouds.org/)
 * [g2o](https://github.com/RainerKuemmerle/g2o)
 * [DBow2](https://github.com/shinsumicco/DBoW2.git)
-  * Please use the custom version released in [https://github.com/shinsumicco/DBoW2)](https://github.com/shinsumicco/DBoW2)
+  * Please use the custom version released in [https://github.com/shinsumicco/DBoW2](https://github.com/shinsumicco/DBoW2)
 
-> see also: [openvslam](https://openvslam.readthedocs.io/en/master/installation.html#dependencies).
+> ~~see also: [openvslam](https://openvslam.readthedocs.io/en/master/installation.html#dependencies).~~ <span style="color: orange;">Modifications are underway.</span>
 
 ## How to Build
 ```bash
@@ -81,7 +84,8 @@ rosbag play yours.bag # (on another terminal)
 ```
 
 ## License
-Iris is provided under the BSD 3-Clause License.
+~~Iris is provided under the BSD 3-Clause License.~~
+<span style="color: orange;">Modifications are underway.</span>
 
 The following files are derived from third-party libraries.
 * `iris/src/optimize/types_gicp.hpp` : part of [g2o](https://github.com/RainerKuemmerle/g2o) (BSD)
@@ -90,3 +94,7 @@ The following files are derived from third-party libraries.
 * `iris/src/pcl_/correspondence_estimator.cpp` : part of [pcl](https://github.com/PointCloudLibrary/pcl) (BSD)
 * `iris/src/pcl_/normal_estimator.hpp` : part of [pcl](https://github.com/PointCloudLibrary/pcl) (BSD)
 * `iris/src/pcl_/normal_estimator.cpp` : part of [pcl](https://github.com/PointCloudLibrary/pcl) (BSD)
+
+
+## Reference
+- T. Caselitz, B. Steder, M. Ruhnke, and W. Burgard, “Monocular camera localization in 3d lidar maps,” in 2016 IEEE/RSJ International Conference on Intelligent Robots and Systems (IROS). IEEE, 2016, pp. 1926–1931.
